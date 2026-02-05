@@ -18,30 +18,23 @@ from __future__ import annotations
 import logging
 from collections import defaultdict
 from dataclasses import field
-from operator import ge
-from typing import IO, TYPE_CHECKING, Sequence
+from typing import TYPE_CHECKING
 
 from gemseo.datasets.io_dataset import IODataset
-from gemseo.problems.mdo.scalable.parametric.core import variable_names
-from gemseo.utils.metrics import element_wise_metric
+from gemseo.utils.metrics.dataset_metric import DatasetMetric
+from gemseo.utils.metrics.metric_factory import MetricFactory
 from numpy import ndarray
 from pandas import DataFrame
 
 from vimseo.tools.base_tool import BaseResult
 from vimseo.utilities.datasets import dataframe_to_dataset
-from collections import defaultdict
-from pathlib import Path
-from typing import TYPE_CHECKING
-
-from gemseo.datasets.dataset import Dataset
-from gemseo.datasets.io_dataset import IODataset
-from gemseo.utils.directory_creator import DirectoryNamingMethod
-from gemseo.utils.metrics.dataset_metric import DatasetMetric
-from gemseo.utils.metrics.metric_factory import MetricFactory
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
     from collections.abc import Mapping
+    from collections.abc import Sequence
+
+    from gemseo.datasets.dataset import Dataset
 
     from vimseo.tools.validation.validation_point_result import ValidationPointResult
 
@@ -64,20 +57,28 @@ class ValidationCaseResult(BaseResult):
             common_values.intersection_update(data)
         return sorted(common_values)
 
-    def add_averaged_point(self, src_group_name: str, dataset: Dataset, data: dict[str, list], output_group_name: str):
+    def add_averaged_point(
+        self,
+        src_group_name: str,
+        dataset: Dataset,
+        data: dict[str, list],
+        output_group_name: str,
+    ):
         """Average validation point data and add to case dictionary."""
-        group_data = dataset.get_view(
-            group_names=[src_group_name]
-        ).copy()
+        group_data = dataset.get_view(group_names=[src_group_name]).copy()
         group_data.columns = group_data.get_columns(as_tuple=False)
         group_data = group_data.mean().to_dict()
         for name, value in group_data.items():
-            data[f"{name}[{output_group_name}]"].append(value) 
+            data[f"{name}[{output_group_name}]"].append(value)
 
     def set_from_point_results(self, results: Iterable[ValidationPointResult]):
 
-        metric_names = self.get_common_values([result.metadata.settings["metric_names"] for result in results])
-        output_names = self.get_common_values([result.metadata.report["measured_output_names"] for result in results])
+        metric_names = self.get_common_values([
+            result.metadata.settings["metric_names"] for result in results
+        ])
+        output_names = self.get_common_values([
+            result.metadata.report["measured_output_names"] for result in results
+        ])
 
         data = defaultdict(list)
         for result in results:
@@ -90,10 +91,24 @@ class ValidationCaseResult(BaseResult):
             for metric_name in metric_names:
                 for name, value in result.integrated_metrics[metric_name].items():
                     data[f"{name}[{metric_name}]"].append(value)
-            self.add_averaged_point(IODataset.INPUT_GROUP, result.simulated_data, data, IODataset.INPUT_GROUP)
-            self.add_averaged_point(IODataset.OUTPUT_GROUP, result.simulated_data, data, IODataset.OUTPUT_GROUP)
-            self.add_averaged_point(IODataset.INPUT_GROUP, result.measured_data, data, "ReferenceInputs")
-            self.add_averaged_point(IODataset.OUTPUT_GROUP, result.measured_data, data, "ReferenceOutputs")
+            self.add_averaged_point(
+                IODataset.INPUT_GROUP,
+                result.simulated_data,
+                data,
+                IODataset.INPUT_GROUP,
+            )
+            self.add_averaged_point(
+                IODataset.OUTPUT_GROUP,
+                result.simulated_data,
+                data,
+                IODataset.OUTPUT_GROUP,
+            )
+            self.add_averaged_point(
+                IODataset.INPUT_GROUP, result.measured_data, data, "ReferenceInputs"
+            )
+            self.add_averaged_point(
+                IODataset.OUTPUT_GROUP, result.measured_data, data, "ReferenceOutputs"
+            )
 
         df = DataFrame.from_dict(data)
         self.element_wise_metrics = dataframe_to_dataset(df)

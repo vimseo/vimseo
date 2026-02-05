@@ -21,7 +21,6 @@ from numpy import array
 from numpy import linspace
 from numpy.testing import assert_allclose
 
-from vimseo.utilities.metrics import EPSILON
 from vimseo.api import create_model
 from vimseo.problems.mock.mock_reference_data import MOCK_REFERENCE_DIR
 from vimseo.tools.io.reader_file_dataframe import ReaderFileDataFrame
@@ -35,6 +34,7 @@ from vimseo.tools.validation_case.validation_case import (
     DeterministicValidationCaseSettings,
 )
 from vimseo.tools.validation_case.validation_case_result import ValidationCaseResult
+from vimseo.utilities.metrics import EPSILON
 
 
 @pytest.fixture
@@ -177,7 +177,11 @@ def test_to_dataframe(tmp_wd):
                 "y1": IODataset.OUTPUT_GROUP,
             },
         ),
-        integrated_metrics={"RelativeErrorMetric": {"y1": 0.5 * (0.5 / (2.0 + EPSILON) + 0.5 / (4.0 + EPSILON))}},
+        integrated_metrics={
+            "RelativeErrorMetric": {
+                "y1": 0.5 * (0.5 / (2.0 + EPSILON) + 0.5 / (4.0 + EPSILON))
+            }
+        },
     )
     point_1.metadata.settings["metric_names"] = ["RelativeErrorMetric"]
     point_1.metadata.report["measured_output_names"] = ["y1"]
@@ -204,27 +208,72 @@ def test_to_dataframe(tmp_wd):
                 "y1": IODataset.OUTPUT_GROUP,
             },
         ),
-        integrated_metrics={"RelativeErrorMetric": {"y1": 0.5 * (0.5 / (2.1 + EPSILON) + 0.5 / (4.1 + EPSILON))}},
+        integrated_metrics={
+            "RelativeErrorMetric": {
+                "y1": 0.5 * (0.5 / (2.1 + EPSILON) + 0.5 / (4.1 + EPSILON))
+            }
+        },
     )
     point_2.metadata.settings["metric_names"] = ["RelativeErrorMetric"]
     point_2.metadata.report["measured_output_names"] = ["y1"]
     result = ValidationCaseResult()
     result.set_from_point_results([point_1, point_2])
 
-    assert set(result.element_wise_metrics.get_variable_names(IODataset.INPUT_GROUP)) == {"x3"}
-    assert set(result.element_wise_metrics.get_variable_names(IODataset.OUTPUT_GROUP)) == {"y1"}
-    assert set(result.element_wise_metrics.get_variable_names("ReferenceInputs")) == {"x3"}
-    assert set(result.element_wise_metrics.get_variable_names("ReferenceOutputs")) == {"y1"}
-    # Expected value is the mean value of the input variable x3 for each point, 
+    assert set(
+        result.element_wise_metrics.get_variable_names(IODataset.INPUT_GROUP)
+    ) == {"x3"}
+    assert set(
+        result.element_wise_metrics.get_variable_names(IODataset.OUTPUT_GROUP)
+    ) == {"y1"}
+    assert set(result.element_wise_metrics.get_variable_names("ReferenceInputs")) == {
+        "x3"
+    }
+    assert set(result.element_wise_metrics.get_variable_names("ReferenceOutputs")) == {
+        "y1"
+    }
+    # Expected value is the mean value of the input variable x3 for each point,
     # which is 2.0 for point_1 and 2.1 for point_2
-    assert_allclose(result.element_wise_metrics.get_view(group_names="ReferenceInputs").to_numpy().ravel(), array([2.0, 2.1]))
-    assert_allclose(result.element_wise_metrics.get_view(group_names="ReferenceOutputs").to_numpy().ravel(), array([3.0, 3.1]))
-    assert_allclose(result.element_wise_metrics.get_view(group_names=IODataset.INPUT_GROUP).to_numpy().ravel(), array([2.5, 2.6]))
-    assert_allclose(result.element_wise_metrics.get_view(group_names=IODataset.OUTPUT_GROUP).to_numpy().ravel(), array([3.5, 3.6]))
-    assert_allclose(result.element_wise_metrics.get_view(group_names="RelativeErrorMetric").to_numpy().ravel(), array([
-        point_1.integrated_metrics["RelativeErrorMetric"]["y1"],
-        point_2.integrated_metrics["RelativeErrorMetric"]["y1"],
-        ]))
+    assert_allclose(
+        result.element_wise_metrics
+        .get_view(group_names="ReferenceInputs")
+        .to_numpy()
+        .ravel(),
+        array([2.0, 2.1]),
+    )
+    assert_allclose(
+        result.element_wise_metrics
+        .get_view(group_names="ReferenceOutputs")
+        .to_numpy()
+        .ravel(),
+        array([3.0, 3.1]),
+    )
+    assert_allclose(
+        result.element_wise_metrics
+        .get_view(group_names=IODataset.INPUT_GROUP)
+        .to_numpy()
+        .ravel(),
+        array([2.5, 2.6]),
+    )
+    assert_allclose(
+        result.element_wise_metrics
+        .get_view(group_names=IODataset.OUTPUT_GROUP)
+        .to_numpy()
+        .ravel(),
+        array([3.5, 3.6]),
+    )
+    assert_allclose(
+        result.element_wise_metrics
+        .get_view(group_names="RelativeErrorMetric")
+        .to_numpy()
+        .ravel(),
+        array([
+            point_1.integrated_metrics["RelativeErrorMetric"]["y1"],
+            point_2.integrated_metrics["RelativeErrorMetric"]["y1"],
+        ]),
+    )
     assert set(result.integrated_metrics.keys()) == {"RelativeErrorMetric"}
     assert set(result.integrated_metrics["RelativeErrorMetric"].keys()) == {"y1"}
-    assert result.integrated_metrics["RelativeErrorMetric"]["y1"] == 0.5 * (point_1.integrated_metrics["RelativeErrorMetric"]["y1"] + point_2.integrated_metrics["RelativeErrorMetric"]["y1"])
+    assert result.integrated_metrics["RelativeErrorMetric"]["y1"] == 0.5 * (
+        point_1.integrated_metrics["RelativeErrorMetric"]["y1"]
+        + point_2.integrated_metrics["RelativeErrorMetric"]["y1"]
+    )

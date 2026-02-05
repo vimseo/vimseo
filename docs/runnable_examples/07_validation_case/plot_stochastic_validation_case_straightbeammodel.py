@@ -18,11 +18,11 @@
 ## Problem
 
 I want to validate a model at several validation points and quantify the uncertainty
-due to the uncertainty on the model inputs and the epistemic uncertainties on the 
+due to the uncertainty on the model inputs and the epistemic uncertainties on the
 reference data.
 
 Based on repeated measurements, the stochastic validation case of VIMSEO allows
-to take into account the uncertainty on the reference, propagate the uncertainty 
+to take into account the uncertainty on the reference, propagate the uncertainty
 through the model and use specific metrics to take into the uncertaity on the outputs.
 
 """
@@ -31,27 +31,28 @@ from __future__ import annotations
 
 import logging
 
+from gemseo.datasets.io_dataset import IODataset
+
 from vimseo import EXAMPLE_RUNS_DIR_NAME
 from vimseo.api import activate_logger
 from vimseo.api import create_model
 from vimseo.core.model_settings import IntegratedModelSettings
-from vimseo.problems.beam_analytic.reference_dataset_builder import (
-    bending_test_analytical_reference_dataset,
-)
+from vimseo.io.space_io import SpaceToolFileIO
 from vimseo.material.material import Material
 from vimseo.material_lib import MATERIAL_LIB_DIR
-from vimseo.io.space_io import SpaceToolFileIO
 from vimseo.storage_management.base_storage_manager import PersistencyPolicy
-from vimseo.tools.io.reader_file_dataframe import ReaderFileDataFrame, ReaderFileDataFrameSettings
-from vimseo.tools.validation.validation_point import StochasticValidationPoint, StochasticValidationPointInputs, StochasticValidationPointSettings
+from vimseo.tools.io.reader_file_dataframe import ReaderFileDataFrame
+from vimseo.tools.io.reader_file_dataframe import ReaderFileDataFrameSettings
+from vimseo.tools.validation.validation_point import StochasticValidationPoint
+from vimseo.tools.validation.validation_point import StochasticValidationPointInputs
+from vimseo.tools.validation.validation_point import StochasticValidationPointSettings
 from vimseo.tools.validation_case.validation_case import DeterministicValidationCase
 from vimseo.tools.validation_case.validation_case_result import ValidationCaseResult
+from vimseo.utilities.datasets import SEP
 from vimseo.utilities.generate_validation_reference import Bias
 from vimseo.utilities.generate_validation_reference import (
     generate_reference_from_parameter_space,
 )
-from vimseo.utilities.datasets import SEP
-from gemseo.datasets.io_dataset import IODataset
 
 activate_logger(level=logging.INFO)
 
@@ -69,7 +70,7 @@ target_model = create_model(
 )
 target_model.cache = None
 
-for mult_factor, batch in zip([1.01, 1.02, 1.03], [1, 2, 3]):
+for _mult_factor, batch in zip([1.01, 1.02, 1.03], [1, 2, 3], strict=False):
     reference_dataset_cantilever = generate_reference_from_parameter_space(
         target_model,
         SpaceToolFileIO()
@@ -82,7 +83,9 @@ for mult_factor, batch in zip([1.01, 1.02, 1.03], [1, 2, 3]):
         additional_name_to_data={"nominal_length": 600.0, "batch": batch},
     )
     reference_dataset_cantilever.to_csv(
-        f"reference_validation_bending_test_cantilever_{batch}.csv", sep=SEP, index=False
+        f"reference_validation_bending_test_cantilever_{batch}.csv",
+        sep=SEP,
+        index=False,
     )
     print(f"The reference data for batch {batch}: ", reference_dataset_cantilever)
 
@@ -101,7 +104,7 @@ model = create_model(
 )
 
 # %%
-# Model input uncertainty are captured in the stochastic material properties, 
+# Model input uncertainty are captured in the stochastic material properties,
 # compatible with the model:
 material = Material.from_json(MATERIAL_LIB_DIR / "Ta6v.json")
 print("The stochastic material: ", material)
@@ -109,31 +112,54 @@ print("The stochastic material: ", material)
 # %%
 # All inputs to a stochastic validation are now prepared:
 # the model, the reference data and the uncertain input space.
-# We can define and run the three validation points corresponding to the three batches 
+# We can define and run the three validation points corresponding to the three batches
 # of reference data, and gather the results in a validation case result.
 results = []
 for batch, reference_data in zip(
     [1, 2, 3],
     [
-        ReaderFileDataFrame().execute(settings=ReaderFileDataFrameSettings(
-            file_name=f"reference_validation_bending_test_cantilever_{batch}.csv",
-            variable_names=["width", "height", "imposed_dplt", "maximum_dplt", "reaction_forces", "nominal_length", "batch"],
-            variable_names_to_group_names={
-                "width": IODataset.INPUT_GROUP,
-                "height": IODataset.INPUT_GROUP,
-                "imposed_dplt": IODataset.INPUT_GROUP,
-                "reaction_forces": IODataset.OUTPUT_GROUP,
-                "maximum_dplt": IODataset.OUTPUT_GROUP,
-            },
-        )).dataset
+        ReaderFileDataFrame()
+        .execute(
+            settings=ReaderFileDataFrameSettings(
+                file_name=f"reference_validation_bending_test_cantilever_{batch}.csv",
+                variable_names=[
+                    "width",
+                    "height",
+                    "imposed_dplt",
+                    "maximum_dplt",
+                    "reaction_forces",
+                    "nominal_length",
+                    "batch",
+                ],
+                variable_names_to_group_names={
+                    "width": IODataset.INPUT_GROUP,
+                    "height": IODataset.INPUT_GROUP,
+                    "imposed_dplt": IODataset.INPUT_GROUP,
+                    "reaction_forces": IODataset.OUTPUT_GROUP,
+                    "maximum_dplt": IODataset.OUTPUT_GROUP,
+                },
+            )
+        )
+        .dataset
         for batch in [1, 2, 3]
     ],
+    strict=False,
 ):
     print(f"The reference data for batch {batch}: ", reference_data)
 
     result = StochasticValidationPoint().execute(
-        inputs=StochasticValidationPointInputs(model=model, measured_data=reference_data, uncertain_input_space=material.to_parameter_space()),
-        settings=StochasticValidationPointSettings(metric_names=["AreaMetric", "RelativeMeanToMean", "AbsoluteRelativeErrorP90"]),
+        inputs=StochasticValidationPointInputs(
+            model=model,
+            measured_data=reference_data,
+            uncertain_input_space=material.to_parameter_space(),
+        ),
+        settings=StochasticValidationPointSettings(
+            metric_names=[
+                "AreaMetric",
+                "RelativeMeanToMean",
+                "AbsoluteRelativeErrorP90",
+            ]
+        ),
     )
 
     print(f"The error dataset for batch {batch}: ", result.integrated_metrics)
@@ -150,7 +176,13 @@ case_result
 # using integrated metrics such as the AreaMetric (or a metric of this family),
 # which output a scalar value for each validation point.
 # The plots are computed for a given output and metric:
-figs = DeterministicValidationCase().plot_results(case_result, metric_name="AbsoluteRelativeErrorP90", output_name="reaction_forces", show=True, save=False)
+figs = DeterministicValidationCase().plot_results(
+    case_result,
+    metric_name="AbsoluteRelativeErrorP90",
+    output_name="reaction_forces",
+    show=True,
+    save=False,
+)
 # a parallel coordinates plot:
 figs["parallel_coordinates"]
 
