@@ -37,7 +37,7 @@ from numpy import array
 from vimseo import EXAMPLE_RUNS_DIR_NAME
 from vimseo.api import activate_logger
 from vimseo.api import create_model
-from vimseo.core.base_integrated_model import IntegratedModelSettings
+from vimseo.core.model_settings import IntegratedModelSettings
 from vimseo.tools.doe.doe import DOETool
 from vimseo.tools.space.space_tool import SpaceTool
 from vimseo.tools.surrogate.surrogate import SurrogateTool
@@ -125,7 +125,7 @@ fig
 surrogate_tool = SurrogateTool(working_directory="surrogate_tool_results")
 
 # %%
-# Options of the tool can be checked (other options can be redefined throughout
+# Settings of the tool can be checked (other options can be redefined throughout
 # :code:`surrogate_tool.update_options()`):
 
 pprint.pprint(surrogate_tool.options)

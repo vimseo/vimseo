@@ -30,7 +30,7 @@ from numpy import array
 from vimseo import EXAMPLE_RUNS_DIR_NAME
 from vimseo.api import activate_logger
 from vimseo.api import create_model
-from vimseo.core.base_integrated_model import IntegratedModelSettings
+from vimseo.core.model_settings import IntegratedModelSettings
 
 activate_logger(level=logging.INFO)
 
@@ -147,7 +147,7 @@ figures["dplt_vs_dplt_grid"]
 # %%
 # For a model running an external solver, the options of the job
 # can be modified.
-# The basic job options are defined in the pydantic model ``BaseUserJobOptions()``
+# The basic job options are defined in the pydantic model ``BaseUserJobSettings()``
 # and passed to the model's job executor. To set the number of CPUs to 2,
 # the following command can be used:
-# ``model.run.job_executor.set_options(BaseUserJobOptions(n_cpus=2))``.
+# ``model.run.job_executor.set_options(BaseUserJobSettings(n_cpus=2))``.

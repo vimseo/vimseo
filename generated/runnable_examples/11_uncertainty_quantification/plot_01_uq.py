@@ -27,7 +27,7 @@ from numpy import array
 from vimseo import EXAMPLE_RUNS_DIR_NAME
 from vimseo.api import activate_logger
 from vimseo.api import create_model
-from vimseo.core.base_integrated_model import IntegratedModelSettings
+from vimseo.core.model_settings import IntegratedModelSettings
 from vimseo.tools.doe.doe import DOETool
 from vimseo.tools.space.space_tool import SpaceTool
 from vimseo.tools.statistics.statistics_tool import StatisticsTool

@@ -23,7 +23,7 @@ from gemseo.utils.directory_creator import DirectoryNamingMethod
 from vimseo import EXAMPLE_RUNS_DIR_NAME
 from vimseo.api import activate_logger
 from vimseo.api import create_model
-from vimseo.core.base_integrated_model import IntegratedModelSettings
+from vimseo.core.model_settings import IntegratedModelSettings
 from vimseo.tools.verification.verification_vs_data import CodeVerificationAgainstData
 
 # %%
