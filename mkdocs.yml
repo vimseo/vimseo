@@ -1,6 +1,6 @@
 site_name: vimseo
-site_url: https://SebastienBocquet.github.io/vimseo
-repo_url: https://github.com/SebastienBocquet/vimseo
+site_url: https://vimseo.github.io/vimseo
+repo_url: https://github.com/vimseo/vimseo
 repo_name: vimseo
 
 theme:

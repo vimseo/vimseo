@@ -8,14 +8,14 @@
 -->
 
 <div align="center">
-<a href="https://github.com/SebastienBocquet/vimseo/">
+<a href="https://github.com/vimseo/vimseo/">
 <img width="1800" alt="" src="/docs/images/analysis_workflow_and_credibility.png" />
 </a>
 
 <div align="center">
 <h3>
-    <a href="https://sebastienbocquet.github.io/vimseo/">documentation</a> |
-    <a href="https://sebastienbocquet.github.io/vimseo/generated/runnable_examples/02_integrated_models">examples</a>
+    <a href="https://vimseo.github.io/vimseo/">documentation</a> |
+    <a href="https://vimseo.github.io/vimseo/generated/runnable_examples/02_integrated_models">examples</a>
 </h3>
 </div>
 </div>
@@ -246,14 +246,14 @@ information on the calibrated quantities and versatile calibration metrics takin
 
 ## Using **VIMSEO**
 
-- **[References](https://sebastienbocquet.github.io/vimseo/generated/runnable_examples/01_models/)
-and [API](https://sebastienbocquet.github.io/vimseo/reference/vimseo/)**: get the description and definition of concepts and API.
-- **[How-to](https://sebastienbocquet.github.io/vimseo/generated/runnable_examples/02_integrated_models/)**: solve practical problems by exploring runnable examples and how-to.
+- **[References](https://vimseo.github.io/vimseo/generated/runnable_examples/01_models/)
+and [API](https://vimseo.github.io/vimseo/reference/vimseo/)**: get the description and definition of concepts and API.
+- **[How-to](https://vimseo.github.io/vimseo/generated/runnable_examples/02_integrated_models/)**: solve practical problems by exploring runnable examples and how-to.
 
 ## Learning **VIMSEO**
 
-- **[Tutorials](https://sebastienbocquet.github.io/vimseo/tutorials/vvuq_study/intoduction/)
-and [Explanations](https://sebastienbocquet.github.io/vimseo/explanations/asme2025/abstract/)**:
+- **[Tutorials](https://vimseo.github.io/vimseo/tutorials/vvuq_study/intoduction/)
+and [Explanations](https://vimseo.github.io/vimseo/explanations/asme2025/abstract/)**:
 learn through discussions and tutorials about key topics.
 
 ## Roadmap
@@ -274,14 +274,14 @@ build robust model credibility indicators and reliable use of the models downstr
 
 We welcome contributions! Please refer to the contribution guidelines.
 
-Please use the [github issue tracker](https://github.com/SebastienBocquet/vimseo/issues/)
+Please use the [github issue tracker](https://github.com/vimseo/vimseo/issues/)
 to submit bugs or questions.
 
 [//]: # (Join our [Discord]&#40;https://; server for questions and discussions.)
 
 ## Contributing
 
-Refer to our contribution guide here: [Contributing](https://sebastienbocquet.github.io/vimseo/contributing/)
+Refer to our contribution guide here: [Contributing](https://vimseo.github.io/vimseo/contributing/)
 
 ## Contributors
 

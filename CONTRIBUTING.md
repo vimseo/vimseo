@@ -7,4 +7,4 @@
  Commons, PO Box 1866, Mountain View, CA 94042, USA.
 -->
 
-Refer to our contribution guide here: [Contributing](https://SebastienBocquet.github.io/vimseo/contributing/)
+Refer to our contribution guide here: [Contributing](https://vimseo.github.io/vimseo/contributing/)

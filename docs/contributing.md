@@ -9,7 +9,7 @@
 
 # Contributing
 
-Since January 2026, VIMSEO is open source, under the [LGPL v3 license](https://www.gnu.org/licenses/lgpl-3.0.en.html). The project is hosted on [github](https://github.com/SebastienBocquet/vimseo/).
+Since January 2026, VIMSEO is open source, under the [LGPL v3 license](https://www.gnu.org/licenses/lgpl-3.0.en.html). The project is hosted on [github](https://github.com/vimseo/vimseo/).
 
 ## Contributions
 
@@ -40,4 +40,4 @@ Signed-off-by: Name <email address>
 
 ## Development
 
-For the technical aspects, we invite you to read: [Developer information](https://sebastienbocquet.github.io/vimseo/developing.md).
+For the technical aspects, we invite you to read: [Developer information](https://vimseo.github.io/vimseo/developing.md).
