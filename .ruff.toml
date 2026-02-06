@@ -184,6 +184,7 @@ convention = "google"
 ]
 # ignore docstring that have not yet be converted to the google style
 "src/*.py" = ["D"]
+"src/vimseo/lib_vimseo/*.*" = ["ALL"]
 
 [format]
 docstring-code-format = true

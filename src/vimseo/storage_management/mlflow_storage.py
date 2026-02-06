@@ -34,9 +34,9 @@ from mlflow import delete_run
 from numpy import atleast_1d
 from numpy import ndarray
 
-from vimseo.config.certificates import CONFIG_CERTIFICATES_DIR
 from vimseo.config.global_configuration import _configuration as config
 from vimseo.core.model_metadata import MetaDataNames
+from vimseo.storage_management.certificates import MLFLOW_CERTIFICATES_DIR
 from vimseo.storage_management.directory_storage import BaseArchiveManager
 from vimseo.utilities.json_grammar_utils import EnhancedJSONEncoder
 
@@ -81,7 +81,7 @@ class MlflowArchive(BaseArchiveManager):
             os.environ["REQUESTS_CA_BUNDLE"] = (
                 config.database.ssl_certificate_file
                 if config.database.ssl_certificate_file != ""
-                else str((CONFIG_CERTIFICATES_DIR / "irt_certificate.txt").absolute())
+                else str((MLFLOW_CERTIFICATES_DIR / "irt_certificate.txt").absolute())
             )
 
             if config.database.use_insecure_tls == "True":

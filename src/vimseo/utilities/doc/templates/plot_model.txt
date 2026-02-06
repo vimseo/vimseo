@@ -1,4 +1,4 @@
-# copyright section to be added automatically by syntax check
+
 """
 # Overview of the {{ model_name }} for load case {{ load_case }}
 

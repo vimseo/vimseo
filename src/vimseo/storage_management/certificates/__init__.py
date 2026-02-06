@@ -17,6 +17,6 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import vimseo.config.certificates as config_certitficates_lib
+import vimseo.storage_management.certificates as certificates_lib
 
-CONFIG_CERTIFICATES_DIR = Path(config_certitficates_lib.__path__[0]).resolve()
+MLFLOW_CERTIFICATES_DIR = Path(certificates_lib.__path__[0]).resolve()

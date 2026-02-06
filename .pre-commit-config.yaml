@@ -73,7 +73,7 @@ repos:
         - LICENSES/headers/LGPL-3.0.txt
     - id: insert-license
       name: insert BSD license
-      files: ^docs/(examples|tutorials).*\.py$
+      files: ^docs/(runnable_examples|tutorials).*\.py$
       args:
         - --license-filepath
         - LICENSES/headers/BSD-0-Clause.txt
