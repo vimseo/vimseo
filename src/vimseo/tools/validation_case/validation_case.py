@@ -51,6 +51,7 @@ from vimseo.utilities.datasets import encode_vector
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
+    from collections.abc import Sequence
 
     from plotly.graph_objs import Figure
 
@@ -256,6 +257,7 @@ class DeterministicValidationCase(BaseAnalysisTool):
         result: DeterministicValidationCaseResult,
         metric_name: str,
         output_name: str,
+        input_names: Sequence[str] = (),
         directory_path: str | Path = "",
         save=False,
         show=True,
@@ -270,14 +272,21 @@ class DeterministicValidationCase(BaseAnalysisTool):
             threshold: The threshold used a mid-point for the parallel coordinates plot
                 color bar.
         """
+        working_directory = (
+            self.working_directory if directory_path == "" else Path(directory_path)
+        )
+
         figs = {}
 
+        variable_names = [] if not input_names else [*input_names, output_name]
         df = result.element_wise_metrics.get_view(
-            group_names=[IODataset.INPUT_GROUP, metric_name]
+            group_names=[IODataset.INPUT_GROUP, metric_name],
+            variable_names=variable_names,
         ).copy()
         df.columns = df.get_columns(as_tuple=False)
+
         figs["parallel_coordinates"] = (
-            ParallelCoordinates(working_directory=self.working_directory)
+            ParallelCoordinates(working_directory=working_directory)
             .execute(
                 df,
                 metric_name,
@@ -289,10 +298,16 @@ class DeterministicValidationCase(BaseAnalysisTool):
             .figure
         )
 
-        df = dataset_to_dataframe(result.element_wise_metrics, suffix_by_group=True)
+        # Weird inteface: the following plots expect variable names with group suffixes.
+        # TODO: document the expected name convention of the dataframe columns.
+        df = dataset_to_dataframe(
+            result.element_wise_metrics,
+            variable_names=variable_names,
+            suffix_by_group=True,
+        )
 
         figs["error_scatter_matrix"] = (
-            ErrorScatterMatrix(working_directory=self.working_directory)
+            ErrorScatterMatrix(working_directory=working_directory)
             .execute(
                 df,
                 metric_name,
@@ -304,7 +319,7 @@ class DeterministicValidationCase(BaseAnalysisTool):
         )
 
         figs["predict_vs_true"] = (
-            PredictVsTrue(working_directory=self.working_directory)
+            PredictVsTrue(working_directory=working_directory)
             .execute(
                 df,
                 metric_name,
@@ -316,7 +331,7 @@ class DeterministicValidationCase(BaseAnalysisTool):
         )
 
         figs["integrated_metric_bars"] = (
-            IntegratedMetricBars(working_directory=self.working_directory)
+            IntegratedMetricBars(working_directory=working_directory)
             .execute(
                 result.integrated_metrics,
                 metric_name,
