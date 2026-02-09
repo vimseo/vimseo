@@ -1,0 +1,40 @@
+name: Tests
+
+on:
+  push:
+    paths-ignore:
+      - "*.md"
+      - "LICENSE**"
+      - ".gitignore"
+  pull_request:
+    paths-ignore:
+      - "*.md"
+      - "LICENSE**"
+      - ".gitignore"
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ["3.11"]
+    steps:
+      - uses: actions/checkout@v5
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install tox
+        run: pip install tox-uv
+      - name: Run tox
+        # Run tox using the version of Python in `PATH`.
+        run: tox run -e py-coverage
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          slug: vimseo/vimseo
+          #          fail_ci_if_error: true
+          files: ./coverage.xml
+          verbose: true

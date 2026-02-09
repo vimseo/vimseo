@@ -28,7 +28,7 @@
 [![PyPI - License](https://img.shields.io/pypi/l/vimseo)](https://www.gnu.org/licenses/lgpl-3.0.en.html)
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/vimseo)](https://pypi.org/project/vimseo/)
 [![PyPI](https://img.shields.io/pypi/v/vimseo)](https://pypi.org/project/vimseo/)
-[![Codecov branch](https://img.shields.io/codecov/c/gitlab/gemseo:dev/vimseo/develop)](https://app.codecov.io/gl/gemseo:dev/vimseo)
+[![Codecov branch](https://img.shields.io/codecov/github/vimseo/vimseo/tree/main)](https://app.codecov.io/github/vimseo/vimseo/tree/main)
 
 ## Why VIMSEO?
 
@@ -252,7 +252,7 @@ and [API](https://vimseo.github.io/vimseo/reference/vimseo/)**: get the descript
 
 ## Learning **VIMSEO**
 
-- **[Tutorials](https://vimseo.github.io/vimseo/tutorials/vvuq_study/intoduction/)
+- **[Tutorials](https://vimseo.github.io/vimseo/tutorials/vvuq_study/introduction/)
 and [Explanations](https://vimseo.github.io/vimseo/explanations/asme2025/abstract/)**:
 learn through discussions and tutorials about key topics.
 
@@ -269,6 +269,12 @@ to run the model under integration stage step by step, with proper error managem
 
 Ensure a coherence between the tools (verification, validation, calibration) in order to
 build robust model credibility indicators and reliable use of the models downstream.
+
+## License
+
+This software was developed by IRT Saint EXUPERY within the framework of the TRUST research project and the VITAL resarch project.
+VIMSEO is licensed by IRT SAINT EXUPERY under the GNU LESSER GENERAL PUBLIC LICENSE, version 3.0. A copy of this license is provided in the LICENSE file.
+
 
 ## Contribution
 
