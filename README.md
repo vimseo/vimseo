@@ -252,7 +252,7 @@ and [API](https://vimseo.github.io/vimseo/reference/vimseo/)**: get the descript
 
 ## Learning **VIMSEO**
 
-- **[Tutorials](https://vimseo.github.io/vimseo/tutorials/vvuq_study/intoduction/)
+- **[Tutorials](https://vimseo.github.io/vimseo/tutorials/vvuq_study/introduction/)
 and [Explanations](https://vimseo.github.io/vimseo/explanations/asme2025/abstract/)**:
 learn through discussions and tutorials about key topics.
 
