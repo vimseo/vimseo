@@ -67,7 +67,7 @@ def test_specific_settings(tmp_wd):
             },
             parameter_names=["young_modulus"],
             optimizer_name="MultiStart",
-            optimizer_settings=MultiStart_Settings(opt_algo_name=sub_optimizer_name),
+            optimizer_settings=MultiStart_Settings(opt_algo_name=sub_optimizer_name, max_iter=10),
         ),
     )
     assert step.options["optimizer_settings"]["opt_algo_name"] == sub_optimizer_name

@@ -60,18 +60,23 @@ def prior() -> array:
 def bayes_analysis(model, prior, data) -> BayesTool:
     """A raw MCMC sampling."""
     analysis = BayesTool()
-    analysis.execute(likelihood_dist=model, prior_dist=prior, data=data, n_mcmc=1_000)
+    analysis.execute(likelihood_dist=model, prior_dist=prior, data=data, n_mcmc=50)
     return analysis
 
 
 @pytest.fixture(scope="module")
 def processed_analysis(bayes_analysis) -> BayesTool:
     """A MCMC chain."""
-    bayes_analysis.post(burnin=50)
+    bayes_analysis.post(
+        1,
+        n_mcmc=50,
+        nb_samples_ml=5,
+        nb_samples_posterior=2,
+    )
     return bayes_analysis
 
 
-def test_missing_likelihood():
+def test_missing_likelihood(tmp_wd):
     """Check an error is raised if no model is defined."""
     analysis = BayesTool()
     with pytest.raises(
@@ -81,7 +86,7 @@ def test_missing_likelihood():
         analysis.execute()
 
 
-def test_missing_prior(model):
+def test_missing_prior(tmp_wd, model):
     """Check an error is raised if no prior is defined."""
     analysis = BayesTool()
     with pytest.raises(
@@ -91,7 +96,7 @@ def test_missing_prior(model):
         analysis.execute(likelihood_dist=model)
 
 
-def test_dirac_prior(model, data):
+def test_dirac_prior(tmp_wd, model, data):
     """Check an error is raised if Dirac distributions are used for priors."""
     analysis = BayesTool()
     with pytest.raises(
@@ -109,7 +114,7 @@ def test_dirac_prior(model, data):
         )
 
 
-def test_missing_data(model, prior):
+def test_missing_data(tmp_wd, model, prior):
     """Check an error is raised if no prior is available."""
     analysis = BayesTool()
     with pytest.raises(
@@ -119,7 +124,7 @@ def test_missing_data(model, prior):
         analysis.execute(likelihood_dist=model, prior_dist=prior)
 
 
-def test_no_correspondance_prior_likelihood(prior, data):
+def test_no_correspondance_prior_likelihood(tmp_wd, prior, data):
     """Check that the dimension of the prior corresponds to the number of model
     parameters."""
     analysis = BayesTool()
@@ -133,7 +138,7 @@ def test_no_correspondance_prior_likelihood(prior, data):
         analysis.execute(likelihood_dist="WeibullMin", prior_dist=prior, data=data)
 
 
-def test_execution_settings(model, prior, data):
+def test_execution_settings(tmp_wd, model, prior, data):
     """Check the initialization settings of a mock inference ."""
     analysis = BayesTool()
     analysis.execute(likelihood_dist=model, prior_dist=prior, data=data, n_mcmc=10)
@@ -185,6 +190,7 @@ def test_execution_settings(model, prior, data):
     ],
 )
 def test_instanciation_prior(
+    tmp_wd,
     model,
     data,
     prior,
@@ -218,10 +224,10 @@ def test_return_type(tmp_wd, bayes_analysis):
     )
 
 
-def test_execution_results(processed_analysis):
+def test_execution_results(tmp_wd, processed_analysis):
     """Check the results of an inference."""
-    assert processed_analysis.result.processed_samples.shape == (930, 2)
-    assert processed_analysis.result.raw_samples.shape == (1_000, 30, 2)
+    assert processed_analysis.result.processed_samples.shape == (30, 2)
+    assert processed_analysis.result.raw_samples.shape == (50, 30, 2)
     censored_samples = array(
         processed_analysis.result.posterior_predictive.getConditioningDistribution().getParameter()
     )
@@ -250,7 +256,7 @@ def test_execution_results(processed_analysis):
     assert "ml" in attributes
 
 
-def test_error_cropping(bayes_analysis):
+def test_error_cropping(tmp_wd, bayes_analysis):
     """Check that an error is raised when not enough samples are generated."""
     mock_samples = zeros((10, 30, 2))
     with pytest.raises(
@@ -260,17 +266,17 @@ def test_error_cropping(bayes_analysis):
         bayes_analysis.cropping(mock_samples, thin=30, burnin=1, dim=2)
 
 
-def test_lppd(bayes_analysis):
+def test_lppd(tmp_wd, bayes_analysis):
     """Check the returned lppd."""
     assert bayes_analysis.lppd(burnin=1, n_mcmc=40) > 0
 
 
-def test_marginal_likelihood(processed_analysis):
+def test_marginal_likelihood(tmp_wd, processed_analysis):
     """Check the returned marginal likelihood."""
     assert processed_analysis.marginal_likelihood(10) > 0
 
 
-def test_maximum_size_posterior_predictive(processed_analysis):
+def test_maximum_size_posterior_predictive(tmp_wd, processed_analysis):
     """Check the maximum size of posterior samples for the function."""
     with pytest.raises(
         ValueError,
@@ -298,10 +304,14 @@ def test_plot_posterior_predictive(tmp_wd, processed_analysis):
 @pytest.mark.parametrize("plot_directory", ["", "foo"])
 def test_plot_results_return_type(tmp_wd, model, prior, data, plot_directory):
     """Check that plot_results output is a dictionary."""
-    # TODO: bug when using tmp_wd, OK when not using tmp_wd
     analysis = BayesTool()
-    analysis.execute(likelihood_dist=model, prior_dist=prior, data=data, n_mcmc=1_000)
-    analysis.post(burnin=50)
+    analysis.execute(likelihood_dist=model, prior_dist=prior, data=data, n_mcmc=50)
+    analysis.post(
+        1,
+        n_mcmc=50,
+        nb_samples_ml=5,
+        nb_samples_posterior=2,
+    )
     assert analysis.working_directory.absolute().exists()
     plot_checks = analysis.plot_results(
         directory_path=plot_directory, save=True, show=False
