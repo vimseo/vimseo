@@ -17,27 +17,25 @@ from __future__ import annotations
 
 import logging
 from collections import defaultdict
-from dataclasses import dataclass
 from dataclasses import field
 from typing import TYPE_CHECKING
 
+from gemseo.datasets.io_dataset import IODataset
 from numpy import ndarray
 from pandas import DataFrame
 
 from vimseo.tools.base_tool import BaseResult
+from vimseo.utilities.datasets import dataframe_to_dataset
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
     from collections.abc import Mapping
-
-    from gemseo.datasets.io_dataset import IODataset
 
     from vimseo.tools.validation.validation_point_result import ValidationPointResult
 
 LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
 class StochasticValidationCaseResult(BaseResult):
     """The result of a validation case."""
 
@@ -72,3 +70,37 @@ class DeterministicValidationCaseResult(BaseResult):
     integrated_metrics: Mapping[str, Mapping[str, float]] | None = None
     """A dictionary mapping variable names and metric names to integrated metric values
     corresponding the each validation point (i.e. each sample of the reference data)."""
+
+    def set_from_point_results(self, results: Iterable[ValidationPointResult]):
+
+        # TODO compute the list of common metric names:
+        metric_names = []
+
+        data = defaultdict(list)
+        for result in results:
+            for name, value in result.nominal_data.items():
+                # data is then converted to dataframe.
+                # arrays are stringified because they could be of different lengths
+                if isinstance(value, ndarray) and value.size > 1:
+                    value = str(value)
+                data[f"{name}[{IODataset.INPUT_GROUP}]"].append(value)
+            for metric_name in metric_names:
+                for name, value in result.integrated_metrics[metric_name].items():
+                    data[f"{name}[{metric_name}]"].append(value)
+            reference_outputs = result.measured_data.get_view(
+                group_names=[IODataset.OUTPUT_GROUP]
+            ).copy()
+            reference_outputs.columns = reference_outputs.get_columns(as_tuple=False)
+            reference_outputs = reference_outputs.mean().to_dict()
+            for name, value in reference_outputs.items():
+                data[f"{name}[Reference]"] = value
+            simulated_outputs = result.simulated_data.get_view(
+                group_names=[IODataset.OUTPUT_GROUP]
+            ).copy()
+            simulated_outputs.columns = simulated_outputs.get_columns(as_tuple=False)
+            simulated_outputs = simulated_outputs.mean().to_dict()
+            for name, value in reference_outputs.items():
+                data[f"{name}[{IODataset.OUTPUT_GROUP}]"] = value
+
+        df = DataFrame.from_dict(data)
+        dataframe_to_dataset(df)

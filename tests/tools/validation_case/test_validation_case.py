@@ -18,18 +18,23 @@ from __future__ import annotations
 import pytest
 from gemseo.datasets.io_dataset import IODataset
 from numpy import array
+from numpy import linspace
 from numpy.testing import assert_allclose
 
 from vimseo.api import create_model
 from vimseo.problems.mock.mock_reference_data import MOCK_REFERENCE_DIR
 from vimseo.tools.io.reader_file_dataframe import ReaderFileDataFrame
 from vimseo.tools.io.reader_file_dataframe import ReaderFileDataFrameSettings
+from vimseo.tools.validation.validation_point_result import ValidationPointResult
 from vimseo.tools.validation_case.validation_case import DeterministicValidationCase
 from vimseo.tools.validation_case.validation_case import (
     DeterministicValidationCaseInputs,
 )
 from vimseo.tools.validation_case.validation_case import (
     DeterministicValidationCaseSettings,
+)
+from vimseo.tools.validation_case.validation_case_result import (
+    DeterministicValidationCaseResult,
 )
 
 
@@ -146,33 +151,51 @@ def test_validation_plots(tmp_wd, reference_data):
     assert (validation_case.working_directory / "integrated_metric_bars.html").is_file()
 
 
-# # TODO wait for refactoring of validaiton case tool
-# def test_to_dataframe(tmp_wd):
-#     """Check that a StochasticValidationCaseResult can export a DataFrame containing the
-#     nominal input variables and the integrated metrics as outputs."""
-#     point_1 = ValidationPointResult(
-#         nominal_data={
-#             "x1_vector": linspace(0, 1, 5),
-#             "x2": array([1.0]),
-#             "x3": 2.0,
-#             "x4": "foo",
-#         },
-#         integrated_metrics={"metric1": {"y1": 3.0}},
-#     )
-#     point_2 = ValidationPointResult(
-#         nominal_data={
-#             "x1_vector": linspace(0, 1, 3),
-#             "x2": array([2.0]),
-#             "x3": 3.0,
-#             "x4": "bar",
-#         },
-#         integrated_metrics={"metric1": {"y1": 4.0}},
-#     )
-#     result = StochasticValidationCaseResult(validation_point_results=[point_1, point_2])
-#     df = result.to_dataframe("metric1")
-#     assert list(df["x1_vector"].values) == [
-#         "[0.   0.25 0.5  0.75 1.  ]",
-#         "[0.  0.5 1. ]",
-#     ]
-#     assert df.shape == (2, 5)
-#     assert list(df.columns.values) == ["x1_vector", "x2", "x3", "x4", "metric1[y1]"]
+# TODO wait for refactoring of validaiton case tool
+def test_to_dataframe(tmp_wd):
+    """Check that a StochasticValidationCaseResult can export a DataFrame containing the
+    nominal input variables and the integrated metrics as outputs."""
+    point_1 = ValidationPointResult(
+        nominal_data={
+            "x1_vector": linspace(0, 1, 5),
+            "x2": array([1.0]),
+            "x3": 2.0,
+            "x4": "foo",
+        },
+        # TODO add a vector to the measured data
+        measured_data=IODataset.from_array(
+            [[1, 2], [1.5, 2.5]],
+            variable_names=["x3", "y1"],
+            variable_names_to_group_names={
+                "x3": IODataset.INPUT_GROUP,
+                "y1": IODataset.OUTPUT_GROUP,
+            },
+        ),
+        integrated_metrics={"metric1": {"y1": 3.0}},
+    )
+    point_2 = ValidationPointResult(
+        nominal_data={
+            "x1_vector": linspace(0, 1, 3),
+            "x2": array([2.0]),
+            "x3": 3.0,
+            "x4": "bar",
+        },
+        measured_data=IODataset.from_array(
+            [[1, 2], [1.5, 2.5]],
+            variable_names=["x3", "y1"],
+            variable_names_to_group_names={
+                "x3": IODataset.INPUT_GROUP,
+                "y1": IODataset.OUTPUT_GROUP,
+            },
+        ),
+        integrated_metrics={"metric1": {"y1": 4.0}},
+    )
+    result = DeterministicValidationCaseResult()
+    result.set_from_point_results([point_1, point_2])
+    # df = result.to_dataframe("metric1")
+    # assert list(df["x1_vector"].values) == [
+    #     "[0.   0.25 0.5  0.75 1.  ]",
+    #     "[0.  0.5 1. ]",
+    # ]
+    # assert df.shape == (2, 5)
+    # assert list(df.columns.values) == ["x1_vector", "x2", "x3", "x4", "metric1[y1]"]
