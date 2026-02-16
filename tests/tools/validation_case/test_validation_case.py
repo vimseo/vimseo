@@ -164,7 +164,15 @@ def test_to_dataframe(tmp_wd):
         },
         # TODO add a vector to the measured data
         measured_data=IODataset.from_array(
-            [[1, 2], [1.5, 2.5]],
+            [[1.0, 2.0], [3.0, 4.0]],
+            variable_names=["x3", "y1"],
+            variable_names_to_group_names={
+                "x3": IODataset.INPUT_GROUP,
+                "y1": IODataset.OUTPUT_GROUP,
+            },
+        ),
+        simulated_data=IODataset.from_array(
+            [[1.5, 2.5], [3.5, 4.5]],
             variable_names=["x3", "y1"],
             variable_names_to_group_names={
                 "x3": IODataset.INPUT_GROUP,
@@ -181,17 +189,27 @@ def test_to_dataframe(tmp_wd):
             "x4": "bar",
         },
         measured_data=IODataset.from_array(
-            [[1, 2], [1.5, 2.5]],
+            [[1.0, 2.0], [3.0, 4.0]],
             variable_names=["x3", "y1"],
             variable_names_to_group_names={
                 "x3": IODataset.INPUT_GROUP,
                 "y1": IODataset.OUTPUT_GROUP,
             },
         ),
+        simulated_data=IODataset.from_array(
+            [[1.5, 2.5], [3.5, 4.5]],
+            variable_names=["x3", "y1"],
+            variable_names_to_group_names={
+                "x3": IODataset.INPUT_GROUP,
+                "y1": IODataset.OUTPUT_GROUP,
+            },
+        ),
+
         integrated_metrics={"metric1": {"y1": 4.0}},
     )
     result = DeterministicValidationCaseResult()
     result.set_from_point_results([point_1, point_2])
+    a=1
     # df = result.to_dataframe("metric1")
     # assert list(df["x1_vector"].values) == [
     #     "[0.   0.25 0.5  0.75 1.  ]",

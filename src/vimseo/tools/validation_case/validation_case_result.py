@@ -62,6 +62,7 @@ class StochasticValidationCaseResult(BaseResult):
         return DataFrame.from_dict(data)
 
 
+# TODO rename into ValidationCaseResult
 class DeterministicValidationCaseResult(BaseResult):
     """The result of a deterministic validation."""
 
@@ -73,9 +74,10 @@ class DeterministicValidationCaseResult(BaseResult):
 
     def set_from_point_results(self, results: Iterable[ValidationPointResult]):
 
-        # TODO compute the list of common metric names:
+        # TODO compute the list of common metric names. Use the result.metadata.settings["metric_names"]
         metric_names = []
 
+        # TODO put nominal values in dedicated group
         data = defaultdict(list)
         for result in results:
             for name, value in result.nominal_data.items():
@@ -99,8 +101,10 @@ class DeterministicValidationCaseResult(BaseResult):
             ).copy()
             simulated_outputs.columns = simulated_outputs.get_columns(as_tuple=False)
             simulated_outputs = simulated_outputs.mean().to_dict()
-            for name, value in reference_outputs.items():
+            for name, value in simulated_outputs.items():
                 data[f"{name}[{IODataset.OUTPUT_GROUP}]"] = value
 
         df = DataFrame.from_dict(data)
-        dataframe_to_dataset(df)
+        self.element_wise_metrics = dataframe_to_dataset(df)
+
+        # TODO Compute the integrated metrics
