@@ -3,6 +3,9 @@ site_url: https://vimseo.github.io/vimseo
 repo_url: https://github.com/vimseo/vimseo
 repo_name: vimseo
 
+# Uncomment for static build (mkdocs build)
+# use_directory_urls: false
+
 theme:
   name: material
   favicon: images/favicon.ico
@@ -24,6 +27,7 @@ theme:
     repo: fontawesome/brands/gitlab
 
 plugins:
+# Comment for static build (mkdocs build)
 - search
 - markdown-exec
 - gen-files:
