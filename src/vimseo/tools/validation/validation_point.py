@@ -217,6 +217,7 @@ class StochasticValidationPoint(BaseAnalysisTool):
             if len(options["output_names"]) == 0
             else options["output_names"]
         )
+        self.result.metadata.report["measured_output_names"] = measured_output_names
 
         self.result.measured_data = measured_data
         self.result.nominal_data = nominal_data

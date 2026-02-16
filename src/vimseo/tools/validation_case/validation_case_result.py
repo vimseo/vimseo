@@ -18,15 +18,27 @@ from __future__ import annotations
 import logging
 from collections import defaultdict
 from dataclasses import field
+from operator import ge
 from typing import TYPE_CHECKING
 
 from gemseo.datasets.io_dataset import IODataset
+from gemseo.problems.mdo.scalable.parametric.core import variable_names
+from gemseo.utils.metrics import element_wise_metric
 from numpy import ndarray
 from pandas import DataFrame
 
 from vimseo.tools.base_tool import BaseResult
 from vimseo.utilities.datasets import dataframe_to_dataset
+from collections import defaultdict
+from pathlib import Path
+from typing import TYPE_CHECKING
 
+from gemseo.datasets.dataset import Dataset
+from gemseo.datasets.io_dataset import IODataset
+from gemseo.utils.directory_creator import DirectoryNamingMethod
+from gemseo.utils.metrics.dataset_metric import DatasetMetric
+from gemseo.utils.metrics.metric_factory import MetricFactory
+f
 if TYPE_CHECKING:
     from collections.abc import Iterable
     from collections.abc import Mapping
@@ -36,35 +48,8 @@ if TYPE_CHECKING:
 LOGGER = logging.getLogger(__name__)
 
 
-class StochasticValidationCaseResult(BaseResult):
+class ValidationCaseResult(BaseResult):
     """The result of a validation case."""
-
-    validation_point_results: Iterable[ValidationPointResult] = ()
-    """A list of validation point results."""
-
-    def to_dataframe(self, metric_name: str):
-        """Return a ``Pandas.DataFrame`` containing on each row the nominal inputs and
-        the integrated metrics as outputs of each ``ValidationPointResult``.
-
-        Args:
-            metric_name: The name of the metric to export.
-        """
-        data = defaultdict(list)
-        for result in self.validation_point_results:
-            for name, value in result.nominal_data.items():
-                # data is then converted to dataframe.
-                # arrays are stringified because they could be of different lengths
-                if isinstance(value, ndarray) and value.size > 1:
-                    value = str(value)
-                data[name].append(value)
-            for name, value in result.integrated_metrics[metric_name].items():
-                data[f"{metric_name}[{name}]"].append(value)
-        return DataFrame.from_dict(data)
-
-
-# TODO rename into ValidationCaseResult
-class DeterministicValidationCaseResult(BaseResult):
-    """The result of a deterministic validation."""
 
     element_wise_metrics: IODataset | None = field(default_factory=None)
 
@@ -74,8 +59,13 @@ class DeterministicValidationCaseResult(BaseResult):
 
     def set_from_point_results(self, results: Iterable[ValidationPointResult]):
 
-        # TODO compute the list of common metric names. Use the result.metadata.settings["metric_names"]
-        metric_names = []
+        all_metric_names = [result.metadata.settings["metric_names"] for result in results]
+        common_metric_names = set(all_metric_names[0])
+        for m in all_metric_names[1:]:
+            common_metric_names.intersection_update(m)
+        metric_names = sorted(common_metric_names)
+
+        output_names = results[0].metadata.report["measured_output_names"]
 
         # TODO put nominal values in dedicated group
         data = defaultdict(list)
@@ -106,5 +96,28 @@ class DeterministicValidationCaseResult(BaseResult):
 
         df = DataFrame.from_dict(data)
         self.element_wise_metrics = dataframe_to_dataset(df)
+
+        self.integrated_metrics = defaultdict(dict)
+        for metric_name in metric_names:
+            metric = MetricFactory().create(metric_name)
+            for output_name in output_names:
+                dm = DatasetMetric(
+                    metric,
+                    variable_names=output_name,
+                )
+                mean_metric = MetricFactory().create("MeanMetric", dm)
+                self.integrated_metrics[metric_name][output_name] = (
+                    mean_metric.compute(
+                        self.element_wise_metric.get_view(
+                            group_names=[f"{IODataset.OUTPUT_GROUP}"],
+                            variable_names=[output_name],
+                        ),
+                        self.element_wise_metric.get_view(
+                            group_names=["Reference"],
+                            variable_names=[output_name],
+                        )
+                    )
+                )
+
 
         # TODO Compute the integrated metrics

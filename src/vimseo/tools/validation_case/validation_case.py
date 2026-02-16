@@ -42,9 +42,7 @@ from vimseo.tools.post_tools.error_scatter_matrix_plot import ErrorScatterMatrix
 from vimseo.tools.post_tools.metric_bar_plot import IntegratedMetricBars
 from vimseo.tools.post_tools.parallel_coordinates_plot import ParallelCoordinates
 from vimseo.tools.post_tools.predict_vs_true_plot import PredictVsTrue
-from vimseo.tools.validation_case.validation_case_result import (
-    DeterministicValidationCaseResult,
-)
+from vimseo.tools.validation_case.validation_case_result import ValidationCaseResult
 from vimseo.tools.verification.base_verification import BaseCodeVerificationSettings
 from vimseo.utilities.datasets import dataset_to_dataframe
 from vimseo.utilities.datasets import encode_vector
@@ -81,7 +79,7 @@ class DeterministicValidationCase(BaseAnalysisTool):
     name: str
     """The name of the validation point."""
 
-    results: DeterministicValidationCaseResult
+    results: ValidationCaseResult
 
     _INPUTS = DeterministicValidationCaseInputs
 
@@ -109,7 +107,7 @@ class DeterministicValidationCase(BaseAnalysisTool):
             **options,
         )
 
-        self.result = DeterministicValidationCaseResult()
+        self.result = ValidationCaseResult()
 
     @BaseCompositeTool.validate
     def execute(
@@ -117,7 +115,7 @@ class DeterministicValidationCase(BaseAnalysisTool):
         inputs: DeterministicValidationCaseInputs | None = None,
         settings: DeterministicValidationCaseSettings | None = None,
         **options,
-    ) -> DeterministicValidationCaseResult:
+    ) -> ValidationCaseResult:
 
         model = options["model"]
         reference_data = options["reference_data"]
@@ -254,7 +252,7 @@ class DeterministicValidationCase(BaseAnalysisTool):
 
     def plot_results(
         self,
-        result: DeterministicValidationCaseResult,
+        result: ValidationCaseResult,
         metric_name: str,
         output_name: str,
         input_names: Sequence[str] = (),

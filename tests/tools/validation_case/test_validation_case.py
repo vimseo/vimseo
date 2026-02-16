@@ -33,9 +33,7 @@ from vimseo.tools.validation_case.validation_case import (
 from vimseo.tools.validation_case.validation_case import (
     DeterministicValidationCaseSettings,
 )
-from vimseo.tools.validation_case.validation_case_result import (
-    DeterministicValidationCaseResult,
-)
+from vimseo.tools.validation_case.validation_case_result import ValidationCaseResult
 
 
 @pytest.fixture
@@ -153,8 +151,9 @@ def test_validation_plots(tmp_wd, reference_data):
 
 # TODO wait for refactoring of validaiton case tool
 def test_to_dataframe(tmp_wd):
-    """Check that a StochasticValidationCaseResult can export a DataFrame containing the
-    nominal input variables and the integrated metrics as outputs."""
+    """Check that a ValidationCaseResult can export a DataFrame containing the
+    nominal input variables, the simulated outputs, the reference outputs
+    and the integrated metrics as outputs."""
     point_1 = ValidationPointResult(
         nominal_data={
             "x1_vector": linspace(0, 1, 5),
@@ -162,7 +161,6 @@ def test_to_dataframe(tmp_wd):
             "x3": 2.0,
             "x4": "foo",
         },
-        # TODO add a vector to the measured data
         measured_data=IODataset.from_array(
             [[1.0, 2.0], [3.0, 4.0]],
             variable_names=["x3", "y1"],
@@ -204,12 +202,10 @@ def test_to_dataframe(tmp_wd):
                 "y1": IODataset.OUTPUT_GROUP,
             },
         ),
-
         integrated_metrics={"metric1": {"y1": 4.0}},
     )
-    result = DeterministicValidationCaseResult()
+    result = ValidationCaseResult()
     result.set_from_point_results([point_1, point_2])
-    a=1
     # df = result.to_dataframe("metric1")
     # assert list(df["x1_vector"].values) == [
     #     "[0.   0.25 0.5  0.75 1.  ]",
