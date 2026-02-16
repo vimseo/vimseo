@@ -1,10 +1,3 @@
-# Copyright (c) 2019 IRT-AESE.
-# All rights reserved.
-#
-# Contributors:
-#    INITIAL AUTHORS - API and implementation and/or documentation
-#        :author: XXXXXXXXXXX
-#    OTHER AUTHORS   - MACROSCOPIC CHANGES
 # ISC License
 #
 # Copyright (c) 2021, Timothée Mazzucotelli
@@ -100,9 +93,13 @@ def _get_deps(base_deps: Mapping[str, Mapping[str, str]]) -> dict[str, dict[str,
 
 def _render_credits() -> str:
     external_dependencies = _get_deps(project["dependencies"])
+    opt_dep_key = "optional-dependencies"
+    optional_dependencies = (
+        project[opt_dep_key].values() if opt_dep_key in project else []
+    )
     external_applications = _get_deps(
         chain(
-            *project["optional-dependencies"].values(),
+            *optional_dependencies,
             (
                 "commitizen",
                 "docformatter",
