@@ -21,6 +21,7 @@ from numpy import array
 from numpy import linspace
 from numpy.testing import assert_allclose
 
+from vimseo.utilities.metrics import EPSILON
 from vimseo.api import create_model
 from vimseo.problems.mock.mock_reference_data import MOCK_REFERENCE_DIR
 from vimseo.tools.io.reader_file_dataframe import ReaderFileDataFrame
@@ -149,7 +150,6 @@ def test_validation_plots(tmp_wd, reference_data):
     assert (validation_case.working_directory / "integrated_metric_bars.html").is_file()
 
 
-# TODO wait for refactoring of validaiton case tool
 def test_to_dataframe(tmp_wd):
     """Check that a ValidationCaseResult can export a DataFrame containing the
     nominal input variables, the simulated outputs, the reference outputs
@@ -177,8 +177,10 @@ def test_to_dataframe(tmp_wd):
                 "y1": IODataset.OUTPUT_GROUP,
             },
         ),
-        integrated_metrics={"metric1": {"y1": 3.0}},
+        integrated_metrics={"RelativeErrorMetric": {"y1": 0.5 * (0.5 / (2.0 + EPSILON) + 0.5 / (4.0 + EPSILON))}},
     )
+    point_1.metadata.settings["metric_names"] = ["RelativeErrorMetric"]
+    point_1.metadata.report["measured_output_names"] = ["y1"]
     point_2 = ValidationPointResult(
         nominal_data={
             "x1_vector": linspace(0, 1, 3),
@@ -187,7 +189,7 @@ def test_to_dataframe(tmp_wd):
             "x4": "bar",
         },
         measured_data=IODataset.from_array(
-            [[1.0, 2.0], [3.0, 4.0]],
+            [[1.1, 2.1], [3.1, 4.1]],
             variable_names=["x3", "y1"],
             variable_names_to_group_names={
                 "x3": IODataset.INPUT_GROUP,
@@ -195,21 +197,34 @@ def test_to_dataframe(tmp_wd):
             },
         ),
         simulated_data=IODataset.from_array(
-            [[1.5, 2.5], [3.5, 4.5]],
+            [[1.6, 2.6], [3.6, 4.6]],
             variable_names=["x3", "y1"],
             variable_names_to_group_names={
                 "x3": IODataset.INPUT_GROUP,
                 "y1": IODataset.OUTPUT_GROUP,
             },
         ),
-        integrated_metrics={"metric1": {"y1": 4.0}},
+        integrated_metrics={"RelativeErrorMetric": {"y1": 0.5 * (0.5 / (2.1 + EPSILON) + 0.5 / (4.1 + EPSILON))}},
     )
+    point_2.metadata.settings["metric_names"] = ["RelativeErrorMetric"]
+    point_2.metadata.report["measured_output_names"] = ["y1"]
     result = ValidationCaseResult()
     result.set_from_point_results([point_1, point_2])
-    # df = result.to_dataframe("metric1")
-    # assert list(df["x1_vector"].values) == [
-    #     "[0.   0.25 0.5  0.75 1.  ]",
-    #     "[0.  0.5 1. ]",
-    # ]
-    # assert df.shape == (2, 5)
-    # assert list(df.columns.values) == ["x1_vector", "x2", "x3", "x4", "metric1[y1]"]
+
+    assert set(result.element_wise_metrics.get_variable_names(IODataset.INPUT_GROUP)) == {"x3"}
+    assert set(result.element_wise_metrics.get_variable_names(IODataset.OUTPUT_GROUP)) == {"y1"}
+    assert set(result.element_wise_metrics.get_variable_names("ReferenceInputs")) == {"x3"}
+    assert set(result.element_wise_metrics.get_variable_names("ReferenceOutputs")) == {"y1"}
+    # Expected value is the mean value of the input variable x3 for each point, 
+    # which is 2.0 for point_1 and 2.1 for point_2
+    assert_allclose(result.element_wise_metrics.get_view(group_names="ReferenceInputs").to_numpy().ravel(), array([2.0, 2.1]))
+    assert_allclose(result.element_wise_metrics.get_view(group_names="ReferenceOutputs").to_numpy().ravel(), array([3.0, 3.1]))
+    assert_allclose(result.element_wise_metrics.get_view(group_names=IODataset.INPUT_GROUP).to_numpy().ravel(), array([2.5, 2.6]))
+    assert_allclose(result.element_wise_metrics.get_view(group_names=IODataset.OUTPUT_GROUP).to_numpy().ravel(), array([3.5, 3.6]))
+    assert_allclose(result.element_wise_metrics.get_view(group_names="RelativeErrorMetric").to_numpy().ravel(), array([
+        point_1.integrated_metrics["RelativeErrorMetric"]["y1"],
+        point_2.integrated_metrics["RelativeErrorMetric"]["y1"],
+        ]))
+    assert set(result.integrated_metrics.keys()) == {"RelativeErrorMetric"}
+    assert set(result.integrated_metrics["RelativeErrorMetric"].keys()) == {"y1"}
+    assert result.integrated_metrics["RelativeErrorMetric"]["y1"] == 0.5 * (point_1.integrated_metrics["RelativeErrorMetric"]["y1"] + point_2.integrated_metrics["RelativeErrorMetric"]["y1"])

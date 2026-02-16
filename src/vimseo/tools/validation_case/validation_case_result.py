@@ -19,7 +19,7 @@ import logging
 from collections import defaultdict
 from dataclasses import field
 from operator import ge
-from typing import TYPE_CHECKING
+from typing import IO, TYPE_CHECKING, Sequence
 
 from gemseo.datasets.io_dataset import IODataset
 from gemseo.problems.mdo.scalable.parametric.core import variable_names
@@ -38,7 +38,7 @@ from gemseo.datasets.io_dataset import IODataset
 from gemseo.utils.directory_creator import DirectoryNamingMethod
 from gemseo.utils.metrics.dataset_metric import DatasetMetric
 from gemseo.utils.metrics.metric_factory import MetricFactory
-f
+
 if TYPE_CHECKING:
     from collections.abc import Iterable
     from collections.abc import Mapping
@@ -57,17 +57,28 @@ class ValidationCaseResult(BaseResult):
     """A dictionary mapping variable names and metric names to integrated metric values
     corresponding the each validation point (i.e. each sample of the reference data)."""
 
+    def get_common_values(self, data_list: Sequence[list]) -> list:
+        """Get the common values across all lists in data_list."""
+        common_values = set(data_list[0])
+        for data in data_list[1:]:
+            common_values.intersection_update(data)
+        return sorted(common_values)
+
+    def add_averaged_point(self, src_group_name: str, dataset: Dataset, data: dict[str, list], output_group_name: str):
+        """Average validation point data and add to case dictionary."""
+        group_data = dataset.get_view(
+            group_names=[src_group_name]
+        ).copy()
+        group_data.columns = group_data.get_columns(as_tuple=False)
+        group_data = group_data.mean().to_dict()
+        for name, value in group_data.items():
+            data[f"{name}[{output_group_name}]"].append(value) 
+
     def set_from_point_results(self, results: Iterable[ValidationPointResult]):
 
-        all_metric_names = [result.metadata.settings["metric_names"] for result in results]
-        common_metric_names = set(all_metric_names[0])
-        for m in all_metric_names[1:]:
-            common_metric_names.intersection_update(m)
-        metric_names = sorted(common_metric_names)
+        metric_names = self.get_common_values([result.metadata.settings["metric_names"] for result in results])
+        output_names = self.get_common_values([result.metadata.report["measured_output_names"] for result in results])
 
-        output_names = results[0].metadata.report["measured_output_names"]
-
-        # TODO put nominal values in dedicated group
         data = defaultdict(list)
         for result in results:
             for name, value in result.nominal_data.items():
@@ -75,24 +86,14 @@ class ValidationCaseResult(BaseResult):
                 # arrays are stringified because they could be of different lengths
                 if isinstance(value, ndarray) and value.size > 1:
                     value = str(value)
-                data[f"{name}[{IODataset.INPUT_GROUP}]"].append(value)
+                data[f"{name}[Nominal]"].append(value)
             for metric_name in metric_names:
                 for name, value in result.integrated_metrics[metric_name].items():
                     data[f"{name}[{metric_name}]"].append(value)
-            reference_outputs = result.measured_data.get_view(
-                group_names=[IODataset.OUTPUT_GROUP]
-            ).copy()
-            reference_outputs.columns = reference_outputs.get_columns(as_tuple=False)
-            reference_outputs = reference_outputs.mean().to_dict()
-            for name, value in reference_outputs.items():
-                data[f"{name}[Reference]"] = value
-            simulated_outputs = result.simulated_data.get_view(
-                group_names=[IODataset.OUTPUT_GROUP]
-            ).copy()
-            simulated_outputs.columns = simulated_outputs.get_columns(as_tuple=False)
-            simulated_outputs = simulated_outputs.mean().to_dict()
-            for name, value in simulated_outputs.items():
-                data[f"{name}[{IODataset.OUTPUT_GROUP}]"] = value
+            self.add_averaged_point(IODataset.INPUT_GROUP, result.simulated_data, data, IODataset.INPUT_GROUP)
+            self.add_averaged_point(IODataset.OUTPUT_GROUP, result.simulated_data, data, IODataset.OUTPUT_GROUP)
+            self.add_averaged_point(IODataset.INPUT_GROUP, result.measured_data, data, "ReferenceInputs")
+            self.add_averaged_point(IODataset.OUTPUT_GROUP, result.measured_data, data, "ReferenceOutputs")
 
         df = DataFrame.from_dict(data)
         self.element_wise_metrics = dataframe_to_dataset(df)
@@ -106,18 +107,13 @@ class ValidationCaseResult(BaseResult):
                     variable_names=output_name,
                 )
                 mean_metric = MetricFactory().create("MeanMetric", dm)
-                self.integrated_metrics[metric_name][output_name] = (
-                    mean_metric.compute(
-                        self.element_wise_metric.get_view(
-                            group_names=[f"{IODataset.OUTPUT_GROUP}"],
-                            variable_names=[output_name],
-                        ),
-                        self.element_wise_metric.get_view(
-                            group_names=["Reference"],
-                            variable_names=[output_name],
-                        )
-                    )
+                self.integrated_metrics[metric_name][output_name] = mean_metric.compute(
+                    self.element_wise_metrics.get_view(
+                        group_names=[f"{IODataset.OUTPUT_GROUP}"],
+                        variable_names=[output_name],
+                    ),
+                    self.element_wise_metrics.get_view(
+                        group_names=["ReferenceOutputs"],
+                        variable_names=[output_name],
+                    ),
                 )
-
-
-        # TODO Compute the integrated metrics
