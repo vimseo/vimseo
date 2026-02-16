@@ -1297,6 +1297,10 @@
          <lastmod>2026-02-16</lastmod>
     </url>
     <url>
+         <loc>https://vimseo.github.io/vimseo/tutorials/vvuq_study/code_verification/model_integration/</loc>
+         <lastmod>2026-02-16</lastmod>
+    </url>
+    <url>
          <loc>https://vimseo.github.io/vimseo/tutorials/vvuq_study/sensitivity_analysis/</loc>
          <lastmod>2026-02-16</lastmod>
     </url>
@@ -1317,11 +1321,43 @@
          <lastmod>2026-02-16</lastmod>
     </url>
     <url>
+         <loc>https://vimseo.github.io/vimseo/tutorials/vvuq_study/solution_verification/solution_verification_method/</loc>
+         <lastmod>2026-02-16</lastmod>
+    </url>
+    <url>
          <loc>https://vimseo.github.io/vimseo/tutorials/vvuq_study/solution_verification/opfm_plate_oht/solution_verification_opfm_plate_oht/</loc>
          <lastmod>2026-02-16</lastmod>
     </url>
     <url>
          <loc>https://vimseo.github.io/vimseo/tutorials/vvuq_study/solution_verification/opfm_plate_pst/solution_verification_opfm_plate_pst/</loc>
+         <lastmod>2026-02-16</lastmod>
+    </url>
+    <url>
+         <loc>https://vimseo.github.io/vimseo/tutorials/vvuq_study/tmp/code_verification/</loc>
+         <lastmod>2026-02-16</lastmod>
+    </url>
+    <url>
+         <loc>https://vimseo.github.io/vimseo/tutorials/vvuq_study/tmp/code_verification/code_verification_opfm/</loc>
+         <lastmod>2026-02-16</lastmod>
+    </url>
+    <url>
+         <loc>https://vimseo.github.io/vimseo/tutorials/vvuq_study/tmp/code_verification/model_integration/</loc>
+         <lastmod>2026-02-16</lastmod>
+    </url>
+    <url>
+         <loc>https://vimseo.github.io/vimseo/tutorials/vvuq_study/tmp/solution_verification/</loc>
+         <lastmod>2026-02-16</lastmod>
+    </url>
+    <url>
+         <loc>https://vimseo.github.io/vimseo/tutorials/vvuq_study/tmp/solution_verification/solution_verification_method/</loc>
+         <lastmod>2026-02-16</lastmod>
+    </url>
+    <url>
+         <loc>https://vimseo.github.io/vimseo/tutorials/vvuq_study/tmp/solution_verification/opfm_plate_oht/solution_verification_opfm_plate_oht/</loc>
+         <lastmod>2026-02-16</lastmod>
+    </url>
+    <url>
+         <loc>https://vimseo.github.io/vimseo/tutorials/vvuq_study/tmp/solution_verification/opfm_plate_pst/solution_verification_opfm_plate_pst/</loc>
          <lastmod>2026-02-16</lastmod>
     </url>
 </urlset>

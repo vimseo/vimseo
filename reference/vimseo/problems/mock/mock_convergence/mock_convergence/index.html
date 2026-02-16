@@ -5633,28 +5633,6 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#vimseo.problems.mock.mock_convergence.mock_convergence.MockConvergence--run-a-model-with-default-values-each-execution-being-stored-in-a-unique" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Run a model with default values, each execution being stored in a unique
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#vimseo.problems.mock.mock_convergence.mock_convergence.MockConvergence--directory" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        directory.
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#vimseo.problems.mock.mock_convergence.mock_convergence.MockConvergence-attributes" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -13052,28 +13030,6 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#vimseo.problems.mock.mock_convergence.mock_convergence.MockConvergence--run-a-model-with-default-values-each-execution-being-stored-in-a-unique" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Run a model with default values, each execution being stored in a unique
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#vimseo.problems.mock.mock_convergence.mock_convergence.MockConvergence--directory" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        directory.
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#vimseo.problems.mock.mock_convergence.mock_convergence.MockConvergence-attributes" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -13548,18 +13504,21 @@ Also, |gemseo| capabilities (MLearning, Optimisation) can be used on the model.<
 </details>
 
 <p><span class="doc-section-title">Examples:</span></p>
-    <h5 id="vimseo.problems.mock.mock_convergence.mock_convergence.MockConvergence--run-a-model-with-default-values-each-execution-being-stored-in-a-unique">Run a model with default values, each execution being stored in a unique<a class="headerlink" href="#vimseo.problems.mock.mock_convergence.mock_convergence.MockConvergence--run-a-model-with-default-values-each-execution-being-stored-in-a-unique" title="Permanent link">&para;</a></h5>
-<h5 id="vimseo.problems.mock.mock_convergence.mock_convergence.MockConvergence--directory">directory.<a class="headerlink" href="#vimseo.problems.mock.mock_convergence.mock_convergence.MockConvergence--directory" title="Permanent link">&para;</a></h5>
-    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">create_model</span><span class="p">(</span><span class="s2">&quot;BendingTestAnalytical&quot;</span><span class="p">,</span> <span class="s2">&quot;Cantilever&quot;</span><span class="p">)</span>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Run a model with default values, each execution being stored in a unique</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># directory. The archive and scratch persistency is customized.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># The manager for archiving the results is set to MLFlow.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">vimseo.api</span><span class="w"> </span><span class="kn">import</span> <span class="n">create_model</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">vimseo.core.model_settings</span><span class="w"> </span><span class="kn">import</span> <span class="n">IntegratedModelSettings</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">create_model</span><span class="p">(</span><span class="s2">&quot;BendingTestAnalytical&quot;</span><span class="p">,</span> <span class="s2">&quot;Cantilever&quot;</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">model_options</span><span class="o">=</span><span class="n">IntegratedModelSettings</span><span class="p">(</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="n">directory_archive_root</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;my_model_result&quot;</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="n">directory_scratch_root</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;my_scratch&quot;</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="n">directory_scratch_persistency</span><span class="o">=</span><span class="n">PersistencyPolicy</span><span class="o">.</span><span class="n">DELETE_ALWAYS</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="n">directory_archive_persistency</span><span class="o">=</span><span class="n">PersistencyPolicy</span><span class="o">.</span><span class="n">DELETE_IF_FAULTY</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="n">archive_manager</span><span class="o">=</span><span class="s2">&quot;MlflowArchive&quot;</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="p">),</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">model</span><span class="o">.</span><span class="n">execute</span><span class="p">()</span>
-<span class="go"># The policy of the job directory suppression can be customized:</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">create_model</span><span class="p">(</span><span class="s2">&quot;BendingTestAnalytical&quot;</span><span class="p">,</span> <span class="s2">&quot;Cantilever&quot;</span><span class="p">,</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">directory_scratch_persistency</span> <span class="o">=</span> <span class="p">(</span><span class="n">PersistencyPolicy</span><span class="o">.</span><span class="n">DELETE_ALWAYS</span><span class="p">,)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">directory_archive_persistency</span><span class="o">=</span><span class="n">PersistencyPolicy</span><span class="o">.</span><span class="n">DELETE_IF_FAULTY</span><span class="p">)</span>
-<span class="go"># A model can be executed remotely:</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">create_model</span><span class="p">(</span><span class="s2">&quot;BendingTestAnalytical&quot;</span><span class="p">,</span> <span class="s2">&quot;Cantilever&quot;</span><span class="p">,</span>
-<span class="go">directory_scratch_root=&quot;bending_study/my_scratch&quot;)</span>
-<span class="go"># Note that ``job_directory`` argument must be a non-empty path to ensure</span>
 </code></pre></div>
 
         <p>Initialize self.  See help(type(self)) for accurate signature.</p>
@@ -14173,10 +14132,7 @@ Otherwise, all load case classes associated to the model are considered.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src\vimseo\core\base_integrated_model.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">606</span>
-<span class="normal">607</span>
-<span class="normal">608</span>
-<span class="normal">609</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">609</span>
 <span class="normal">610</span>
 <span class="normal">611</span>
 <span class="normal">612</span>
@@ -14222,7 +14178,10 @@ Otherwise, all load case classes associated to the model are considered.</p>
 <span class="normal">652</span>
 <span class="normal">653</span>
 <span class="normal">654</span>
-<span class="normal">655</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">auto_get_file</span><span class="p">(</span>
+<span class="normal">655</span>
+<span class="normal">656</span>
+<span class="normal">657</span>
+<span class="normal">658</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">auto_get_file</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">file_suffix</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">load_cases</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span>
@@ -14299,10 +14258,7 @@ archive.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src\vimseo\core\base_integrated_model.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">765</span>
-<span class="normal">766</span>
-<span class="normal">767</span>
-<span class="normal">768</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">768</span>
 <span class="normal">769</span>
 <span class="normal">770</span>
 <span class="normal">771</span>
@@ -14337,7 +14293,10 @@ archive.</p>
 <span class="normal">800</span>
 <span class="normal">801</span>
 <span class="normal">802</span>
-<span class="normal">803</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">create_cache_from_archive</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">run_ids</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">())</span> <span class="o">-&gt;</span> <span class="n">HDF5Cache</span><span class="p">:</span>
+<span class="normal">803</span>
+<span class="normal">804</span>
+<span class="normal">805</span>
+<span class="normal">806</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">create_cache_from_archive</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">run_ids</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">())</span> <span class="o">-&gt;</span> <span class="n">HDF5Cache</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Defines a temporary HDF5 cache file, based on results found on the current</span>
 <span class="sd">    archive.&quot;&quot;&quot;</span>
 
@@ -14522,10 +14481,7 @@ Complete this dictionary with the :attr:<code>.default_input_data</code>.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src\vimseo\core\base_integrated_model.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">412</span>
-<span class="normal">413</span>
-<span class="normal">414</span>
-<span class="normal">415</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">415</span>
 <span class="normal">416</span>
 <span class="normal">417</span>
 <span class="normal">418</span>
@@ -14540,7 +14496,10 @@ Complete this dictionary with the :attr:<code>.default_input_data</code>.</p>
 <span class="normal">427</span>
 <span class="normal">428</span>
 <span class="normal">429</span>
-<span class="normal">430</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_dataflow</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="normal">430</span>
+<span class="normal">431</span>
+<span class="normal">432</span>
+<span class="normal">433</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_dataflow</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;The inputs and outputs of the components of the model.</span>
 
 <span class="sd">    Returns:</span>
@@ -14599,10 +14558,7 @@ Complete this dictionary with the :attr:<code>.default_input_data</code>.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src\vimseo\core\base_integrated_model.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">506</span>
-<span class="normal">507</span>
-<span class="normal">508</span>
-<span class="normal">509</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">509</span>
 <span class="normal">510</span>
 <span class="normal">511</span>
 <span class="normal">512</span>
@@ -14613,7 +14569,10 @@ Complete this dictionary with the :attr:<code>.default_input_data</code>.</p>
 <span class="normal">517</span>
 <span class="normal">518</span>
 <span class="normal">519</span>
-<span class="normal">520</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_output_data_names</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">remove_metadata</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="normal">520</span>
+<span class="normal">521</span>
+<span class="normal">522</span>
+<span class="normal">523</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_output_data_names</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">remove_metadata</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 
 <span class="sd">    Args:</span>
@@ -14705,10 +14664,7 @@ directory.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src\vimseo\core\base_integrated_model.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">536</span>
-<span class="normal">537</span>
-<span class="normal">538</span>
-<span class="normal">539</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">539</span>
 <span class="normal">540</span>
 <span class="normal">541</span>
 <span class="normal">542</span>
@@ -14773,7 +14729,10 @@ directory.</p>
 <span class="normal">601</span>
 <span class="normal">602</span>
 <span class="normal">603</span>
-<span class="normal">604</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">plot_results</span><span class="p">(</span>
+<span class="normal">604</span>
+<span class="normal">605</span>
+<span class="normal">606</span>
+<span class="normal">607</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">plot_results</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">directory_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
     <span class="n">save</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
@@ -14867,17 +14826,17 @@ directory.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src\vimseo\core\base_integrated_model.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">825</span>
-<span class="normal">826</span>
-<span class="normal">827</span>
-<span class="normal">828</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">828</span>
 <span class="normal">829</span>
 <span class="normal">830</span>
 <span class="normal">831</span>
 <span class="normal">832</span>
 <span class="normal">833</span>
 <span class="normal">834</span>
-<span class="normal">835</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">reset_cache</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_cache_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">):</span>
+<span class="normal">835</span>
+<span class="normal">836</span>
+<span class="normal">837</span>
+<span class="normal">838</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">reset_cache</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_cache_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Create a new cache with another file path.</span>
 
 <span class="sd">    Has an effect only for ``HDF5`` cache.</span>
@@ -14912,10 +14871,10 @@ directory.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src\vimseo\core\base_integrated_model.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">373</span>
-<span class="normal">374</span>
-<span class="normal">375</span>
-<span class="normal">376</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">show_image</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">376</span>
+<span class="normal">377</span>
+<span class="normal">378</span>
+<span class="normal">379</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">show_image</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Show the image illustrating the load case.&quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">image_path</span><span class="p">:</span>
         <span class="n">imshow</span><span class="p">(</span><span class="n">asarray</span><span class="p">(</span><span class="n">imread</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">image_path</span><span class="p">)))</span>
