@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import logging
 
+from gemseo.algos.opt.nlopt.settings.nlopt_cobyla_settings import NLOPT_COBYLA_Settings
 from gemseo_calibration.calibrator import CalibrationMetricSettings
 from numpy import atleast_1d
 
@@ -167,6 +168,7 @@ step.execute(
             "imposed_dplt",
         ],
         parameter_names=["young_modulus"],
+        optimizer_settings=NLOPT_COBYLA_Settings(max_iter=50),
     ),
 )
 step.save_results()

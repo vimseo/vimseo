@@ -170,11 +170,11 @@ burnin = 50
 # Then, we post-process the results
 # for each models before analyzing the results,
 # first for the Normal model:
-analysis_n.post(50)
+analysis_n.post(50, n_mcmc=N_MCMC, nb_samples_ml=10, nb_samples_posterior=5)
 # then for the Weibull Min model:
-analysis_w.post(50)
+analysis_w.post(50, n_mcmc=N_MCMC, nb_samples_ml=10, nb_samples_posterior=5)
 # And the Log Normal model:
-analysis_l.post(50)
+analysis_l.post(50, n_mcmc=N_MCMC, nb_samples_ml=10, nb_samples_posterior=5)
 
 # %% Next,
 # we generate the plots

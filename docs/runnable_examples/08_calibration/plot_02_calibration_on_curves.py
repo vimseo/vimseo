@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import logging
 
+from gemseo.algos.opt.nlopt.settings.nlopt_cobyla_settings import NLOPT_COBYLA_Settings
 from gemseo_calibration.calibrator import CalibrationMetricSettings
 from gemseo_calibration.measures.integrated_measure import CurveScaling
 from numpy import atleast_1d
@@ -125,6 +126,7 @@ step.execute(
             "x_1",
         ],
         parameter_names=["x"],
+        optimizer_settings=NLOPT_COBYLA_Settings(max_iter=50),
     ),
 )
 step.save_results()

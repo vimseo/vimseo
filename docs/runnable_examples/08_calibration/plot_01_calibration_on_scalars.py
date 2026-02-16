@@ -30,6 +30,7 @@ from gemseo.algos.design_space import DesignSpace
 from gemseo.algos.opt.multi_start.settings.multi_start_settings import (
     MultiStart_Settings,
 )
+from gemseo.algos.opt.nlopt.settings.nlopt_cobyla_settings import NLOPT_COBYLA_Settings
 from gemseo_calibration.calibrator import CalibrationMetricSettings
 from matplotlib.image import imread
 from matplotlib.pyplot import imshow
@@ -213,6 +214,7 @@ step.execute(
             "imposed_dplt",
         ],
         parameter_names=["young_modulus"],
+        optimizer_settings=NLOPT_COBYLA_Settings(max_iter=50),
     ),
 )
 step.save_results()
@@ -249,7 +251,9 @@ step.execute(
         ],
         parameter_names=["young_modulus"],
         optimizer_name="MultiStart",
-        optimizer_settings=MultiStart_Settings(opt_algo_name="NLOPT_COBYLA"),
+        optimizer_settings=MultiStart_Settings(
+            opt_algo_name="NLOPT_COBYLA", max_iter=50
+        ),
     ),
 )
 step.save_results()
@@ -293,6 +297,7 @@ step.execute(
             "imposed_dplt",
         ],
         parameter_names=["young_modulus"],
+        optimizer_settings=NLOPT_COBYLA_Settings(),
     ),
 )
 step.save_results()
