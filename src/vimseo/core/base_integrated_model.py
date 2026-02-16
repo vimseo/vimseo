@@ -130,18 +130,21 @@ class IntegratedModel(GemseoDisciplineWrapper):
         Also, |gemseo| capabilities (MLearning, Optimisation) can be used on the model.
 
     Examples:
-        # Run a model with default values, each execution being stored in a unique
-        # directory.
-        >>> model = create_model("BendingTestAnalytical", "Cantilever")
+        >>> # Run a model with default values, each execution being stored in a unique
+        >>> # directory. The archive and scratch persistency is customized.
+        >>> # The manager for archiving the results is set to MLFlow.
+        >>> from vimseo.api import create_model
+        >>> from vimseo.core.model_settings import IntegratedModelSettings
+        >>> model = create_model("BendingTestAnalytical", "Cantilever",
+        >>>     model_options=IntegratedModelSettings(
+        >>>         directory_archive_root=f"my_model_result",
+        >>>         directory_scratch_root=f"my_scratch",
+        >>>         directory_scratch_persistency=PersistencyPolicy.DELETE_ALWAYS,
+        >>>         directory_archive_persistency=PersistencyPolicy.DELETE_IF_FAULTY,
+        >>>         archive_manager="MlflowArchive",
+        >>>     ),
+        >>> )
         >>> model.execute()
-        # The policy of the job directory suppression can be customized:
-        >>> model = create_model("BendingTestAnalytical", "Cantilever",
-        >>> directory_scratch_persistency = (PersistencyPolicy.DELETE_ALWAYS,)
-        >>> directory_archive_persistency=PersistencyPolicy.DELETE_IF_FAULTY)
-        # A model can be executed remotely:
-        >>> model = create_model("BendingTestAnalytical", "Cantilever",
-        directory_scratch_root="bending_study/my_scratch")
-        # Note that ``job_directory`` argument must be a non-empty path to ensure
     """
 
     class InputGroupNames(StrEnum):
