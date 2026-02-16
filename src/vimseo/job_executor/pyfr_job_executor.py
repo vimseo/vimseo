@@ -13,4 +13,26 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from __future__ import annotations
+import logging
+from pathlib import Path
+
+from vimseo.job_executor.base_interactive_executor import BaseInteractiveExecutor
+from vimseo.job_executor.base_user_job_options import BaseUserJobSettings
+
+LOGGER = logging.getLogger(__name__)
+
+
+class PyFRJobSettings(BaseUserJobSettings):
+    """The user job options for PyFR."""
+
+    backend: str = "cuda"
+
+
+class PyFRInteractiveExecutor(BaseInteractiveExecutor):
+    """An executor to execute PyFR."""
+
+    def _fetch_convergence(self):
+        files = sorted(Path(self._job_directory).glob("*.pyfrs"))
+        times = [f.basename.split("-")[-1] for f in files]
+        if len(times) > 0:
+            LOGGER.info(f"Current time: {times[-1]}")

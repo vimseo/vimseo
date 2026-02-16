@@ -37,7 +37,6 @@ class VimseoSettings(
     env_nested_delimiter="__",
     env_prefix=ENV_PREFIX,
     env_file=".env",
-    extra="forbid",
     # nested_model_default_partial_update=True,
 ):  # noqa: N801
     """Global configuration."""

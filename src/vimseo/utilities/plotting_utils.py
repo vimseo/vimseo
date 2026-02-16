@@ -62,8 +62,8 @@ def plot_curves(
         range(4 * nb_color_period - 1), colors, linestyles, curves[:-1], strict=False
     ):
         curve.plot(
-            save=False,
-            show=False,
+            save=save,
+            show=show,
             fig=fig,
             color=color,
             linestyle=linestyle,

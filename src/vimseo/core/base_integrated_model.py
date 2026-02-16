@@ -211,6 +211,10 @@ class IntegratedModel(GemseoDisciplineWrapper):
     ``{_LOAD_CASE_DOMAIN}_{load_case_name}`` instead of ``{load_case_name}``.
     """
 
+    _INDEX_DISC_OUTPUT_TO_REMOVE: ClassVar[Sequence[int]] = []
+    """The output names of the disciplines in the ``IntegratedModel._chain``
+    corresponding to these index are removed from the model output grammar."""
+
     auto_detect_grammar_files = False
     default_cache_type = Discipline.CacheType.HDF5
     default_grammar_type = Discipline.GrammarType.JSON
@@ -237,11 +241,12 @@ class IntegratedModel(GemseoDisciplineWrapper):
             self._cache_file_path = f"{self.name}_{self.__load_case.name}_cache.hdf"
 
         super().__init__(name=self.__class__.__name__)
-        self.set_cache(
-            cache_type=Discipline.CacheType.HDF5,
-            hdf_file_path=self._cache_file_path,
-            hdf_node_path="node",
-        )
+        if self.default_cache_type == CacheType.HDF5:
+            self.set_cache(
+                cache_type=Discipline.CacheType.HDF5,
+                hdf_file_path=self._cache_file_path,
+                hdf_node_path="node",
+            )
 
         self._job_name = options["job_name"]
 
@@ -275,15 +280,31 @@ class IntegratedModel(GemseoDisciplineWrapper):
             **archive_options
         )
 
-        output_names = self._chain.disciplines[-1].output_grammar.names
-        self._chain.output_grammar.restrict_to(output_names)
+        chain_output_names = list(self._chain.output_grammar.names)
+        disc_index_to_keep_outputs = [
+            i
+            for i in range(len(self._chain.disciplines))
+            if i not in self._INDEX_DISC_OUTPUT_TO_REMOVE
+        ]
+        names_to_keep = [
+            name
+            for i in disc_index_to_keep_outputs
+            for name in self._chain.disciplines[i].output_grammar.names
+        ]
+        for i in self._INDEX_DISC_OUTPUT_TO_REMOVE:
+            for name in self._chain.disciplines[i].output_grammar.names:
+                if name in chain_output_names and name not in names_to_keep:
+                    chain_output_names.remove(name)
+        self._chain.output_grammar.restrict_to(chain_output_names)
 
         self.input_grammar = deepcopy(self._chain.input_grammar)
         self.default_input_data = self._chain.default_input_data
         for name in self.input_grammar.names:
             self.input_grammar.required_names.add(name)
 
-        self.output_grammar = deepcopy(self._chain.disciplines[-1].output_grammar)
+        self.output_grammar.update_from_types(
+            self._chain.output_grammar._get_names_to_types()
+        )
         self.output_grammar.update_from_data(DEFAULT_METADATA)
         for name in DEFAULT_METADATA:
             self.output_grammar.required_names.add(name)
@@ -464,6 +485,15 @@ class IntegratedModel(GemseoDisciplineWrapper):
                     if match(field_re, f.name):
                         field_file_names[name].append(f.name)
 
+        if set(field_file_names.keys()) != set(self.FIELDS_FROM_FILE.keys()):
+            missing_fields = set(self.FIELDS_FROM_FILE.keys()) - set(
+                field_file_names.keys()
+            )
+            LOGGER.warning(
+                f"The following fields have not been found in the scratch job directory: "
+                f"{missing_fields}."
+            )
+
         self._archive_manager.add_persistent_file_names([
             file_name
             for file_names in field_file_names.values()
@@ -555,7 +585,11 @@ class IntegratedModel(GemseoDisciplineWrapper):
 
         Returns:
         """
-        directory_path = Path.cwd() if directory_path == "" else Path(directory_path)
+        directory_path = (
+            self.archive_manager.job_directory
+            if directory_path == ""
+            else Path(directory_path)
+        )
         if not directory_path.exists():
             directory_path.mkdir(parents=True)
 
@@ -711,7 +745,11 @@ class IntegratedModel(GemseoDisciplineWrapper):
         if self._chain.execution_status.value != ExecutionStatus.Status.DONE:
             error = 1
         else:
-            error = output_data_raw[MetaDataNames.error_code][0]
+            error = (
+                output_data_raw[MetaDataNames.error_code][0]
+                if MetaDataNames.error_code in output_data_raw
+                else self._ERROR_CODE_DEFAULT
+            )
 
         here = str(Path(__file__).parent)
         try:

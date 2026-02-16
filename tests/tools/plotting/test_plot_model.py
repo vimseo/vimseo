@@ -39,15 +39,16 @@ from vimseo.api import create_model
 )
 def test_plot_model(tmp_wd, model, load_case):
     """Check that the curves of a model are correctly plotted."""
-    m = create_model(model, load_case)
-    m.EXTRA_INPUT_GRAMMAR_CHECK = True
-    m.execute()
-    m.plot_results()
-    expected_curves = m.CURVES + m.load_case.plot_parameters.curves
+    model = create_model(model, load_case)
+    model.EXTRA_INPUT_GRAMMAR_CHECK = True
+    model.execute()
+    model.plot_results()
+    expected_curves = model.CURVES + model.load_case.plot_parameters.curves
 
-    assert m.curves == expected_curves
+    assert model.curves == expected_curves
 
     for variables in expected_curves:
         assert Path(
-            f"{model}_{load_case}_{variables[1]}_vs_{variables[0]}.html"
+            model.archive_manager.job_directory
+            / f"{model.name}_{load_case}_{variables[1]}_vs_{variables[0]}.html"
         ).is_file()

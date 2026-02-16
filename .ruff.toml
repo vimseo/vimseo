@@ -83,6 +83,7 @@ select = [
 #    "FBT",
     "FLY",
     "FURB",
+    "F401",
     "G",
     "I",
     "ISC",
@@ -169,7 +170,7 @@ force-single-line = true
 convention = "google"
 
 [lint.per-file-ignores]
-"*.ipynb" = ["RET504"]
+"*.ipynb" = ["RET504", "PTH"]
 "tests/*.py" = ["D", "PT009", "PT011", "PT027", "PTH"]
 "docs/*.py" = [
   "T",

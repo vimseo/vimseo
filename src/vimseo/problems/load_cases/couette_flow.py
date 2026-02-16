@@ -13,19 +13,13 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-"""The job options (user and internal) for all the executors."""
-
 from __future__ import annotations
 
-from vimseo.job_executor.base_user_job_options import BaseUserJobSettings
+from dataclasses import dataclass
+
+from vimseo.core.load_case import LoadCase
 
 
-class BaseJobSettings(BaseUserJobSettings):
-    """The options of a job execution.
-
-    They extend the user job options ``BaseUserJobSettings``
-    with options used internally, and that are known at model execution
-    like the job directory.
-    """
-
-    executable: str = ""
+@dataclass
+class Couette2D(LoadCase):
+    """A Couette 2D flow."""

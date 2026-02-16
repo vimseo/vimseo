@@ -13,27 +13,8 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from __future__ import annotations
+from pathlib import Path
 
-from vimseo.api import get_available_load_cases
-from vimseo.api import get_available_models
+import vimseo.problems.cfd.couette_2d as couette_2d_pkg
 
-
-def test_available_load_cases(tmp_wd):
-    """Check the load cases available for a model."""
-    assert get_available_load_cases("MockModel") == ["LC1", "LC2"]
-    assert get_available_load_cases("BendingTestAnalytical") == [
-        "Cantilever",
-        "ThreePoints",
-    ]
-
-
-def test_available_models(tmp_wd):
-    """Check that the models associated with a given load case are correctly found."""
-    assert set(get_available_models("LC1")) == {
-        "MockModel",
-        "MockModelFields",
-        "MockModelPersistent",
-        "MockModelWithMaterial",
-        "MockExternalSoftware",
-    }
+COUETTE_2D_DIR = Path(couette_2d_pkg.__path__[0]).resolve()
