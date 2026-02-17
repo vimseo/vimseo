@@ -70,7 +70,7 @@ target_model = create_model(
 )
 target_model.cache = None
 
-for _mult_factor, batch in zip([1.01, 1.02, 1.03], [1, 2, 3], strict=False):
+for mult_factor, batch in zip([1.01, 1.02, 1.03], [1, 2, 3], strict=False):
     reference_dataset_cantilever = generate_reference_from_parameter_space(
         target_model,
         SpaceToolFileIO()
@@ -79,7 +79,7 @@ for _mult_factor, batch in zip([1.01, 1.02, 1.03], [1, 2, 3], strict=False):
         n_samples=6,
         input_names=["width", "height", "imposed_dplt"],
         output_names=["reaction_forces", "maximum_dplt"],
-        outputs_to_bias={"reaction_forces": Bias(mult_factor=1.05)},
+        outputs_to_bias={"reaction_forces": Bias(mult_factor=mult_factor)},
         additional_name_to_data={"nominal_length": 600.0, "batch": batch},
     )
     reference_dataset_cantilever.to_csv(
