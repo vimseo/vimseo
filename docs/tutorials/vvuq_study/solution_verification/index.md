@@ -11,6 +11,5 @@
 
 # Solution  Verification
 
-[Background on solution verification](solution_verification_method.md){ .md-button }
 [OpfmPlate PST](opfm_plate_pst/solution_verification_opfm_plate_pst.md){ .md-button }
 [OpfmPlate OHT](opfm_plate_oht/solution_verification_opfm_plate_oht.md){ .md-button }
