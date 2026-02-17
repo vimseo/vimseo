@@ -237,7 +237,7 @@ class DeterministicValidationCase(BaseAnalysisTool):
         )
 
         error_dataset.add_group(
-            group_name="Reference",
+            group_name="ReferenceOutputs",
             data=reference_data.get_view(
                 variable_names=output_names,
                 group_names=IODataset.OUTPUT_GROUP,
