@@ -23,22 +23,22 @@ Solution verification can be carried out by analyzing model results on progressi
 The two main indicators to assess mesh convergence are the
 Relative Discretization Error (RDE) [@roy2005_review_verif]
 and the Richardson extrapolation. The latter is mostly used in Computation Fluid Dynamics, and
-assumes that the model is in the asymptotic range regarding the mesh size.
+assumes that the model is in the asymptotic range with respect to the mesh size.
 In [@krysl2022_confidence_intervals_richardson], it is shown that using four meshes allows
-to estimate the confidence in Richardson extapolation.
+to estimate the confidence in Richardson extrapolation.
 
 !!! note
 
     The time (for explicit models) or pseudo-time integration scheme could also be verified.
 
-These two methods are implemented in VIMS, in the tool named ``DiscretizationSolutionVerification``.
+These two methods are implemented in VIMSEO, in the tool named ``DiscretizationSolutionVerification``.
 and can be displayed by the dashboard ``dashboard_verification``.
 Solution verification is performed through a convergence study of the solution
-on four progressively refined meshes (only three meshes would be strictly necessary),
-which allows to compute some uncertainties on the $GCI$, RDE and
+on four progressively refined meshes (though only three meshes would be strictly necessary).
+This allows for the computation of  some uncertainties on the $GCI$, RDE and
 Richardson extrapolation.
 
-An example of Python script setting up the solution verification for the ``OpfmPlate`` model with load case ``PST``
+An example of Python script for setting up the solution verification for the ``OpfmPlate`` model with load case ``PST``
 can be found
 [here](http://docvimscomposites.ipf7135.irt-aese.local/generated/examples/solution_verification/plot_opfm_plate_pst_convergence.html).
 
@@ -77,7 +77,7 @@ It requires to know the order of convergence of the solution,
 based on the computation of the extrapoled value with Richardson method.
 The $GCI$ requires the solution on two meshes. Thus different values
 for the $GCI$ can be obtained from four meshes.
-For the two fines meshes, the $GCI$ is:
+For the two finest meshes, the $GCI$ is:
 
 $$
 GCI_{finest} = F_s \frac{q_{\gamma_3} - q_{\gamma_2}}{q_{\gamma_3}} \frac{1}{(\gamma_2 /
@@ -88,9 +88,9 @@ An error band can be computed for the $GCI$[@krysl2022_confidence_intervals_rich
 
 $E_b(GCI_{finest}) = q_{\gamma_3} (1 \pm GCI_{finest})$
 
-However, it is often the case that Richardson extrapolation cannot be computed
+However, Richardson extrapolation is often not computable
 (for instance, if the solution oscillates between consecutive refined meshes).
-In such case, we can still provide a value of the $GCI$ by assuming a convergence order.
+In such cases, we can still provide a value for the $GCI$ by assuming a convergence order.
 Note also that two meshes must be selected to compute this indicator.
 Currently, the $GCI$ is computed on the two finest meshes and the two coarsest meshes.
 The solution verification dashboard shows these two $GCI$ values for:
@@ -103,8 +103,8 @@ The solution verification dashboard shows these two $GCI$ values for:
 
 The RDE is another indicator of the numerical error due to
 the mesh discretization.
-It can be computed from two meshes. Thus three RDE values can be computed from the four simulated meshes.
-Note that it also requires that the extrapolated value with Richardson method is computed.
+It can be computed from two meshes. Therefore, three RDE values can be computed from the four simulated meshes.
+Note that it also requires the extrapolated value using the Richardson method to be computed.
 
 $$
 RDE_3 = \frac{q_{\gamma_3} - q_{exact}}{q_{exact}} = \frac{q_{\gamma_2} -

@@ -45,9 +45,9 @@ damage law and implements a given modelling strategy, as explained below.
 
 ## Modelling strategies
 
-Defining different modelling approach having different fidelity level
+Defining different modelling approaches with different levels of fidelity
 eases model calibration and validation,
-because the best compromise in terms of fidelity versus computational time can be chosen.
+because the best compromise between fidelity and computational time can be chosen.
 Indeed these two activities involve a large number of model runs:
 - calibration is based on several gradient-free optimizations with a design space composed
   of around five to ten variables
@@ -55,14 +55,14 @@ Indeed these two activities involve a large number of model runs:
 
 ![](modelling_strategies.png){ width="600" }
 
-The three following modelling approaches have been developped:
+The three following modelling approaches have been developed:
 
   - The OpfmUnitCell model. It does not require a finite-element solver and it
     does not account for the geometry or the stacking sequence.
     This model runs the material law within a convergence loop that is developed in
     a specific ``run-processor`` (see TODO insert link to vims doc).
     It considers a pure loading mode only.
-    Its computational time is less than one min on a single CPU, except for the PureShear load case.
+    The computational time is less than one minute on a single CPU, except for the `PureShear` load case.
     It is useful for calibration, sensitivity analysis and
     load cases with uniform stress distribution (pure tension/ compression/shear).
 
@@ -70,8 +70,8 @@ The three following modelling approaches have been developped:
 
   - The OpfmCube model.
     It is based on the RVE (Representative Volume Element) approach.
-    It only accounts for the thickness of the specimen,
-    and considers a uniform stress distribution per ply.
+    It only considers the thickness of the specimen,
+    and assumes a uniform stress distribution per ply.
     So it does account for the stacking sequence.
     It requires Abaqus as a finite-element solver and
     uses the single 3D solid element approach with multiple integration points

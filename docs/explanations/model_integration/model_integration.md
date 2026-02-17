@@ -47,7 +47,7 @@ Indeed these two activities involve a large number of model runs:
 
 ![](modelling_strategies.png){ width="600" }
 
-The three following modelling approaches have been developped:
+The three following modelling approaches have been developed:
 
   - The OpfmUnitCell model. It does not require a finite-element solver and it
     does not account for the geometry or the stacking sequence.
