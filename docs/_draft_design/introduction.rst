@@ -12,7 +12,7 @@
 
     Contributors:
        INITIAL AUTHORS - API and implementation and/or documentation
-           :author: XXXXXXXXXXX
+           :author: Sebastien BOCQUET
        OTHER AUTHORS   - MACROSCOPIC CHANGES
 
 ..
