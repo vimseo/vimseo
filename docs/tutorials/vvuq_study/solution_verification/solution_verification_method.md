@@ -84,7 +84,7 @@ GCI_{finest} = F_s \frac{q_{\gamma_3} - q_{\gamma_2}}{q_{\gamma_3}} \frac{1}{(\g
 \gamma_3)^{\beta} - 1}
 $$
 
-An error band can be computed for the $GCI$[@krysl2022_confidence_intervals_richardson]:
+A confidence interval can be computed for the $GCI$[@krysl2022_confidence_intervals_richardson]:
 
 $E_b(GCI_{finest}) = q_{\gamma_3} (1 \pm GCI_{finest})$
 
