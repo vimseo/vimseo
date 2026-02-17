@@ -21,7 +21,7 @@ General
 
 Verification:
 
-- $GCI$: Grid Convergence Index
+- GCI: Grid Convergence Index
 - RDE: Relative Discretization Error
 
 Composites:
