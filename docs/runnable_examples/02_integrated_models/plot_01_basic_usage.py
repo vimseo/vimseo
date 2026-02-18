@@ -65,7 +65,12 @@ model_settings = IntegratedModelSettings(
 model = create_model(
     model_name,
     load_case,
-    model_options=model_settings,
+    model_options=IntegratedModelSettings(
+        directory_archive_root=EXAMPLE_RUNS_DIR / "archive/basic_usage",
+        directory_scratch_root=EXAMPLE_RUNS_DIR / "scratch/basic_usage",
+        cache_file_path=EXAMPLE_RUNS_DIR
+        / f"caches/basic_usage/{model_name}_{load_case}_cache.hdf",
+    ),
 )
 model.set_cache(Discipline.CacheType.NONE)
 model.archive_manager._accept_overwrite_job_dir = True
