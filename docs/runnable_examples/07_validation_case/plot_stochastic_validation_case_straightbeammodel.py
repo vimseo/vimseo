@@ -21,9 +21,17 @@ I want to validate a model at several validation points and quantify the uncerta
 due to the uncertainty on the model inputs and the epistemic uncertainties on the
 reference data.
 
-Based on repeated measurements, the stochastic validation case of VIMSEO allows
-to take into account the uncertainty on the reference, propagate the uncertainty
-through the model and use specific metrics to take into the uncertaity on the outputs.
+Based on repeated reference data, the stochastic validation case of VIMSEO allows
+to take into account:
+- the uncertainty on the reference data
+- the uncertainty on model inputs
+
+and propagate these uncertainties through the model.
+On the output quantity of interest, this validation tool uses specific metrics 
+that can handle stochastic variables. 
+It compares the cumulative distribution function (CDF)
+of these variables and outputs scalar metrics such as the area between the two CDFs, 
+the relative mean to mean error, or the relative error on a given percentile.
 
 """
 
@@ -48,6 +56,8 @@ from vimseo.tools.validation.validation_point import StochasticValidationPointIn
 from vimseo.tools.validation.validation_point import StochasticValidationPointSettings
 from vimseo.tools.validation_case.validation_case import DeterministicValidationCase
 from vimseo.tools.validation_case.validation_case_result import ValidationCaseResult
+from vimseo.tools.validation.validation_point import read_nominal_values
+from vimseo.tools.validation.validation_point import NominalValuesOutputType
 from vimseo.utilities.datasets import SEP
 from vimseo.utilities.generate_validation_reference import Bias
 from vimseo.utilities.generate_validation_reference import (
@@ -147,6 +157,23 @@ for batch, reference_data in zip(
 ):
     print(f"The reference data for batch {batch}: ", reference_data)
 
+    # If the reference data contain nominal values for the model inputs, 
+    # it is possible to extract them as a dictionary and pass it to the tool.
+    # The model default inputs are then set to these nominal values.
+    # The ``read_nominal_values`` function allows to read
+    # the nominal values in the reference data, using averaging
+    # over the repeats for a given ``master`` variable:
+    nominal_data = read_nominal_values(
+        "batch",
+        csv_path=f"reference_validation_bending_test_cantilever_{batch}.csv",
+        master_value=batch,
+        additional_names=["nominal_length"],
+        name_remapping={"nominal_length": "length"},
+        output_type=NominalValuesOutputType.DICTIONARY,
+    )
+    # Otherwise, the user can define the nominal values as a dictionary, 
+    # and pass it to the tool.
+
     result = StochasticValidationPoint().execute(
         inputs=StochasticValidationPointInputs(
             model=model,
@@ -158,7 +185,8 @@ for batch, reference_data in zip(
                 "AreaMetric",
                 "RelativeMeanToMean",
                 "AbsoluteRelativeErrorP90",
-            ]
+            ],
+            nominal_data=nominal_data,
         ),
     )
 
@@ -169,6 +197,18 @@ for batch, reference_data in zip(
 case_result = ValidationCaseResult()
 case_result.set_from_point_results(results)
 case_result
+
+# %%
+# A validation point result can be plotted to compare the measured and simulated
+# distributions of the quantity of interest.
+result = results[0]
+figs = StochasticValidationPoint().plot_results(result, output_name="reaction_forces", show=True, save=False)
+figs["PDF_comparison"]
+
+# %%
+# The comparison of the measured and simulated CDF:
+figs["CDF_comparison"]
+
 
 # %%
 # Even if the validation case is stochastic,
