@@ -21,8 +21,7 @@ from dataclasses import field
 from typing import TYPE_CHECKING
 
 from gemseo.datasets.io_dataset import IODataset
-from gemseo.utils.metrics.dataset_metric import DatasetMetric
-from gemseo.utils.metrics.metric_factory import MetricFactory
+from numpy import mean
 from numpy import ndarray
 from pandas import DataFrame
 
@@ -113,22 +112,10 @@ class ValidationCaseResult(BaseResult):
         df = DataFrame.from_dict(data)
         self.element_wise_metrics = dataframe_to_dataset(df)
 
+        # The case integrated metric is the mean of integrated metrics of each validation point.
         self.integrated_metrics = defaultdict(dict)
         for metric_name in metric_names:
-            metric = MetricFactory().create(metric_name)
             for output_name in output_names:
-                dm = DatasetMetric(
-                    metric,
-                    variable_names=output_name,
-                )
-                mean_metric = MetricFactory().create("MeanMetric", dm)
-                self.integrated_metrics[metric_name][output_name] = mean_metric.compute(
-                    self.element_wise_metrics.get_view(
-                        group_names=[f"{IODataset.OUTPUT_GROUP}"],
-                        variable_names=[output_name],
-                    ),
-                    self.element_wise_metrics.get_view(
-                        group_names=["ReferenceOutputs"],
-                        variable_names=[output_name],
-                    ),
+                self.integrated_metrics[metric_name][output_name] = mean(
+                    df[f"{output_name}[{metric_name}]"]
                 )
