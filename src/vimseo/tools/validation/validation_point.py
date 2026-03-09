@@ -396,7 +396,8 @@ def read_nominal_values(
     """
 
     if csv_path and df is not None:
-        raise ValueError("Only one of csv_path and df should be provided.")
+        msg = "Only one of csv_path and df should be provided."
+        raise ValueError(msg)
 
     if csv_path:
         df = read_csv(

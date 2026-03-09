@@ -27,10 +27,10 @@ to take into account:
 - the uncertainty on model inputs
 
 and propagate these uncertainties through the model.
-On the output quantity of interest, this validation tool uses specific metrics 
-that can handle stochastic variables. 
+On the output quantity of interest, this validation tool uses specific metrics
+that can handle stochastic variables.
 It compares the cumulative distribution function (CDF)
-of these variables and outputs scalar metrics such as the area between the two CDFs, 
+of these variables and outputs scalar metrics such as the area between the two CDFs,
 the relative mean to mean error, or the relative error on a given percentile.
 
 """
@@ -51,13 +51,13 @@ from vimseo.material_lib import MATERIAL_LIB_DIR
 from vimseo.storage_management.base_storage_manager import PersistencyPolicy
 from vimseo.tools.io.reader_file_dataframe import ReaderFileDataFrame
 from vimseo.tools.io.reader_file_dataframe import ReaderFileDataFrameSettings
+from vimseo.tools.validation.validation_point import NominalValuesOutputType
 from vimseo.tools.validation.validation_point import StochasticValidationPoint
 from vimseo.tools.validation.validation_point import StochasticValidationPointInputs
 from vimseo.tools.validation.validation_point import StochasticValidationPointSettings
+from vimseo.tools.validation.validation_point import read_nominal_values
 from vimseo.tools.validation_case.validation_case import DeterministicValidationCase
 from vimseo.tools.validation_case.validation_case_result import ValidationCaseResult
-from vimseo.tools.validation.validation_point import read_nominal_values
-from vimseo.tools.validation.validation_point import NominalValuesOutputType
 from vimseo.utilities.datasets import SEP
 from vimseo.utilities.generate_validation_reference import Bias
 from vimseo.utilities.generate_validation_reference import (
@@ -157,7 +157,7 @@ for batch, reference_data in zip(
 ):
     print(f"The reference data for batch {batch}: ", reference_data)
 
-    # If the reference data contain nominal values for the model inputs, 
+    # If the reference data contain nominal values for the model inputs,
     # it is possible to extract them as a dictionary and pass it to the tool.
     # The model default inputs are then set to these nominal values.
     # The ``read_nominal_values`` function allows to read
@@ -171,7 +171,7 @@ for batch, reference_data in zip(
         name_remapping={"nominal_length": "length"},
         output_type=NominalValuesOutputType.DICTIONARY,
     )
-    # Otherwise, the user can define the nominal values as a dictionary, 
+    # Otherwise, the user can define the nominal values as a dictionary,
     # and pass it to the tool.
 
     result = StochasticValidationPoint().execute(
@@ -202,7 +202,9 @@ case_result
 # A validation point result can be plotted to compare the measured and simulated
 # distributions of the quantity of interest.
 result = results[0]
-figs = StochasticValidationPoint().plot_results(result, output_name="reaction_forces", show=True, save=False)
+figs = StochasticValidationPoint().plot_results(
+    result, output_name="reaction_forces", show=True, save=False
+)
 figs["PDF_comparison"]
 
 # %%
