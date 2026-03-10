@@ -17,13 +17,17 @@ from __future__ import annotations
 
 import pytest
 from gemseo.datasets.io_dataset import IODataset
+from gemseo.utils.metrics.dataset_metric import DatasetMetric
+from gemseo.utils.metrics.metric_factory import MetricFactory
 from numpy import array
+from numpy import linspace
 from numpy.testing import assert_allclose
 
 from vimseo.api import create_model
 from vimseo.problems.mock.mock_reference_data import MOCK_REFERENCE_DIR
 from vimseo.tools.io.reader_file_dataframe import ReaderFileDataFrame
 from vimseo.tools.io.reader_file_dataframe import ReaderFileDataFrameSettings
+from vimseo.tools.validation.validation_point_result import ValidationPointResult
 from vimseo.tools.validation_case.validation_case import DeterministicValidationCase
 from vimseo.tools.validation_case.validation_case import (
     DeterministicValidationCaseInputs,
@@ -31,6 +35,8 @@ from vimseo.tools.validation_case.validation_case import (
 from vimseo.tools.validation_case.validation_case import (
     DeterministicValidationCaseSettings,
 )
+from vimseo.tools.validation_case.validation_case_result import ValidationCaseResult
+from vimseo.utilities.metrics.error_metrics import RelativeErrorMetric
 
 
 @pytest.fixture
@@ -146,33 +152,142 @@ def test_validation_plots(tmp_wd, reference_data):
     assert (validation_case.working_directory / "integrated_metric_bars.html").is_file()
 
 
-# # TODO wait for refactoring of validaiton case tool
-# def test_to_dataframe(tmp_wd):
-#     """Check that a StochasticValidationCaseResult can export a DataFrame containing the
-#     nominal input variables and the integrated metrics as outputs."""
-#     point_1 = ValidationPointResult(
-#         nominal_data={
-#             "x1_vector": linspace(0, 1, 5),
-#             "x2": array([1.0]),
-#             "x3": 2.0,
-#             "x4": "foo",
-#         },
-#         integrated_metrics={"metric1": {"y1": 3.0}},
-#     )
-#     point_2 = ValidationPointResult(
-#         nominal_data={
-#             "x1_vector": linspace(0, 1, 3),
-#             "x2": array([2.0]),
-#             "x3": 3.0,
-#             "x4": "bar",
-#         },
-#         integrated_metrics={"metric1": {"y1": 4.0}},
-#     )
-#     result = StochasticValidationCaseResult(validation_point_results=[point_1, point_2])
-#     df = result.to_dataframe("metric1")
-#     assert list(df["x1_vector"].values) == [
-#         "[0.   0.25 0.5  0.75 1.  ]",
-#         "[0.  0.5 1. ]",
-#     ]
-#     assert df.shape == (2, 5)
-#     assert list(df.columns.values) == ["x1_vector", "x2", "x3", "x4", "metric1[y1]"]
+def test_to_dataframe(tmp_wd):
+    """Check that a ValidationCaseResult can export a DataFrame containing the
+    nominal input variables, the simulated outputs, the reference outputs
+    and the integrated metrics as outputs."""
+    measured_data = IODataset.from_array(
+        [[1.0, 2.0], [3.0, 4.0]],
+        variable_names=["x3", "y1"],
+        variable_names_to_group_names={
+            "x3": IODataset.INPUT_GROUP,
+            "y1": IODataset.OUTPUT_GROUP,
+        },
+    )
+    simulated_data = IODataset.from_array(
+        [[1.5, 2.5], [3.5, 4.5]],
+        variable_names=["x3", "y1"],
+        variable_names_to_group_names={
+            "x3": IODataset.INPUT_GROUP,
+            "y1": IODataset.OUTPUT_GROUP,
+        },
+    )
+    dm = DatasetMetric(
+        RelativeErrorMetric,
+        variable_names=["y1"],
+    )
+    mean_metric = MetricFactory().create("MeanMetric", dm)
+
+    point_1 = ValidationPointResult(
+        nominal_data={
+            "x1_vector": linspace(0, 1, 5),
+            "x2": array([1.0]),
+            "x3": 2.0,
+            "x4": "foo",
+        },
+        measured_data=measured_data,
+        simulated_data=simulated_data,
+        integrated_metrics={
+            "RelativeErrorMetric": {
+                "y1": mean_metric.compute(measured_data, simulated_data)
+            }
+        },
+    )
+    point_1.metadata.settings["metric_names"] = ["RelativeErrorMetric"]
+    point_1.metadata.report["measured_output_names"] = ["y1"]
+
+    measured_data = IODataset.from_array(
+        [[1.1, 2.1], [3.1, 4.1]],
+        variable_names=["x3", "y1"],
+        variable_names_to_group_names={
+            "x3": IODataset.INPUT_GROUP,
+            "y1": IODataset.OUTPUT_GROUP,
+        },
+    )
+    simulated_data = IODataset.from_array(
+        [[1.6, 2.6], [3.6, 4.6]],
+        variable_names=["x3", "y1"],
+        variable_names_to_group_names={
+            "x3": IODataset.INPUT_GROUP,
+            "y1": IODataset.OUTPUT_GROUP,
+        },
+    )
+
+    point_2 = ValidationPointResult(
+        nominal_data={
+            "x1_vector": linspace(0, 1, 3),
+            "x2": array([2.0]),
+            "x3": 3.0,
+            "x4": "bar",
+        },
+        measured_data=measured_data,
+        simulated_data=simulated_data,
+        integrated_metrics={
+            "RelativeErrorMetric": {
+                "y1": mean_metric.compute(measured_data, simulated_data)
+            }
+        },
+    )
+    point_2.metadata.settings["metric_names"] = ["RelativeErrorMetric"]
+    point_2.metadata.report["measured_output_names"] = ["y1"]
+    result = ValidationCaseResult()
+    result.set_from_point_results([point_1, point_2])
+
+    assert set(
+        result.element_wise_metrics.get_variable_names(IODataset.INPUT_GROUP)
+    ) == {"x3"}
+    assert set(
+        result.element_wise_metrics.get_variable_names(IODataset.OUTPUT_GROUP)
+    ) == {"y1"}
+    assert set(result.element_wise_metrics.get_variable_names("ReferenceInputs")) == {
+        "x3"
+    }
+    assert set(result.element_wise_metrics.get_variable_names("ReferenceOutputs")) == {
+        "y1"
+    }
+    # Expected value is the mean value of the input variable x3 for each point,
+    # which is 2.0 for point_1 and 2.1 for point_2
+    assert_allclose(
+        result.element_wise_metrics
+        .get_view(group_names="ReferenceInputs")
+        .to_numpy()
+        .ravel(),
+        array([2.0, 2.1]),
+    )
+    assert_allclose(
+        result.element_wise_metrics
+        .get_view(group_names="ReferenceOutputs")
+        .to_numpy()
+        .ravel(),
+        array([3.0, 3.1]),
+    )
+    assert_allclose(
+        result.element_wise_metrics
+        .get_view(group_names=IODataset.INPUT_GROUP)
+        .to_numpy()
+        .ravel(),
+        array([2.5, 2.6]),
+    )
+    assert_allclose(
+        result.element_wise_metrics
+        .get_view(group_names=IODataset.OUTPUT_GROUP)
+        .to_numpy()
+        .ravel(),
+        array([3.5, 3.6]),
+    )
+    assert_allclose(
+        result.element_wise_metrics
+        .get_view(group_names="RelativeErrorMetric")
+        .to_numpy()
+        .ravel(),
+        array([
+            point_1.integrated_metrics["RelativeErrorMetric"]["y1"],
+            point_2.integrated_metrics["RelativeErrorMetric"]["y1"],
+        ]),
+    )
+    assert set(result.integrated_metrics.keys()) == {"RelativeErrorMetric"}
+    assert set(result.integrated_metrics["RelativeErrorMetric"].keys()) == {"y1"}
+    assert result.integrated_metrics["RelativeErrorMetric"]["y1"] == 0.5 * (
+        point_1.integrated_metrics["RelativeErrorMetric"]["y1"]
+        + point_2.integrated_metrics["RelativeErrorMetric"]["y1"]
+    )
