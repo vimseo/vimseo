@@ -1,0 +1,106 @@
+{
+  "parameter_space": {
+    "nu_p": {
+      "name": "Triangular",
+      "mode": 0.3,
+      "minimum": 0.285,
+      "maximum": 0.315,
+      "sigma": 0.0,
+      "mu": 1.0,
+      "lower_bound": 0.285,
+      "upper_bound": 0.315,
+      "parameters": [],
+      "size": 1
+    },
+    "imposed_dplt": {
+      "name": "Triangular",
+      "mode": -5.0,
+      "minimum": -5.25,
+      "maximum": -4.75,
+      "sigma": 0.0,
+      "mu": 1.0,
+      "lower_bound": -5.25,
+      "upper_bound": -4.75,
+      "parameters": [],
+      "size": 1
+    },
+    "young_modulus": {
+      "name": "Triangular",
+      "mode": 210000.0,
+      "minimum": 199500.0,
+      "maximum": 220500.0,
+      "sigma": 0.0,
+      "mu": 1.0,
+      "lower_bound": 199500.0,
+      "upper_bound": 220500.0,
+      "parameters": [],
+      "size": 1
+    },
+    "length": {
+      "name": "Triangular",
+      "mode": 600.0,
+      "minimum": 570.0,
+      "maximum": 630.0,
+      "sigma": 0.0,
+      "mu": 1.0,
+      "lower_bound": 570.0,
+      "upper_bound": 630.0,
+      "parameters": [],
+      "size": 1
+    },
+    "height": {
+      "name": "Triangular",
+      "mode": 40.0,
+      "minimum": 38.0,
+      "maximum": 42.0,
+      "sigma": 0.0,
+      "mu": 1.0,
+      "lower_bound": 38.0,
+      "upper_bound": 42.0,
+      "parameters": [],
+      "size": 1
+    },
+    "width": {
+      "name": "Triangular",
+      "mode": 30.0,
+      "minimum": 28.5,
+      "maximum": 31.5,
+      "sigma": 0.0,
+      "mu": 1.0,
+      "lower_bound": 28.5,
+      "upper_bound": 31.5,
+      "parameters": [],
+      "size": 1
+    }
+  },
+  "metadata": {
+    "generic": {
+      "datetime": "24-01-2025_21-20-26",
+      "version": "1.0.1.dev19+gef64ff85.d20250121"
+    },
+    "misc": {},
+    "settings": {
+      "distribution_name": "OTTriangularDistribution",
+      "space_builder_name": "FromModelCenterAndCov",
+      "minimum_values": null,
+      "maximum_values": null,
+      "center_value_expr": "0.5*(mini+maxi)",
+      "use_default_values_as_center": true,
+      "variable_names": [
+        "length",
+        "width",
+        "height",
+        "imposed_dplt",
+        "young_modulus",
+        "nu_p"
+      ],
+      "center_values": null,
+      "cov": 0.05,
+      "truncate_to_model_bounds": true,
+      "lower_bounds": null,
+      "upper_bounds": null
+    },
+    "report": {},
+    "model": null
+  }
+}

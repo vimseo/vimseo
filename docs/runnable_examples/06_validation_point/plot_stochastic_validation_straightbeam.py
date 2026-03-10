@@ -42,6 +42,7 @@ from vimseo.tools.validation.validation_point import StochasticValidationPointIn
 from vimseo.tools.validation.validation_point import StochasticValidationPointSettings
 from vimseo.tools.validation.validation_point import read_nominal_values
 from vimseo.utilities.datasets import SEP
+from vimseo.utilities.datasets import dataframe_to_dataset
 from vimseo.utilities.generate_validation_reference import Bias
 from vimseo.utilities.generate_validation_reference import (
     generate_reference_from_parameter_space,
@@ -70,7 +71,7 @@ reference_dataset_cantilever = generate_reference_from_parameter_space(
     .read(file_name="bending_test_validation_input_space.json")
     .parameter_space,
     n_samples=6,
-    input_names=["width", "height"],
+    input_names=["width", "height", "imposed_dplt"],
     output_names=["reaction_forces", "maximum_dplt"],
     outputs_to_bias={"reaction_forces": Bias(mult_factor=1.05)},
     additional_name_to_data={"nominal_length": 600.0, "batch": 1},
@@ -129,10 +130,6 @@ nominal_values = read_nominal_values(
 )
 
 # %%
-# To speed-up the example, we coarsen the mesh:
-# nominal_values.update({"element_size": atleast_1d(4.32)})
-
-# %%
 # And finally we set the nominal inputs from the material.
 # Indeed, all material properties may not be stochastic
 # (a distribution is not necessarily defined).
@@ -149,21 +146,19 @@ df = read_csv(
     delimiter=SEP,
 )
 df = df[df["batch"] == batch]
-df.to_csv("filtered_reference_data.csv", sep=SEP)
 
 # %%
-# Then the groups to which the measured inputs and measured QoIs belong are defined,
-# and the filtered data is loaded as a GEMSEO ``Dataset``:
+# Then the reference data are filtered to retain only the measured quantities,
+# and converted to a GEMSEO Dataset:
+df = df[measured_inputs + measured_outputs]
 variable_names_to_group_names = dict.fromkeys(measured_inputs, IODataset.INPUT_GROUP)
 variable_names_to_group_names.update(
     dict.fromkeys(measured_outputs, IODataset.OUTPUT_GROUP)
 )
-validation_dataset = IODataset.from_txt(
-    "filtered_reference_data.csv",
-    header=True,
-    delimiter=SEP,
-    variable_names_to_group_names=variable_names_to_group_names,
-)
+for name, group_name in variable_names_to_group_names.items():
+    df.rename(columns={name: f"{name}[{group_name}]"}, inplace=True)
+measured_data = dataframe_to_dataset(df)
+print("The measured data as a GEMSEO Dataset: ", measured_data)
 
 # %%
 # The uncertainties coming from unmeasured inputs are then taken into account
@@ -179,7 +174,7 @@ validation_point_tool = StochasticValidationPoint(
 validation_point_tool.execute(
     inputs=StochasticValidationPointInputs(
         model=model,
-        measured_data=validation_dataset,
+        measured_data=measured_data,
         uncertain_input_space=material.to_parameter_space(),
     ),
     settings=StochasticValidationPointSettings(

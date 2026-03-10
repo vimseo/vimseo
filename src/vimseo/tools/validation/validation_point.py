@@ -217,6 +217,7 @@ class StochasticValidationPoint(BaseAnalysisTool):
             if len(options["output_names"]) == 0
             else options["output_names"]
         )
+        self.result.metadata.report["measured_output_names"] = measured_output_names
 
         self.result.measured_data = measured_data
         self.result.nominal_data = nominal_data
@@ -360,6 +361,8 @@ def read_nominal_values(
 
     Args:
         csv_path: The path to the csv file.
+        df: The dataframe containing the data. If no csv_path is provided,
+        this data is used.
         master_name: The name of variable that will be made unique,
             such that only one nominal value is associated with a batch of
             tests.
@@ -391,6 +394,10 @@ def read_nominal_values(
         Either a Pandas.DataFrame (mono-indexed column), a GEMSEO Dataset,
         or a dictionary of NumPy arrays.
     """
+
+    if csv_path and df is not None:
+        msg = "Only one of csv_path and df should be provided."
+        raise ValueError(msg)
 
     if csv_path:
         df = read_csv(

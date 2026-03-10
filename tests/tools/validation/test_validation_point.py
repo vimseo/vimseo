@@ -183,6 +183,7 @@ def test_report(tmp_wd, validation_point):
     validation_point_tool.execute(model=model)
     assert set(validation_point_tool.result.metadata.report.keys()) == {
         "title",
+        "measured_output_names",
         "measured_data_statistics",
         "simulated_uncertainties",
         "typeb_uncertainties",
@@ -226,7 +227,8 @@ def test_plot_results(tmp_wd, validation_point):
 
 @pytest.mark.parametrize("master_value", [2])
 def test_read_nominal_values(master_value):
-    """Check that the nominal values are correctly read."""
+    """Check that nominal values can be computed from a reference data.
+    In case of repeats, the nominal value is computed as the mean value of the repeats."""
     nominal_values = read_nominal_values(
         "batch",
         csv_path=VALIDATION_DATA_DIR / "nominal_values.csv",

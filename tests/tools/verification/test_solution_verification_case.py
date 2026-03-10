@@ -55,4 +55,3 @@ def test_solution_verification_case(tmp_wd):
     tool.plot_results(result, save=True, show=False)
     assert tool.working_directory / "convergence_case_h_a_h.html"
     assert tool.working_directory / "cpu_time_compromise_a_h.html"
-

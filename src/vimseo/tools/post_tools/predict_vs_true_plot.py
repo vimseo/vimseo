@@ -79,7 +79,7 @@ class PredictVsTrue(Plotter):
             hovering_group_name = metric_name
         hovering_variable_name = hovering_variable_name or output_name
 
-        out_true = df[f"{output_name}[Reference]"].to_numpy()
+        out_true = df[f"{output_name}[ReferenceOutputs]"].to_numpy()
         out_pred = df[f"{output_name}[{IODataset.OUTPUT_GROUP}]"].to_numpy()
         metrics = df[f"{output_name}[{metric_name}]"].to_numpy()
 
