@@ -183,6 +183,7 @@ def test_report(tmp_wd, validation_point):
     validation_point_tool.execute(model=model)
     assert set(validation_point_tool.result.metadata.report.keys()) == {
         "title",
+        "measured_output_names",
         "measured_data_statistics",
         "simulated_uncertainties",
         "typeb_uncertainties",
