@@ -27,6 +27,7 @@ from numpy import sign
 from vimseo.config.global_configuration import _configuration as config
 from vimseo.tools.base_tool import BaseTool
 from vimseo.tools.post_tools.base_plot import Plotter
+from vimseo.utilities.datasets import GROUP_SEPARATORS
 from vimseo.utilities.datasets import get_values
 
 if TYPE_CHECKING:
@@ -79,9 +80,15 @@ class PredictVsTrue(Plotter):
             hovering_group_name = metric_name
         hovering_variable_name = hovering_variable_name or output_name
 
-        out_true = df[f"{output_name}[ReferenceOutputs]"].to_numpy()
-        out_pred = df[f"{output_name}[{IODataset.OUTPUT_GROUP}]"].to_numpy()
-        metrics = df[f"{output_name}[{metric_name}]"].to_numpy()
+        out_true = df[
+            f"{output_name}{GROUP_SEPARATORS[0]}ReferenceOutputs{GROUP_SEPARATORS[1]}"
+        ].to_numpy()
+        out_pred = df[
+            f"{output_name}{GROUP_SEPARATORS[0]}{IODataset.OUTPUT_GROUP}{GROUP_SEPARATORS[1]}"
+        ].to_numpy()
+        metrics = df[
+            f"{output_name}{GROUP_SEPARATORS[0]}{metric_name}{GROUP_SEPARATORS[1]}"
+        ].to_numpy()
 
         marker_dict = {
             "color": metrics,

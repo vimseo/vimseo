@@ -22,6 +22,7 @@ from numpy import array
 from numpy.ma.testutils import assert_array_equal
 from pandas._testing import assert_frame_equal
 
+from vimseo.utilities.datasets import assert_frame_equal_unordered
 from vimseo.utilities.datasets import dataframe_to_dataset
 from vimseo.utilities.datasets import dataset_to_dataframe
 
@@ -31,14 +32,14 @@ def mock_dataset():
     """A mock dataset."""
     return Dataset.from_array(
         data=array([[0.0, 1.0, 2.0, 2.1, 3.0, 3.1], [4.0, 5.0, 6.0, 6.1, 7.0, 7.1]]),
-        variable_names=["a", "b", "c", "d"],
+        variable_names=["a[]", "b", "c[foo]", "d"],
         variable_names_to_group_names={
-            "a": IODataset.INPUT_GROUP,
+            "a[]": IODataset.INPUT_GROUP,
             "b": IODataset.OUTPUT_GROUP,
-            "c": IODataset.OUTPUT_GROUP,
+            "c[foo]": IODataset.OUTPUT_GROUP,
             "d": IODataset.OUTPUT_GROUP,
         },
-        variable_names_to_n_components={"a": 1, "b": 1, "c": 2, "d": 2},
+        variable_names_to_n_components={"a[]": 1, "b": 1, "c[foo]": 2, "d": 2},
     )
 
 
@@ -65,12 +66,12 @@ def test_dataset_to_dataframe(mock_dataset):
     """Check that a GEMSEO dataset can be converted to a mono-index DataFrame."""
     df = dataset_to_dataframe(mock_dataset, suffix_by_group=True)
     assert list(df.columns.values) == [
-        "a[inputs]",
-        "b[outputs]",
-        "c[outputs][0]",
-        "c[outputs][1]",
-        "d[outputs][0]",
-        "d[outputs][1]",
+        "a[]{inputs}",
+        "b{outputs}",
+        "c[foo]{outputs}[0]",
+        "c[foo]{outputs}[1]",
+        "d{outputs}[0]",
+        "d{outputs}[1]",
     ]
 
 
@@ -98,33 +99,30 @@ def test_dataframe_to_dataset_with_duplicated_names(mock_dataset_with_duplicated
         .get_view(variable_names=["a"], group_names=IODataset.INPUT_GROUP)
         .to_numpy()
         .ravel(),
-        df[f"a[{IODataset.INPUT_GROUP}]"].to_numpy(),
+        df["a{" + IODataset.INPUT_GROUP + "}"].to_numpy(),
     )
     assert_array_equal(
         ds
         .get_view(variable_names=["a"], group_names=IODataset.OUTPUT_GROUP)
         .to_numpy()
         .ravel(),
-        df[f"a[{IODataset.OUTPUT_GROUP}]"].to_numpy(),
+        df["a{" + IODataset.OUTPUT_GROUP + "}"].to_numpy(),
     )
     assert_array_equal(
         ds
         .get_view(variable_names=["b"], group_names=IODataset.OUTPUT_GROUP)
         .to_numpy()
         .T[0],
-        df[f"b[{IODataset.OUTPUT_GROUP}][0]"].to_numpy(),
+        df["b{" + IODataset.OUTPUT_GROUP + "}[0]"].to_numpy(),
     )
-
-    # This test fails because the group order is different
-    # assert_frame_equal(mock_dataset_with_duplicated_names, ds)
 
 
 @pytest.mark.parametrize(
     ("variable_names", "expected_final_names"),
     [
-        ([], ["a[inputs]", "b[0]", "b[1]", "c[0]", "c[1]", "a[outputs]"]),
-        (["a"], ["a[inputs]", "a[outputs]"]),
-        (["a", "b"], ["a[inputs]", "b[0]", "b[1]", "a[outputs]"]),
+        ([], ["a{inputs}", "b[0]", "b[1]", "c[0]", "c[1]", "a{outputs}"]),
+        (["a"], ["a{inputs}", "a{outputs}"]),
+        (["a", "b"], ["a{inputs}", "b[0]", "b[1]", "a{outputs}"]),
     ],
 )
 def test_dataset_with_duplicated_names_to_dataframe(
@@ -139,3 +137,15 @@ def test_dataset_with_duplicated_names_to_dataframe(
         mock_dataset_with_duplicated_names, variable_names=variable_names
     )
     assert list(df.columns.values) == expected_final_names
+
+
+@pytest.mark.parametrize(
+    "dataset_fixture",
+    ["mock_dataset", "mock_dataset_with_duplicated_names"],
+)
+def test_dataset_to_dataframe_round_trip(dataset_fixture, request):
+    """Test dataframe to dataset with equality of original data after round trip."""
+    dataset = request.getfixturevalue(dataset_fixture)
+    df = dataset_to_dataframe(dataset, suffix_by_group=True)
+    round_trip_dataset = dataframe_to_dataset(df)
+    assert_frame_equal_unordered(dataset, round_trip_dataset)

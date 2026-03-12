@@ -18,12 +18,11 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 from typing import Any
 
-from vimseo.io.io_factory import IOFactory
 from vimseo.tools.base_tool import BaseTool
 from vimseo.tools.io.base_reader_file import BaseReaderFile
 from vimseo.tools.io.base_reader_file import BaseReaderFileSettings
 from vimseo.tools.io.base_reader_file import StreamlitBaseReaderFileSettings
-from vimseo.tools.tool_results_factory import ToolResultsFactory
+from vimseo.tools.tools_factory import AnalysisToolsFactory
 
 if TYPE_CHECKING:
     from vimseo.tools.base_result import BaseResult
@@ -36,32 +35,18 @@ class ReaderFileToolResult(BaseReaderFile):
 
     _STREAMLIT_SETTINGS = StreamlitBaseReaderFileSettings
 
+    _EXTENSION = BaseTool._RESULT_FORMATS
+
     def __init__(
         self,
         tool_name: str,
     ):
         super().__init__()
         self.__tool_name = tool_name
-        self.__io = IOFactory().create(f"{tool_name}FileIO")
-        self.result = ToolResultsFactory().create(tool_name)
+        self.result = AnalysisToolsFactory().create(tool_name).result
 
     def get_file_extension(self):
-        return self.__io._EXTENSION
-
-    @property
-    def io(self):
-        return self.__io
-
-    # TODO not necessary, since all tools are supported. Use AnalysisToolsFactory instead
-    @classmethod
-    def get_tool_names(cls):
-        tmp = [
-            name.split("FileIO")[0]
-            for name in IOFactory().class_names
-            if "FileIO" in name
-        ]
-        tmp.remove("BaseTool")
-        return tmp
+        return self._EXTENSION
 
     @BaseTool.validate
     def execute(
@@ -69,7 +54,5 @@ class ReaderFileToolResult(BaseReaderFile):
         settings: BaseReaderFileSettings | None = None,
         **options,
     ) -> Any:
-        self.result = self.__io.read(
-            file_name=options["file_name"],
-            directory_path=options["directory_path"],
-        )
+        tool = AnalysisToolsFactory().create(options["tool_name"])
+        self.result = tool.load_results(options["file_name"])

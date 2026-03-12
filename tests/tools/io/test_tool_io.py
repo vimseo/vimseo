@@ -32,13 +32,10 @@ def test_tool_result_reader():
     result = reader.execute(
         settings=BaseReaderFileSettings(
             file_name=IO_DATA_DIR / "space_tool" / "space_tool_result.json",
+            tool_name=tool_name,
         )
     )
     assert isinstance(result, SpaceToolResult)
-
-
-def test_tool_names_having_a_reader():
-    assert ReaderFileToolResult.get_tool_names() == ["SpaceTool"]
 
 
 def test_gemseo_dataset_reader(tmp_wd):

@@ -24,6 +24,7 @@ from vimseo.tools.base_tool import BaseTool
 class BaseReaderFileSettings(BaseSettings):
     file_name: str | Path = ""
     directory_path: str | Path = ""
+    tool_name: str = ""
 
 
 class StreamlitBaseReaderFileSettings(BaseSettings):

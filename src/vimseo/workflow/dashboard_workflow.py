@@ -125,7 +125,7 @@ def workflow_dashboard():
                 if tool_name == "ReaderFileToolResult":
                     tool_name_of_reader = st.selectbox(
                         "Select an analysis tool of which the result is to be read",
-                        ReaderFileToolResult.get_tool_names(),
+                        AnalysisToolsFactory().class_names,
                     )
                     tmp_tool = ReaderFileToolResult(tool_name_of_reader)
                     constructor_options = {"tool_name": tool_name_of_reader}

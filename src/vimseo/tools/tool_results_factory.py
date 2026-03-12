@@ -41,4 +41,4 @@ class ToolResultsFactory(BaseFactory):
             name: The name of the tool result (its class name).
             **options: The options of the tool result .
         """
-        return super().create(f"{class_name}Result", **options)
+        return super().create(class_name, **options)

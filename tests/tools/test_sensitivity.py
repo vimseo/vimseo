@@ -22,10 +22,12 @@ from numpy.testing import assert_allclose
 
 from vimseo.api import create_model
 from vimseo.problems.mock.mock_pre_run_post.mock_main import MockModel
+from vimseo.tools.base_result import assert_results_equal
 from vimseo.tools.base_tool import BaseTool
 from vimseo.tools.sensitivity.sensitivity import SensitivityTool
 from vimseo.tools.sensitivity.sensitivity import SensitivityToolInputs
 from vimseo.tools.sensitivity.sensitivity import SensitivityToolSettings
+from vimseo.tools.sensitivity.sensitivity_result import SensitivityResult
 
 
 @pytest.fixture
@@ -168,7 +170,7 @@ def test_sensitivity_vector_input(tmp_wd, sensitivity_algo, settings, expected_i
     )
 
 
-def test_save_and_load_pickle(tmp_wd, sensitivity_tool):
+def test_save_and_load_result(tmp_wd, sensitivity_tool):
     """Check that a sensitivity analysis can be saved and that a new instance can be
     created and loaded from saved data.
 
@@ -176,7 +178,7 @@ def test_save_and_load_pickle(tmp_wd, sensitivity_tool):
     """
     sensitivity_tool.save_results()
     results = BaseTool.load_results(
-        sensitivity_tool.working_directory / "SensitivityTool_result.pickle"
+        sensitivity_tool.working_directory / "SensitivityTool_result.hdf5"
     )
     assert pytest.approx(results.indices.mu["y1"][0]["x1"], 0.01) == array([0.2])
 
@@ -192,3 +194,11 @@ def test_plots(tmp_wd, sensitivity_tool):
     expected_filenames = ["bar_plot.html", "radar_chart.png", "standard_plot_y1.png"]
     for name in expected_filenames:
         assert (sensitivity_tool.working_directory / name).is_file()
+
+
+def test_serialization(tmp_wd, sensitivity_tool):
+    """Check that a SensitivityResult can be serialized to hdf5."""
+    result = sensitivity_tool.result
+    result.to_hdf5("result.hdf5")
+    serialized_result = SensitivityResult.from_hdf5("result.hdf5")
+    assert_results_equal(result, serialized_result)

@@ -21,11 +21,14 @@
 /docs/runnable_examples/**/*.png
 /docs/runnable_examples/**/*.html
 /docs/runnable_examples/**/*.pickle
+/docs/runnable_examples/**/*.hdf5
 /docs/runnable_examples/**/*.hdf
 /docs/runnable_examples/model_runs
 /docs/images/*.pptx
+/docs/runnable_examples/model_runs
 /model_runs
 /site
+/docvimseo
 
 coverage.xml
 .coverage*

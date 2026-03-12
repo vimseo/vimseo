@@ -28,10 +28,12 @@ from vimseo.problems.beam_analytic.reference_dataset_builder import (
     bending_test_analytical_reference_dataset,
 )
 from vimseo.problems.mock.mock_pre_run_post.mock_main import MockModel
+from vimseo.tools.base_result import assert_results_equal
 from vimseo.tools.base_tool import BaseTool
 from vimseo.tools.surrogate.surrogate import LEARN
 from vimseo.tools.surrogate.surrogate import LOO
 from vimseo.tools.surrogate.surrogate import SurrogateTool
+from vimseo.tools.surrogate.surrogate_result import SurrogateResult
 from vimseo.utilities.datasets import DatasetAddFromModel
 
 EXPECTED_PATTERNS_IN_RESULTS = [
@@ -209,7 +211,7 @@ def test_load_and_plot_mock_model(tmp_wd, mock_model_surrogate):
     """Check that a surrogate result can be loaded from disk and that a
     ``PredictionVsTrue`` plot can be created."""
     results = BaseTool.load_results(
-        mock_model_surrogate.working_directory / "SurrogateTool_result.pickle"
+        mock_model_surrogate.working_directory / "SurrogateTool_result.hdf5"
     )
     mock_model_surrogate.plot_results(results, save=True, show=False)
     assert Path("surrogate_LinReg_MockModel.LC1.png").is_file()
@@ -267,3 +269,20 @@ def test_show_results_no_selection(tmp_wd, mock_dataset):
     expected_patterns.extend(evaluation_methods)
 
     assert SELECTION_QUALITITES_TITLE not in msg
+
+
+def test_serialization(tmp_wd, mock_dataset):
+    """Check that a SurrogateToolResult can be serialized to hdf5."""
+    model = MockModel("LC1")
+    evaluation_methods = [LOO, LEARN]
+    surrogate_tool = SurrogateTool()
+    surrogate_tool.execute(
+        model=model,
+        dataset=mock_dataset,
+        algo="LinearRegressor",
+        evaluation_methods=evaluation_methods,
+    )
+    result = surrogate_tool.result
+    result.to_hdf5("result.hdf5")
+    serialized_result = SurrogateResult.from_hdf5("result.hdf5")
+    assert_results_equal(result, serialized_result)

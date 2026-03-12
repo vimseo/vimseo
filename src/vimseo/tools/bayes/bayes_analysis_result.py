@@ -21,12 +21,11 @@ from typing import TYPE_CHECKING
 
 from gemseo.third_party.prettytable.prettytable import PrettyTable
 from gemseo.utils.string_tools import MultiLineString
-from numpy import empty
 
 from vimseo.tools.base_tool import BaseResult
 
 if TYPE_CHECKING:
-    from numpy import array
+    from numpy import ndarray
     from openturns import DeconditionedDistribution
 
 LOGGER = logging.getLogger(__name__)
@@ -36,7 +35,7 @@ LOGGER = logging.getLogger(__name__)
 class BayesAnalysisResult(BaseResult):
     """The result of a Bayesian inference."""
 
-    raw_samples: array = empty
+    raw_samples: ndarray | None = None
     """The MCMC samples without burnin or thining."""
 
     thin_number: int | None = None
@@ -45,10 +44,10 @@ class BayesAnalysisResult(BaseResult):
     ndim: int | None = None
     """The dimension of the calibration problem."""
 
-    processed_samples: empty = None
+    processed_samples: ndarray | None = None
     """The MCMC samples after burnin or thining."""
 
-    posterior_predictive: DeconditionedDistribution = None
+    posterior_predictive: DeconditionedDistribution | None = None
     """The posterior predictive distribution useful to perform uncertainty
     propagation."""
 

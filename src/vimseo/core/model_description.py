@@ -76,7 +76,7 @@ class ModelDescription(BaseDescription):
                 dumps(
                     self.default_inputs[group_name],
                     sort_keys=True,
-                    indent=4,
+                    # indent=4,
                 )
             )
         text.dedent()

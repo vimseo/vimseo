@@ -19,6 +19,8 @@ import pytest
 from gemseo.datasets.dataset import Dataset
 from gemseo.datasets.io_dataset import IODataset
 
+from vimseo.tools.base_result import assert_results_equal
+from vimseo.tools.statistics.statistics_result import StatisticsResult
 from vimseo.tools.statistics.statistics_tool import StatisticsInputs
 from vimseo.tools.statistics.statistics_tool import StatisticsSettings
 from vimseo.tools.statistics.statistics_tool import StatisticsTool
@@ -80,3 +82,15 @@ def test_from_uniform_sample(tmp_wd):
         settings=StatisticsSettings(tested_distributions=["Uniform"]),
     )
     assert result.best_fitting_distributions["x"] == "Uniform"
+
+
+def test_serialization(tmp_wd):
+    """Check that a StatisticsResult can be serialized to hdf5."""
+    uniform_dataset = Dataset.from_array([[1.0], [1.0], [1.0]], variable_names=["x"])
+    result = StatisticsTool().execute(
+        inputs=StatisticsInputs(dataset=uniform_dataset),
+        settings=StatisticsSettings(tested_distributions=["Uniform"]),
+    )
+    result.to_hdf5("result.hdf5")
+    serialized_result = StatisticsResult.from_hdf5("result.hdf5")
+    assert_results_equal(result, serialized_result)

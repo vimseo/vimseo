@@ -41,6 +41,7 @@ from vimseo.tools.validation.validation_point import StochasticValidationPoint
 from vimseo.tools.validation.validation_point import StochasticValidationPointInputs
 from vimseo.tools.validation.validation_point import StochasticValidationPointSettings
 from vimseo.tools.validation.validation_point import read_nominal_values
+from vimseo.utilities.datasets import GROUP_SEPARATORS
 from vimseo.utilities.datasets import SEP
 from vimseo.utilities.datasets import dataframe_to_dataset
 from vimseo.utilities.generate_validation_reference import Bias
@@ -161,7 +162,10 @@ variable_names_to_group_names.update(
     dict.fromkeys(measured_outputs, IODataset.OUTPUT_GROUP)
 )
 for name, group_name in variable_names_to_group_names.items():
-    df.rename(columns={name: f"{name}[{group_name}]"}, inplace=True)
+    df.rename(
+        columns={name: f"{name}{GROUP_SEPARATORS[0]}{group_name}{GROUP_SEPARATORS[1]}"},
+        inplace=True,
+    )
 measured_data = dataframe_to_dataset(df)
 print("The measured data as a GEMSEO Dataset: ", measured_data)
 

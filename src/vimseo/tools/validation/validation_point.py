@@ -52,6 +52,7 @@ from vimseo.tools.statistics.statistics_tool import StatisticsInputs
 from vimseo.tools.statistics.statistics_tool import StatisticsSettings
 from vimseo.tools.statistics.statistics_tool import StatisticsTool
 from vimseo.tools.validation.validation_point_result import ValidationPointResult
+from vimseo.utilities.datasets import GROUP_SEPARATORS
 from vimseo.utilities.datasets import dataframe_to_dataset
 from vimseo.utilities.encoded_to_numerical_vectors import decode_stringified_vectors
 
@@ -429,11 +430,11 @@ def read_nominal_values(
         for name in [*additional_names, master_name]:
             if name in name_remapping:
                 name_remapping[name] = (
-                    f"{name_remapping[name]}[{variable_names_to_group_names[name]}][0]"
+                    f"{name_remapping[name]}{GROUP_SEPARATORS[0]}{variable_names_to_group_names[name]}{GROUP_SEPARATORS[1]}[0]"
                 )
             else:
                 name_remapping[name] = (
-                    f"{name}[{variable_names_to_group_names[name]}][0]"
+                    f"{name}{GROUP_SEPARATORS[0]}{variable_names_to_group_names[name]}{GROUP_SEPARATORS[1]}[0]"
                 )
     if name_remapping:
         for name, new_name in name_remapping.items():

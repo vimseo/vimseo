@@ -25,11 +25,13 @@ from numpy import atleast_1d
 from numpy.testing import assert_array_equal
 
 from vimseo.api import create_model
+from vimseo.tools.base_result import assert_results_equal
 from vimseo.tools.post_tools.distribution_comparison_plot import DistributionComparison
 from vimseo.tools.space.random_variable_interface import add_random_variable_interface
 from vimseo.tools.validation.test_data import VALIDATION_DATA_DIR
 from vimseo.tools.validation.validation_point import StochasticValidationPoint
 from vimseo.tools.validation.validation_point import read_nominal_values
+from vimseo.tools.validation.validation_point_result import ValidationPointResult
 from vimseo.utilities.datasets import DatasetAddFromModel
 from vimseo.utilities.datasets import DatasetAddFromStatistics
 from vimseo.utilities.distribution import DistributionParameters
@@ -241,3 +243,12 @@ def test_read_nominal_values(master_value):
     else:
         assert_array_equal(nominal_values["batch"], array([2]))
         assert_array_equal(nominal_values["nominal_length"], array([3.0]))
+
+
+def test_serialization(tmp_wd, validation_point):
+    """Check that a ValidationPointResult can be serialized to hdf5."""
+    validation_point_tool, _, _ = validation_point
+    result = validation_point_tool.result
+    result.to_hdf5("result.hdf5")
+    serialized_result = ValidationPointResult.from_hdf5("result.hdf5")
+    assert_results_equal(result, serialized_result)

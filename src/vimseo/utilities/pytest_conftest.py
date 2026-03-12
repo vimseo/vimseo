@@ -31,7 +31,6 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import matplotlib.testing.decorators
 import pytest
-from gemseo.core.base_factory import BaseFactory
 from packaging import version
 
 # from vimseo.config.global_configuration import _configuration as config
@@ -115,6 +114,8 @@ def pyplot_close_all():
 @pytest.fixture
 def reset_factory():
     """Reset the factory cache."""
+    from gemseo.core.base_factory import BaseFactory
+
     BaseFactory.cache_clear()
     yield
     BaseFactory.cache_clear()

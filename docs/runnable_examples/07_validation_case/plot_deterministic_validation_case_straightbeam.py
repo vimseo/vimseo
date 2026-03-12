@@ -65,7 +65,9 @@ print("The measured data: ", reference_data)
 
 # %%
 # Then, the validation case tool is created and executed:
-validation_tool = DeterministicValidationCase()
+validation_tool = DeterministicValidationCase(
+    working_directory="deterministic_validation_case"
+)
 results = validation_tool.execute(
     inputs=DeterministicValidationCaseInputs(
         model=model,
