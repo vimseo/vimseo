@@ -7,8 +7,8 @@
  Commons, PO Box 1866, Mountain View, CA 94042, USA.
 -->
 
+# Integration of models {#integration_of_model}
 
-
-# Parameter space definition
-
-[Definition of a parameter space](parameter_space.md){ .md-button }
+```python
+--8<-- "src/vimseo/problems/mock/mock_convergence/mock_convergence.py"
+```
