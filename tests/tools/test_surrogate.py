@@ -27,7 +27,7 @@ from vimseo.api import create_model
 from vimseo.problems.beam_analytic.reference_dataset_builder import (
     bending_test_analytical_reference_dataset,
 )
-from vimseo.problems.mock.mock_main.mock_model import MockModel
+from vimseo.problems.mock.mock_pre_run_post.mock_main import MockModel
 from vimseo.tools.base_tool import BaseTool
 from vimseo.tools.surrogate.surrogate import LEARN
 from vimseo.tools.surrogate.surrogate import LOO

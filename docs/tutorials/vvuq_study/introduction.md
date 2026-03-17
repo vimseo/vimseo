@@ -11,7 +11,7 @@
 
 The VV&UQ methodology is based on workflows of analysis on the model of interest.
 
-![](vvuq_process.png){ width="500" }
+![](../../images/vvuq_process.png){ width="500" }
 
 In this tutorial you will learn about three of the workflow steps:
 

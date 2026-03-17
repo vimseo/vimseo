@@ -92,6 +92,7 @@ nav:
   - Licenses: licenses.md
 - User Guide:
   - Installation for developers: user_guide/developer_install.md
+  - Command line interface: user_guide/cli.md
 - How-to guides:
   - Runnable examples:
     - Use a model: generated/runnable_examples/02_integrated_models
@@ -120,11 +121,11 @@ nav:
 - Tutorials:
     - VVUQ study: tutorials/vvuq_study/introduction.md
 - Explanations:
+    - Model Integration: explanations/model_integration/model_integration.md
+    - Model Validation: explanations/model_validation.md
     - Conference abstracts:
         - ASME 2025: explanations/asme2025/abstract.md
         - ECCOMAS 2024: explanations/eccomas2024/abstract.md
-    - Model Integration: explanations/model_integration/model_integration.md
-    - Model Validation: explanations/model_validation.md
 
 markdown_extensions:
 - admonition
@@ -150,6 +151,7 @@ extra_javascript:
 - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
 
 watch:
+  - mkdocs.yml
   - src/vimseo
   - README.md
   - CHANGELOG.md

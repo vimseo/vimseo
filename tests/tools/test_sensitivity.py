@@ -21,7 +21,7 @@ from numpy import array
 from numpy.testing import assert_allclose
 
 from vimseo.api import create_model
-from vimseo.problems.mock.mock_main.mock_model import MockModel
+from vimseo.problems.mock.mock_pre_run_post.mock_main import MockModel
 from vimseo.tools.base_tool import BaseTool
 from vimseo.tools.sensitivity.sensitivity import SensitivityTool
 from vimseo.tools.sensitivity.sensitivity import SensitivityToolInputs

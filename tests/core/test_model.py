@@ -32,9 +32,15 @@ from vimseo.core.model_metadata import DEFAULT_METADATA
 from vimseo.core.model_metadata import MetaDataNames
 from vimseo.core.pre_run_post_model import PreRunPostModel
 from vimseo.job_executor.base_user_job_options import BaseUserJobSettings
-from vimseo.problems.mock.mock_main.mock_model import MockModelWithMaterial
-from vimseo.problems.mock.mock_main.mock_model import mock_model_lc1_overall_function
-from vimseo.problems.mock.mock_main.mock_model import mock_model_lc2_overall_function
+from vimseo.problems.mock.mock_pre_run_post.mock_with_material import (
+    MockModelWithMaterial,
+)
+from vimseo.problems.mock.mock_reference_data.mock_main_reference_functions import (
+    mock_model_lc1_overall_function,
+)
+from vimseo.problems.mock.mock_reference_data.mock_main_reference_functions import (
+    mock_model_lc2_overall_function,
+)
 
 JOB_NAME = "DummyJobDir"
 

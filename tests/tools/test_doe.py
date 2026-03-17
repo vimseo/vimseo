@@ -23,8 +23,10 @@ from numpy import full
 from numpy import vstack
 from numpy.testing import assert_array_equal
 
-from vimseo.problems.mock.mock_main.mock_model import MockModel
-from vimseo.problems.mock.mock_main.mock_model import mock_model_lc2_overall_function
+from vimseo.problems.mock.mock_pre_run_post.mock_main import MockModel
+from vimseo.problems.mock.mock_reference_data.mock_main_reference_functions import (
+    mock_model_lc2_overall_function,
+)
 from vimseo.tools.base_tool import BaseTool
 from vimseo.tools.doe.custom_doe import CustomDOETool
 from vimseo.tools.doe.doe import DOETool

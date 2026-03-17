@@ -25,7 +25,9 @@ from numpy.testing import assert_array_equal
 
 from vimseo.api import create_model
 from vimseo.core.model_metadata import MetaDataNames
-from vimseo.problems.mock.mock_main.mock_model import mock_model_lc2_overall_function
+from vimseo.problems.mock.mock_reference_data.mock_main_reference_functions import (
+    mock_model_lc2_overall_function,
+)
 from vimseo.tools.verification.verification_vs_model import CodeVerificationAgainstModel
 from vimseo.utilities.datasets import Variable
 from vimseo.utilities.datasets import generate_dataset

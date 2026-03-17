@@ -24,7 +24,9 @@ from vimseo.api import create_model
 from vimseo.problems.beam_analytic.reference_dataset_builder import (
     bending_test_analytical_reference_dataset,
 )
-from vimseo.problems.mock.mock_main.mock_model import mock_model_lc1_overall_function
+from vimseo.problems.mock.mock_reference_data.mock_main_reference_functions import (
+    mock_model_lc1_overall_function,
+)
 from vimseo.tools.base_tool import BaseTool
 from vimseo.tools.post_tools.plot_factory import PlotFactory
 from vimseo.tools.verification.verification_result import VerificationResult
