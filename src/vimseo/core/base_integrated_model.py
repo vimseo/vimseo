@@ -288,7 +288,7 @@ class IntegratedModel(GemseoDisciplineWrapper):
         for name in DEFAULT_METADATA:
             self.output_grammar.required_names.add(name)
         for field_name in self.FIELDS_FROM_FILE:
-            self.output_grammar.update_from_data({field_name: ["names"]})
+            self.output_grammar.update_from_data({field_name: array(["names"])})
             self.output_grammar.required_names.add(field_name)
 
         # Set status to DONE, to avoid being locked in FAILED mode.
