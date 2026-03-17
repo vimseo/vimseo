@@ -21,6 +21,7 @@ Usage of the model calibration based on scalar outputs
 Calibrate a model based on scalar outputs.
 """
 
+# %%
 from __future__ import annotations
 
 import logging
@@ -37,7 +38,7 @@ from matplotlib.pyplot import imshow
 from numpy import asarray
 from numpy import atleast_1d
 
-from vimseo import EXAMPLE_RUNS_DIR_NAME
+from vimseo import EXAMPLE_RUNS_DIR
 from vimseo.api import activate_logger
 from vimseo.api import create_model
 from vimseo.core.model_settings import IntegratedModelSettings
@@ -99,9 +100,10 @@ model = create_model(
     model_name,
     load_case,
     model_options=IntegratedModelSettings(
-        directory_archive_root=f"../../../{EXAMPLE_RUNS_DIR_NAME}/archive/calibration_scalars",
-        directory_scratch_root=f"../../../{EXAMPLE_RUNS_DIR_NAME}/scratch/calibration_scalars",
-        cache_file_path=f"../../../{EXAMPLE_RUNS_DIR_NAME}/caches/calibration_scalars/{model_name}_{load_case}_cache.hdf",
+        directory_archive_root=EXAMPLE_RUNS_DIR / "archive/calibration_scalars",
+        directory_scratch_root=EXAMPLE_RUNS_DIR / "scratch/calibration_scalars",
+        cache_file_path=EXAMPLE_RUNS_DIR
+        / f"caches/calibration_scalars/{model_name}_{load_case}_cache.hdf",
     ),
 )
 

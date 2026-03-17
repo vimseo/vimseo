@@ -7,8 +7,9 @@
  Commons, PO Box 1866, Mountain View, CA 94042, USA.
 -->
 
+# Installation for developers
 
+**VIMSEO** relies on the same Python template that [**GEMSEO**](https://gemseo.readthedocs.io/en/stable/index.html).
 
-# Parameter space definition
-
-[Definition of a parameter space](parameter_space.md){ .md-button }
+You can follow the [**GEMSEO** developer guide](https://gemseo.readthedocs.io/en/stable/software/developing.html#developer-information)
+to install **VIMSEO** in developer mode.

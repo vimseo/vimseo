@@ -9,11 +9,9 @@
 
 
 
-## A component-based model integration for model verification
+## A component-based model integration
 
 As we expect to integrate a large number of models,
-it is interesting to define a strategy for model integration that will ease
-the verification and maintainability of these models.
 We rely on the concept of Travelling Model. A Travelling Model means:
 
 - Same physics (e.g. damage law)
@@ -22,7 +20,9 @@ We rely on the concept of Travelling Model. A Travelling Model means:
 
 As a result, it makes sense to define components corresponding to each above bullets,
 and build the models by assembling these components.
-Then, verifying a component (through a given model) will ensure the verification
+
+This approach will ease the verification and maintainability of these models.
+Indeed, verifying a component (through a given model) will ensure the verification
 of this component for all the model using it.
 In terms of maintainability, it is also more efficient to share components across
 models to reduce the code base.

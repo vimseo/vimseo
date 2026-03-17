@@ -22,6 +22,7 @@ Check an Abaqus cantilever beam model versus a reference dataset with the
 'CodeVerificationAgainstData' tool.
 """
 
+# %%
 from __future__ import annotations
 
 import logging
@@ -29,7 +30,7 @@ import logging
 from gemseo.datasets.io_dataset import IODataset
 from gemseo.utils.directory_creator import DirectoryNamingMethod
 
-from vimseo import EXAMPLE_RUNS_DIR_NAME
+from vimseo import EXAMPLE_RUNS_DIR
 from vimseo.api import activate_logger
 from vimseo.api import create_model
 from vimseo.core.model_settings import IntegratedModelSettings
@@ -47,9 +48,10 @@ model = create_model(
     model_name,
     load_case,
     model_options=IntegratedModelSettings(
-        directory_archive_root=f"../../../{EXAMPLE_RUNS_DIR_NAME}/archive/verification_vs_data",
-        directory_scratch_root=f"../../../{EXAMPLE_RUNS_DIR_NAME}/scratch/verification_vs_data",
-        cache_file_path=f"../../../{EXAMPLE_RUNS_DIR_NAME}/caches/verification_vs_data/{model_name}_{load_case}_cache.hdf",
+        directory_archive_root=EXAMPLE_RUNS_DIR / "archive/verification_vs_data",
+        directory_scratch_root=EXAMPLE_RUNS_DIR / "scratch/verification_vs_data",
+        cache_file_path=EXAMPLE_RUNS_DIR
+        / f"caches/verification_vs_data/{model_name}_{load_case}_cache.hdf",
     ),
 )
 

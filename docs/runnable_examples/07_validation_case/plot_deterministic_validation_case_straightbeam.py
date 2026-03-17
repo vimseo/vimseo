@@ -19,11 +19,12 @@ Deterministic validation case on the bending test analytical beam model against 
 ======================================================================================================
 """
 
+# %%
 from __future__ import annotations
 
 import logging
 
-from vimseo import EXAMPLE_RUNS_DIR_NAME
+from vimseo import EXAMPLE_RUNS_DIR
 from vimseo.api import activate_logger
 from vimseo.api import create_model
 from vimseo.core.model_settings import IntegratedModelSettings
@@ -48,9 +49,10 @@ model = create_model(
     model_name,
     load_case,
     model_options=IntegratedModelSettings(
-        directory_archive_root=f"../../../{EXAMPLE_RUNS_DIR_NAME}/archive/validation_case",
-        directory_scratch_root=f"../../../{EXAMPLE_RUNS_DIR_NAME}/scratch/validation_case",
-        cache_file_path=f"../../../{EXAMPLE_RUNS_DIR_NAME}/caches/validation_case/{model_name}_{load_case}.hdf",
+        directory_archive_root=EXAMPLE_RUNS_DIR / "archive/validation_case",
+        directory_scratch_root=EXAMPLE_RUNS_DIR / "scratch/validation_case",
+        cache_file_path=EXAMPLE_RUNS_DIR
+        / f"caches/validation_case/{model_name}_{load_case}.hdf",
     ),
 )
 

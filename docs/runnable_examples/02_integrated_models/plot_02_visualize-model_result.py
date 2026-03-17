@@ -29,6 +29,7 @@ Visualize and compare model results
 Visualize model results and compare to other model results or reference data.
 """
 
+# %%
 from __future__ import annotations
 
 import logging
@@ -40,7 +41,7 @@ from numpy import atleast_1d
 from pandas import DataFrame
 from pandas import concat
 
-from vimseo import EXAMPLE_RUNS_DIR_NAME
+from vimseo import EXAMPLE_RUNS_DIR
 from vimseo.api import activate_logger
 from vimseo.api import create_model
 from vimseo.core.model_result import ModelResult
@@ -58,9 +59,10 @@ model = create_model(
     model_name,
     load_case,
     model_options=IntegratedModelSettings(
-        directory_archive_root=f"../../../{EXAMPLE_RUNS_DIR_NAME}/archive/visualize_model_result",
-        directory_scratch_root=f"../../../{EXAMPLE_RUNS_DIR_NAME}/scratch/visualize_model_result",
-        cache_file_path=f"../../../{EXAMPLE_RUNS_DIR_NAME}/caches/visualize_model_result/{model_name}_{load_case}_cache.hdf",
+        directory_archive_root=EXAMPLE_RUNS_DIR / "archive/visualize_model_result",
+        directory_scratch_root=EXAMPLE_RUNS_DIR / "scratch/visualize_model_result",
+        cache_file_path=EXAMPLE_RUNS_DIR
+        / f"caches/visualize_model_result/{model_name}_{load_case}_cache.hdf",
     ),
 )
 model.cache = None

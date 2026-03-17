@@ -9,11 +9,17 @@
 
 # Some key steps of a VV&UQ study
 
-In this tutorial you will learn about key steps in any VV&UQ workflow:
+The VV&UQ methodology is based on workflows of analysis on the model of interest.
 
-- code verification
-- solution (convergence) verification
-- sensitivity analysis
+![](../../images/vvuq_process.png){ width="500" }
+
+In this tutorial you will learn about three of the workflow steps:
+
+- code verification: make sure that the model implements the expected mathematical
+  relationships
+- [solution (convergence) verification](../../references/solution_verification/solution_verification_method.md#solution-verification):
+  assess errors and uncertainty due to the mesh refinement
+- sensitivity analysis: estimate to which inputs an output is mostly sensitive
 
 [Code verification](code_verification/index.md){ .md-button }
 [Solution verification](solution_verification/index.md){ .md-button }

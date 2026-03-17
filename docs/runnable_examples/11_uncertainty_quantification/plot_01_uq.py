@@ -23,6 +23,7 @@ on a model output.
 The :class:`~.BendingTestAnalytical` is used to illustrate the use of this tool.
 """
 
+# %%
 from __future__ import annotations
 
 import logging
@@ -33,7 +34,7 @@ from gemseo.post.dataset.scatter import Scatter
 from matplotlib import pyplot as plt
 from numpy import array
 
-from vimseo import EXAMPLE_RUNS_DIR_NAME
+from vimseo import EXAMPLE_RUNS_DIR
 from vimseo.api import activate_logger
 from vimseo.api import create_model
 from vimseo.core.model_settings import IntegratedModelSettings
@@ -49,9 +50,10 @@ model = create_model(
     model_name,
     load_case,
     model_options=IntegratedModelSettings(
-        directory_archive_root=f"../../../{EXAMPLE_RUNS_DIR_NAME}/archive/uq",
-        directory_scratch_root=f"../../../{EXAMPLE_RUNS_DIR_NAME}/scratch/uq",
-        cache_file_path=f"../../../{EXAMPLE_RUNS_DIR_NAME}/caches/uq/{model_name}_{load_case}_cache.hdf",
+        directory_archive_root=EXAMPLE_RUNS_DIR / "archive/uq",
+        directory_scratch_root=EXAMPLE_RUNS_DIR / "scratch/uq",
+        cache_file_path=EXAMPLE_RUNS_DIR
+        / f"caches/uq/{model_name}_{load_case}_cache.hdf",
     ),
 )
 

@@ -15,12 +15,13 @@
 
 from __future__ import annotations
 
-from importlib.metadata import version
-from pathlib import Path
+from vimseo.material_lib import MATERIAL_LIB_DIR
+from vimseo.problems.mock.mock_pre_run_post.mock_main import MockModel
 
-__version__ = version("vimseo")
 
-EXAMPLE_RUNS_DIR = (
-    Path(__file__).parent.parent.parent / "docs" / "runnable_examples" / "model_runs"
-)
-EXAMPLE_RUNS_DIR_NAME = "model_runs"
+class MockModelWithMaterial(MockModel):
+    """Mock model to test loading of a material file."""
+
+    SUMMARY = "A toy model loading a material"
+    _MATERIAL_GRAMMAR_FILE = MATERIAL_LIB_DIR / "Mock_grammar.json"
+    MATERIAL_FILE = MATERIAL_LIB_DIR / "Mock.json"

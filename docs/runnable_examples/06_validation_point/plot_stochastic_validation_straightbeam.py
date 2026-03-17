@@ -27,7 +27,7 @@ from pathlib import Path
 from gemseo.datasets.io_dataset import IODataset
 from pandas import read_csv
 
-from vimseo import EXAMPLE_RUNS_DIR_NAME
+from vimseo import EXAMPLE_RUNS_DIR
 from vimseo.api import activate_logger
 from vimseo.api import create_model
 from vimseo.core.model_settings import IntegratedModelSettings
@@ -62,6 +62,10 @@ target_model = create_model(
     model_options=IntegratedModelSettings(
         directory_archive_persistency=PersistencyPolicy.DELETE_ALWAYS,
         directory_scratch_persistency=PersistencyPolicy.DELETE_ALWAYS,
+        directory_archive_root=EXAMPLE_RUNS_DIR / "archive/validation_point",
+        directory_scratch_root=EXAMPLE_RUNS_DIR / "scratch/validation_point",
+        cache_file_path=EXAMPLE_RUNS_DIR
+        / f"caches/validation_point/target_{model_name}_{load_case}_cache.hdf",
     ),
 )
 target_model.cache = None
@@ -88,9 +92,10 @@ model = create_model(
     model_name,
     load_case,
     model_options=IntegratedModelSettings(
-        directory_archive_root=f"../../../{EXAMPLE_RUNS_DIR_NAME}/archive/validation_point",
-        directory_scratch_root=f"../../../{EXAMPLE_RUNS_DIR_NAME}/scratch/validation_point",
-        cache_file_path=f"../../../{EXAMPLE_RUNS_DIR_NAME}/caches/validation_point/{model_name}_{load_case}_cache.hdf",
+        directory_archive_root=EXAMPLE_RUNS_DIR / "archive/validation_point",
+        directory_scratch_root=EXAMPLE_RUNS_DIR / "scratch/validation_point",
+        cache_file_path=EXAMPLE_RUNS_DIR
+        / f"caches/validation_point/{model_name}_{load_case}_cache.hdf",
     ),
 )
 

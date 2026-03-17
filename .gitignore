@@ -22,6 +22,7 @@
 /docs/runnable_examples/**/*.html
 /docs/runnable_examples/**/*.pickle
 /docs/runnable_examples/**/*.hdf
+/docs/runnable_examples/model_runs
 /docs/images/*.pptx
 /model_runs
 /site

@@ -90,6 +90,9 @@ nav:
   - Changelog: changelog.md
   - Credits: credits.md
   - Licenses: licenses.md
+- User Guide:
+  - Installation for developers: user_guide/developer_install.md
+  - Command line interface: user_guide/cli.md
 - How-to guides:
   - Runnable examples:
     - Use a model: generated/runnable_examples/02_integrated_models
@@ -104,26 +107,25 @@ nav:
     - Propagate uncertainties through a model: generated/runnable_examples/11_uncertainty_quantification
     - Use Bayesian inference to estimate the probability distribution of samples: generated/runnable_examples/12_bayesian_calibration
   - Run a study: how_to/run_a_study.md
-  - Integrate new models: how_to/abaqus_model_integration.md
-  - Define a Space of Parameters: how_to/parameter_space/index.md
+  - Integrate new models: how_to/model_integration.md
+  - Define a Space of Parameters: how_to/parameter_space/parameter_space.md
 - API: reference/vimseo/
 - Reference guides:
    - Available Models: generated/runnable_examples/01_models
    - Materials: references/materials.md
    - Integrated Model:
      - Component based Model: references/component_based_model.md
-     - Abaqus wrapper: references/abaqus_wrapper.md
    - Solution Verification: references/solution_verification/solution_verification_method.md
    - State of the Art: references/state_of_the_art.md
    - Acronyms: references/acronyms.md
 - Tutorials:
     - VVUQ study: tutorials/vvuq_study/introduction.md
 - Explanations:
+    - Model Integration: explanations/model_integration/model_integration.md
+    - Model Validation: explanations/model_validation.md
     - Conference abstracts:
         - ASME 2025: explanations/asme2025/abstract.md
         - ECCOMAS 2024: explanations/eccomas2024/abstract.md
-    - Model Integration: explanations/model_integration/model_integration.md
-    - Model Validation: explanations/model_validation.md
 
 markdown_extensions:
 - admonition
@@ -137,7 +139,8 @@ markdown_extensions:
 - footnotes
 - toc:
     permalink: true
-- pymdownx.snippets
+- pymdownx.snippets:
+    base_path: .
 - pymdownx.emoji:
     emoji_index: !!python/name:material.extensions.emoji.twemoji
     emoji_generator: !!python/name:material.extensions.emoji.to_svg
@@ -148,6 +151,7 @@ extra_javascript:
 - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
 
 watch:
+  - mkdocs.yml
   - src/vimseo
   - README.md
   - CHANGELOG.md

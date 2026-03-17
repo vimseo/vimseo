@@ -65,7 +65,7 @@ def create_model(
     Returns: An instance of an :class:`.IntegratedModel`.
     """
     if model_options:
-        options = model_options.model_dump()
+        options.update(model_options.model_dump())
     return ModelFactory().create(model_name, load_case_name, **options)
 
 

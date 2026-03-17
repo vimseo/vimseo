@@ -15,12 +15,16 @@
 
 from __future__ import annotations
 
-from importlib.metadata import version
-from pathlib import Path
+from vimseo.core.pre_run_post_model import PreRunPostModel
 
-__version__ = version("vimseo")
 
-EXAMPLE_RUNS_DIR = (
-    Path(__file__).parent.parent.parent / "docs" / "runnable_examples" / "model_runs"
-)
-EXAMPLE_RUNS_DIR_NAME = "model_runs"
+class MockModel(PreRunPostModel):
+    """Mock Class to test the creation of a model."""
+
+    SUMMARY = (
+        " A toy model implementing an unphysical analytical law;"
+        " used for testing purpose"
+    )
+    PRE_PROC_FAMILY = "MockPre"  # x2 = x1 + 2
+    RUN_FAMILY = "MockRun"  # y0 = x2 * 2
+    POST_PROC_FAMILY = "MockPost"  # y1 = y0 + 1
