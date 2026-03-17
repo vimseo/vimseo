@@ -13,4 +13,11 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from __future__ import annotations
+from vimseo.material.material import Material
+from vimseo.material.orthotropic_relation import OrthotropicRelation
+
+ORTHOTROPIC_MATERIAL = Material(
+    name="orthotropic",
+    description="Orthotropic material",
+    material_relations=[OrthotropicRelation()],
+)

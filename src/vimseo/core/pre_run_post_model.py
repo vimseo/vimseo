@@ -22,6 +22,7 @@ from typing import ClassVar
 
 from vimseo.core.base_integrated_model import IntegratedModel
 from vimseo.core.components.component_factory import ComponentFactory
+from vimseo.core.components.external_software_component import ExternalSoftwareComponent
 from vimseo.core.components.subroutines.subroutine_wrapper_factory import (
     SubroutineWrapperFactory,
 )
@@ -32,9 +33,7 @@ from vimseo.material.material import Material
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
-    from vimseo.core.components.post.post_processor import PostProcessor
-    from vimseo.core.components.pre.pre_processor import PreProcessor
-    from vimseo.core.components.run.run_processor import RunProcessor
+    from vimseo.core.components.base_component import BaseComponent
 
 LOGGER = logging.getLogger(__name__)
 
@@ -60,9 +59,9 @@ class PreRunPostModel(IntegratedModel):
     in class attribute ``SUBROUTINE_NAMES``.
     """
 
-    _pre_processor: PreProcessor
-    _run_processor: RunProcessor
-    _post_processor: PostProcessor
+    _pre_processor: BaseComponent
+    _run_processor: BaseComponent
+    _post_processor: BaseComponent
 
     PRE_PROC_FAMILY = None
     """The prefix of the pre-processor class name (typically ``MyPre`` for a pre-
@@ -79,6 +78,8 @@ class PreRunPostModel(IntegratedModel):
 
     N_CPUS = 1
     """The default number of cpus used to run the model."""
+
+    _INDEX_DISC_OUTPUT_TO_REMOVE: ClassVar[Sequence[int]] = [0, 1]
 
     def __init__(self, load_case_name: str, **options):
 
@@ -107,7 +108,6 @@ class PreRunPostModel(IntegratedModel):
         components = [
             component_factory.create(
                 self.PRE_PROC_FAMILY,
-                load_case_name,
                 load_case=load_case,
                 material_grammar_file=self._MATERIAL_GRAMMAR_FILE,
                 material=material,
@@ -116,18 +116,23 @@ class PreRunPostModel(IntegratedModel):
             run_processor,
             component_factory.create(
                 self.POST_PROC_FAMILY,
-                load_case_name,
                 load_case=load_case,
                 check_subprocess=options["check_subprocess"],
             ),
         ]
 
-        # run component has its grammar defined from pre and post components:
-        components[1].input_grammar = deepcopy(components[0].output_grammar)
-        components[1].input_grammar.update(components[0].input_grammar)
-        components[1].output_grammar = deepcopy(components[2].input_grammar)
+        # # TODO update run grammar after super.init.
+        # # run component has its grammar defined from pre and post components:
+        # components[1].input_grammar = deepcopy(components[0].output_grammar)
+        # # TODO is it neccesary? Should be done explicitly by the user instead.
+        # components[1].input_grammar.update(components[0].input_grammar)
+        # components[1].output_grammar = deepcopy(components[2].input_grammar)
+        # components[1].output_grammar.update_from_data({"error_code": atleast_1d(0)})
+        # components[1].output_grammar.required_names.add("error_code")
 
         super().__init__(load_case_name, components, **options)
+
+        # TODO automatically add material grammar to run component input grammar.
 
         self._pre_processor = self._chain.disciplines[0]
         self._run_processor = self._chain.disciplines[1]
@@ -136,10 +141,11 @@ class PreRunPostModel(IntegratedModel):
         self._component_with_jacobian = self.run
         self._set_differentiated_names(self.run)
 
-        self.run.job_executor._user_job_options.update({"n_cpus": self.N_CPUS})
+        if isinstance(self.run, ExternalSoftwareComponent):
+            self.run.job_executor._user_job_options.update({"n_cpus": self.N_CPUS})
 
     @property
-    def run(self) -> RunProcessor:
+    def run(self) -> BaseComponent:
         """The component running the external software."""
         return self._run_processor
 

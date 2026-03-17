@@ -21,9 +21,10 @@ from typing import ClassVar
 
 from numpy import atleast_1d
 
-from vimseo.core.base_component import BaseComponent
 from vimseo.core.base_integrated_model import IntegratedModel
+from vimseo.core.components.base_component import BaseComponent
 from vimseo.core.components.component_factory import ComponentFactory
+from vimseo.core.load_case_factory import LoadCaseFactory
 from vimseo.core.model_settings import IntegratedModelSettings
 from vimseo.problems.mock.mock_fields.fields import MOCK_FIELDS_DIR
 
@@ -31,6 +32,8 @@ if TYPE_CHECKING:
     from collections.abc import Mapping
     from collections.abc import Sequence
     from pathlib import Path
+
+    from vimseo.core.load_case import LoadCase
 
 
 class MockComponentField_LC1(BaseComponent):
@@ -41,8 +44,8 @@ class MockComponentField_LC1(BaseComponent):
 
     FILES_TO_COPY: ClassVar[Sequence[Path | str]] = ["Pyramid.vtk"]
 
-    def __init__(self, load_case_name: str):
-        super().__init__(load_case_name)
+    def __init__(self, load_case: LoadCase):
+        super().__init__(load_case)
         self.__default_inputs = {
             "x1": atleast_1d(2.0),
         }
@@ -71,7 +74,7 @@ class MockModelFields(IntegratedModel):
             [
                 ComponentFactory().create(
                     "MockComponentField",
-                    load_case_name,
+                    load_case=LoadCaseFactory().create(load_case_name),
                 )
             ],
             **options,

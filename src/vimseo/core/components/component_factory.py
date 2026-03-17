@@ -43,14 +43,12 @@ class ComponentFactory(BaseFactory):
     def create(
         self,
         base_class_name: str,
-        load_case_name: str = "",
         **options: Any,
     ) -> Any:
         """Return an instance of a class.
 
         Args:
             base_class_name: The name of the family class of component to create.
-            load_case_name: The name of the load case.
             **options: The arguments to be passed to the class constructor.
 
         Returns:
@@ -63,18 +61,17 @@ class ComponentFactory(BaseFactory):
         if base_class_name is None:
             return None
 
-        if load_case_name == "":
+        if "load_case" not in options:
             class_name = base_class_name
         else:
-            class_name = base_class_name + self.SEP + load_case_name
+            class_name = base_class_name + self.SEP + options["load_case"].name
 
         try:
             klass = self.get_class(class_name)
-            return klass(load_case_name=load_case_name, **options)
+            return klass(**options)
         except TypeError:
             LOGGER.exception(
-                "Failed to create class %s with arguments %s %s",
+                "Failed to create class %s with arguments %s",
                 base_class_name,
-                load_case_name,
                 options,
             )

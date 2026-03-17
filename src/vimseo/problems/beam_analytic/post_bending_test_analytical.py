@@ -21,12 +21,12 @@ import numpy as np
 from numpy import array
 from scipy.interpolate import interp1d
 
-from vimseo.core.components.post.post_processor import PostProcessor
+from vimseo.core.components.base_component import BaseComponent
 
 LOGGER = logging.getLogger(__name__)
 
 
-class PostBendingTestAnalytical(PostProcessor):
+class PostBendingTestAnalytical(BaseComponent):
     """Post processor for the analytical bending test model."""
 
 

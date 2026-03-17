@@ -19,6 +19,7 @@ import logging
 from typing import TYPE_CHECKING
 from typing import ClassVar
 
+from gemseo.core.discipline.discipline import Discipline
 from numpy import atleast_1d
 
 from vimseo.core.gemseo_discipline_wrapper import GemseoDisciplineWrapper
@@ -27,6 +28,7 @@ if TYPE_CHECKING:
     from collections.abc import Sequence
     from pathlib import Path
 
+    from vimseo.core.load_case import LoadCase
     from vimseo.material.material import Material
 
 LOGGER = logging.getLogger(__name__)
@@ -48,15 +50,21 @@ class BaseComponent(GemseoDisciplineWrapper):
     """List of files produced in the scratch directory, to be copied to the archive
     directory."""
 
+    auto_detect_grammar_files = True
+    default_cache_type = Discipline.CacheType.HDF5
+    default_grammar_type = Discipline.GrammarType.JSON
+
     def __init__(
         self,
-        load_case_name: str,
+        load_case: LoadCase | None = None,
         material_grammar_file: Path | str = "",
         material: Material | None = None,
+        check_subprocess: bool = False,
     ) -> None:
         super().__init__()
-        self._load_case_name = load_case_name
+        self._load_case = load_case
         self._job_directory = ""
+        self._check_subprocess = check_subprocess
 
         # """Initialize input grammar and default values from the material.
 

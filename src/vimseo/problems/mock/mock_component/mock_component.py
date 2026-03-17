@@ -18,10 +18,10 @@ from __future__ import annotations
 from numpy import array
 from numpy import atleast_1d
 
-from vimseo.core.components.external_software_component import ExternalSoftwareComponent
+from vimseo.core.components.base_component import BaseComponent
 
 
-class MockComponent(ExternalSoftwareComponent):
+class MockComponent(BaseComponent):
     """Default component."""
 
     def _run(self, input_data):

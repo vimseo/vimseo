@@ -23,15 +23,18 @@ import numpy as np
 from numpy import array
 from numpy import atleast_1d
 
-from vimseo.core.base_component import BaseComponent
 from vimseo.core.base_integrated_model import IntegratedModel
+from vimseo.core.components.base_component import BaseComponent
 from vimseo.core.components.component_factory import ComponentFactory
+from vimseo.core.load_case_factory import LoadCaseFactory
 from vimseo.core.model_metadata import MetaDataNames
 from vimseo.core.model_settings import IntegratedModelSettings
 from vimseo.problems.mock.mock_model_persistent import PATH_MOCK_FILES_PERSISTENT
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
+
+    from vimseo.core.load_case import LoadCase
 
 
 class MockComponentStandalonePersistent_LC1(BaseComponent):
@@ -50,8 +53,8 @@ class MockComponentStandalonePersistent_LC1(BaseComponent):
 
     auto_detect_grammar_files = False
 
-    def __init__(self, load_case_name: str):
-        super().__init__(load_case_name)
+    def __init__(self, load_case: LoadCase | None = None):
+        super().__init__(load_case=load_case)
         default_inputs = {
             "x1": atleast_1d(2.0),
             "x2": atleast_1d(5.0),
@@ -110,7 +113,7 @@ class MockModelPersistent(IntegratedModel):
         options = IntegratedModelSettings(**options).model_dump()
         compo = ComponentFactory().create(
             "MockComponentStandalonePersistent",
-            load_case_name,
+            load_case=LoadCaseFactory().create(load_case_name),
         )
         if compo is None:
             msg = "Failed component factory "
