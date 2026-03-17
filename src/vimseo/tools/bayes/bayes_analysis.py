@@ -36,6 +36,7 @@ from numpy import isnan
 from numpy import linspace
 from numpy import log
 from numpy import mean
+from numpy import ndarray
 from numpy import ones
 from numpy import random
 from numpy import std
@@ -104,7 +105,7 @@ class BayesSettings(BaseSettings):
         "<http://openturns.github.io/openturns/latest/user_manual/"
         "probabilistic_modelling.html>`_.",
     )
-    prior_dist: ComposedDistribution | list[dist] = Field(
+    prior_dist: ComposedDistribution | list[type(dist)] = Field(
         default=[],
         description="The prior distribution. Either a list of openturns distribution.",
     )
@@ -117,10 +118,10 @@ class BayesSettings(BaseSettings):
 class BayesInputs(BaseInputs):
     """The inputs of a Bayes analysis."""
 
-    data: array = Field(
+    data: ndarray = Field(
         default=empty, description="The data from which the inference is carried out."
     )
-    x0s: array = Field(
+    x0s: ndarray = Field(
         default=empty,
         description="The starting points of the algorithm. "
         "In practice a 1-D array of size the number "
@@ -140,7 +141,7 @@ class BayesTool(BaseAnalysisTool):
 
     _INPUTS = BayesInputs
 
-    _x0s: array
+    _x0s: ndarray
     """The starting points of the MCMC algorithm."""
 
     _frozen_options: dict
@@ -230,7 +231,7 @@ class BayesTool(BaseAnalysisTool):
 
     def log_posterior(
         self,
-        x: array,
+        x: ndarray,
         func_prior: Callable,
         func_likelihood: Callable,
     ):
@@ -260,7 +261,7 @@ class BayesTool(BaseAnalysisTool):
     def sampling(
         self,
         n_mcmc: int,
-        data: array,
+        data: ndarray,
     ):
         """Return the raw MCMC posterior samples .
 
