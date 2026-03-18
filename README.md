@@ -54,13 +54,16 @@ Install the latest version with `pip install vimseo`.
 
 See [pip](https://pip.pypa.io/en/stable/getting-started/) for more information.
 
-> ** note **
+---
+ **NOTE**
 
     You can use [uv](https://docs.astral.sh/uv/) for installation. ``uv`` is an extremely fast
     Python project manager. To install, use:
     ```
     uv pip install vimseo
     ```
+
+---
 
 !!! note
 
