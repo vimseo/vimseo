@@ -55,36 +55,34 @@ Install the latest version with `pip install vimseo`.
 See [pip](https://pip.pypa.io/en/stable/getting-started/) for more information.
 
 ---
- **NOTE**
+**NOTE**
 
-    You can use [uv](https://docs.astral.sh/uv/) for installation. ``uv`` is an extremely fast
-    Python project manager. To install, use:
-    ```
-    uv pip install vimseo
-    ```
+You can use [uv](https://docs.astral.sh/uv/) for installation. ``uv`` is an extremely fast
+Python project manager. To install, use:
+```
+uv pip install vimseo
+ ```
+
+Pay attention that running the above command will install **VIMSEO** globally on your system.
+
+To isolate **VIMSEO** in an environment using ``uv``, first create a Python environment:
+```
+uv venv env
+```
+
+and activate it:
+```
+source env/bin/activate
+```
+(The above command is valid under Linux. For other operating systems,
+refer to the command ``uv`` prints when creating the environment).
+
+Then install:
+```
+uv pip install vimseo
+```
 
 ---
-
-!!! note
-
-    Pay attention that running the above command will install **VIMSEO** globally on your system.
-    To isolate **VIMSEO** in an environment using ``uv``, first create a Python environment:
-    ```
-    uv venv env
-    ```
-
-    and activate it:
-    ```
-    source env/bin/activate
-    ```
-    (The above command is valid under Linux. For other operating systems,
-    refer to the command ``uv`` prints when creating the environment).
-
-    Then install:
-    ```
-    uv pip install vimseo
-    ```
-
 
 ## What is VIMSEO?
 
