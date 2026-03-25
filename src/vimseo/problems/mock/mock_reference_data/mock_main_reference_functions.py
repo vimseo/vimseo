@@ -23,8 +23,7 @@ from vimseo.core.components.pre.pre_processor import PreProcessor
 from vimseo.core.components.run.run_processor import RunProcessor
 from vimseo.core.pre_run_post_model import PreRunPostModel
 from vimseo.material_lib import MATERIAL_LIB_DIR
-
-X1_DEFAULT_VALUE = 0.1
+from vimseo.problems.mock import X1_DEFAULT_VALUE
 
 
 def mock_model_lc1_overall_function(x1):

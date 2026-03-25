@@ -21,8 +21,7 @@ from numpy import atleast_1d
 from vimseo.core.components.post.post_processor import PostProcessor
 from vimseo.core.components.pre.pre_processor import PreProcessor
 from vimseo.core.components.run.run_processor import RunProcessor
-
-X1_DEFAULT_VALUE = 0.1
+from vimseo.problems.mock import X1_DEFAULT_VALUE
 
 
 class MockPre(PreProcessor):

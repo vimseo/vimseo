@@ -18,10 +18,9 @@ from __future__ import annotations
 from numpy import array
 from numpy import atleast_1d
 
+from vimseo.problems.mock import X1_DEFAULT_VALUE
 from vimseo.problems.mock.mock_pre_run_post.mock_components_lc1 import MockPost
 from vimseo.problems.mock.mock_pre_run_post.mock_components_lc1 import MockPre
-
-X1_DEFAULT_VALUE = 0.1
 
 
 class MockPre_LC2(MockPre):
