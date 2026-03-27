@@ -502,7 +502,7 @@ class IntegratedModel(GemseoDisciplineWrapper):
 
         output_data.update({
             name: array([str(file_name) for file_name in field_file_names[name]])
-            for name, file_names in field_file_names.items()
+            for name in field_file_names
         })
 
         # metadata as additional outputs

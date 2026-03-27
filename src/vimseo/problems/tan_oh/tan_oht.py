@@ -36,12 +36,18 @@ from vimseo.core.components.component_factory import ComponentFactory
 from vimseo.core.model_metadata import MetaDataNames
 from vimseo.core.model_settings import IntegratedModelSettings
 from vimseo.lib_vimseo.tan_lib import tan_model
+from vimseo.utilities.fields import Field
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
     from collections.abc import Sequence
 
 LOGGER = logging.getLogger(__name__)
+
+x_start = 0.0
+x_end = length
+y_start = 0.0
+y_end = width
 
 DEFAULT_INPUT_DATA = {
     "d0": atleast_1d(0.71),
@@ -91,8 +97,8 @@ class TanRun_OHT(BaseComponent):
 
         output_data = {}
 
-        x = linspace(0, length, n_x)
-        y = linspace(0, width, n_y)
+        x = linspace(x_start, x_end, n_x)
+        y = linspace(y_start, y_end, n_y)
 
         # Create 2D grid coordinates
         xx, yy = meshgrid(x, y, indexing="ij")  # shape (nx, ny)
@@ -153,6 +159,35 @@ class TanRun_OHT(BaseComponent):
         output_data[MetaDataNames.error_code] = atleast_1d(0.0)
 
         return output_data
+
+
+class PostFieldExtractionFromFile(BaseComponent):
+    """A post-processor to extract data from a field."""
+
+    auto_detect_grammar_files = False
+    default_grammar_type = "SimpleGrammar"
+
+    def __init__(self, **options):
+        super().__init__(**options)
+
+        for field_name in self.FIELDS_FROM_FILE:
+            self.input_grammar.update_from_data({field_name: array(["names"])})
+            self.input_grammar.required_names.add(field_name)
+
+        self.output_grammar.update_from_names(["line_x", "line_y"])
+
+    def _run(self, input_data):
+
+        Field.load()
+
+    line_extremities = [(())]
+    # line = extract_line(
+    #     vtu_file=vtu_file,
+    #     point_a=(0.0, 0.0, 0.0),
+    #     point_b=(0.0, 1.0, 0.0),
+    #     n_points=200,
+    #     fields=["Velocity", "Density", "y", "Distance", "Pressure"],
+    # )
 
 
 class TanOpenHole(IntegratedModel):

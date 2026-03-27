@@ -24,6 +24,7 @@
 /docs/runnable_examples/**/*.hdf
 /docs/runnable_examples/**/*.hdf5
 /docs/runnable_examples/**/results.json
+/docs/runnable_examples/model_runs
 /docs/images/*.pptx
 /model_runs
 /site
