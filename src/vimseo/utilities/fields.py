@@ -81,11 +81,12 @@ def extract_line(
         n_points: The number of equidistant points along the extraction line.
         fields: The names of the variables to extract.
 
-    Returns: a dictionary mapping variable names to arrays containing the extracted
-    values. Items:
-      - ``coords`` to the coordinates of the line points
-      - ``dist`` to the distance of the line points to the line start
-    are added to the dictionary.
+    Returns:
+        A dictionary mapping variable names to arrays containing the extracted
+        values. The following keys are always present:
+
+        - ``coords``: coordinates of the line points.
+        - ``dist``: distance of the line points to the line start.
     """
     mesh = pv.read(vtu_file)
 
@@ -155,7 +156,6 @@ def vtu_to_png(
         save_path = Path(output_folder) / filename
         plotter.screenshot(save_path)
 
-        print(f"Image sauvegardée : {filename}")
+        LOGGER.info(f"Saved image: {filename}")
 
     plotter.close()
-    print("Terminé !")

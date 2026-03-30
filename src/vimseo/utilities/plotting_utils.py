@@ -95,3 +95,13 @@ def get_formatted_value(value, precision: int = FLOAT_PRECISION):
     if is_float:
         return str(round(value, precision))
     return array_str(atleast_1d(value), precision=precision)
+
+
+def plotly_save_and_show(fig: Figure, save: bool, show: bool, file_path: str):
+    if save and not file_path:
+        msg = "A file path must be passed since save is True."
+        raise ValueError(msg)
+    if save:
+        fig.write_html(file_path)
+    if show:
+        fig.show()

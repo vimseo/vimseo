@@ -230,7 +230,7 @@ class IntegratedModel(GemseoDisciplineWrapper):
         self.__material = (
             Material.from_json(self.MATERIAL_FILE) if self.MATERIAL_FILE != "" else None
         )
-        self.__load_case = LoadCaseFactory().create(
+        self._load_case = LoadCaseFactory().create(
             load_case_name, domain=self._LOAD_CASE_DOMAIN
         )
 
@@ -238,7 +238,7 @@ class IntegratedModel(GemseoDisciplineWrapper):
             self._cache_file_path = options["cache_file_path"]
             Path(self._cache_file_path).parent.mkdir(parents=True, exist_ok=True)
         else:
-            self._cache_file_path = f"{self.name}_{self.__load_case.name}_cache.hdf"
+            self._cache_file_path = f"{self.name}_{self._load_case.name}_cache.hdf"
 
         super().__init__(name=self.__class__.__name__)
         if self.default_cache_type == CacheType.HDF5:
@@ -261,13 +261,13 @@ class IntegratedModel(GemseoDisciplineWrapper):
             persistency=options["directory_scratch_persistency"],
             job_name=self._job_name,
             model_name=self.__class__.__name__,
-            load_case_name=self.__load_case.name,
+            load_case_name=self._load_case.name,
         )
 
         archive_options = {
             "persistency": options["directory_archive_persistency"],
             "model_name": self.name,
-            "load_case_name": self.__load_case.name,
+            "load_case_name": self._load_case.name,
             "root_directory": Path(options["directory_archive_root"]),
             "job_name": self._job_name,
             "persistent_file_names": [
@@ -382,17 +382,17 @@ class IntegratedModel(GemseoDisciplineWrapper):
         load case is returned.
         """
         try:
-            image_paths = self.auto_get_file(".png", [self.__load_case.name])
+            image_paths = self.auto_get_file(".png", [self._load_case.name])
             if len(image_paths) > 1:
                 LOGGER.warning(
                     f"There are more than one image associated with"
                     f" model {self.__class__.__name__}"
-                    f" and load case {self.__load_case.name}."
+                    f" and load case {self._load_case.name}."
                     f" Only the first one is shown."
                 )
             return image_paths[0]
         except FileNotFoundError:
-            return self.__load_case.image_path
+            return self._load_case.image_path
 
     def show_image(self) -> None:
         """Show the image illustrating the load case."""
@@ -555,7 +555,7 @@ class IntegratedModel(GemseoDisciplineWrapper):
     @property
     def load_case(self) -> LoadCase:
         """The load case."""
-        return self.__load_case
+        return self._load_case
 
     @property
     def material(self) -> Material:
@@ -564,7 +564,23 @@ class IntegratedModel(GemseoDisciplineWrapper):
 
     @property
     def curves(self) -> Iterable[tuple[str]]:
-        return self.__load_case.plot_parameters.curves + self.CURVES
+        return self._load_case.plot_parameters.curves + self.CURVES
+
+    def _plot_curves(self, figures, result, directory_path, save, show):
+        for variables in self.curves:
+            file_name = (
+                f"{self.name}_{self._load_case.name}_"
+                f"{variables[1]}_vs_{variables[0]}.html"
+            )
+            figures[f"{variables[1]}_vs_{variables[0]}"] = plot_curves(
+                result.get_curve(variables),
+                directory_path=directory_path,
+                file_name=file_name,
+                save=save,
+                show=show,
+            )
+            LOGGER.info(f"Plot {file_name} is saved in {Path(directory_path)}")
+        return figures
 
     def plot_results(
         self,
@@ -603,21 +619,7 @@ class IntegratedModel(GemseoDisciplineWrapper):
         )
         figures = {}
         if data == "CURVES":
-            for variables in self.curves:
-                file_name = (
-                    f"{self.name}_{self.__load_case.name}_"
-                    f"{variables[1]}_vs_{variables[0]}.html"
-                )
-                figures[f"{variables[1]}_vs_{variables[0]}"] = plot_curves(
-                    result.get_curve(variables),
-                    directory_path=directory_path,
-                    file_name=file_name,
-                    save=save,
-                    show=show,
-                )
-                LOGGER.info(
-                    f"Plot {file_name} is saved to {Path(directory_path) / file_name}"
-                )
+            figures = self._plot_curves(figures, result, directory_path, save, show)
         elif data == "SCALARS":
             plot = ScatterMatrix(
                 Dataset.from_dataframe(
@@ -770,7 +772,7 @@ class IntegratedModel(GemseoDisciplineWrapper):
             user = getpass.getuser()
         return MetaData(**{
             MetaDataNames.model: array([self.__class__.__name__]),
-            MetaDataNames.load_case: array([self.__load_case.name]),
+            MetaDataNames.load_case: array([self._load_case.name]),
             MetaDataNames.error_code: array([error]),
             MetaDataNames.description: array([str(self.job_description)]),
             MetaDataNames.job_name: array([self._job_name]),
@@ -811,7 +813,7 @@ class IntegratedModel(GemseoDisciplineWrapper):
         cache_dir_path = Path(self._cache_file_path).parent
         self._cache_file_path = Path(
             cache_dir_path
-            / f"{self.__class__.__name__}_{self.__load_case.name}_from_archive.hdf"
+            / f"{self.__class__.__name__}_{self._load_case.name}_from_archive.hdf"
         )
         self._cache_file_path.unlink(
             missing_ok=True

@@ -24,49 +24,55 @@ from numpy import arctan2
 from numpy import array
 from numpy import atleast_1d
 from numpy import column_stack
+from numpy import isnan
 from numpy import linspace
 from numpy import meshgrid
 from numpy import nan
 from numpy import sqrt
 from numpy import zeros
+from plotly.graph_objs import Scatter
+from scipy.interpolate import interp1d
 
-from vimseo.core.base_component import BaseComponent
 from vimseo.core.base_integrated_model import IntegratedModel
+from vimseo.core.components.base_component import BaseComponent
 from vimseo.core.components.component_factory import ComponentFactory
+from vimseo.core.load_case_factory import LoadCaseFactory
 from vimseo.core.model_metadata import MetaDataNames
 from vimseo.core.model_settings import IntegratedModelSettings
 from vimseo.lib_vimseo.tan_lib import tan_model
-from vimseo.utilities.fields import Field
+from vimseo.utilities.fields import extract_line
+from vimseo.utilities.plotting_utils import plotly_save_and_show
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
     from collections.abc import Sequence
+    from pathlib import Path
+
+    from vimseo.core.load_case import LoadCase
+    from vimseo.material.material import Material
 
 LOGGER = logging.getLogger(__name__)
 
-x_start = 0.0
-x_end = length
-y_start = 0.0
-y_end = width
+NOMINAL_GRID_SIZE = 100
 
 DEFAULT_INPUT_DATA = {
     "d0": atleast_1d(0.71),
     "radius": atleast_1d(3.175),
     "width": atleast_1d(32.0),
     "length": atleast_1d(50.0),
-    "load": array([5000, 0, 0]),
-    "n_x": atleast_1d(100),
-    "n_y": atleast_1d(100),
+    "thickness": atleast_1d(1.0),
+    "load": array([5000]),
     "c_strat": array([
         [453798.95833606, 80454.21661519, 0.0],
         [80454.21661519, 183534.41794582, 0.0],
         [0.0, 0.0, 86824.15717525],
     ]),
+    "coarsening_factor": atleast_1d(1.0),
 }
 
 
 class TanRun_OHT(BaseComponent):
-    """An Open Hole compression model based on Tan theory."""
+    """An Open Hole Tension model based on Tan theory (#open-hole-plate-model-tan-model)."""
 
     USE_JOB_DIRECTORY = True
 
@@ -80,23 +86,33 @@ class TanRun_OHT(BaseComponent):
         self.default_input_data.update(DEFAULT_INPUT_DATA)
         self.output_grammar.update_from_data({
             MetaDataNames.error_code.name: atleast_1d(0),
+            "dx": atleast_1d(0.0),
+            "dy": atleast_1d(0.0),
         })
 
     def _run(self, input_data):
 
         length = input_data["length"][0]
         width = input_data["width"][0]
-        d0 = input_data["d0"][0]
+        thickness = input_data["thickness"][0]
+        input_data["d0"][0]
         radius = input_data["radius"][0]
-        n_x = input_data["n_x"][0]
-        n_y = input_data["n_y"][0]
+        coarsening_factor = input_data["coarsening_factor"][0]
+        n_x = int(NOMINAL_GRID_SIZE / coarsening_factor)
+        n_y = int(NOMINAL_GRID_SIZE / coarsening_factor)
+        dx = length / (n_x - 1)
+        dy = width / (n_y - 1)
 
-        load = input_data["load"]
+        load = array([input_data["load"][0], 0.0, 0.0]) / thickness
 
         c_strat = input_data["c_strat"]
 
         output_data = {}
 
+        x_start = 0.0
+        x_end = length
+        y_start = 0.0
+        y_end = width
         x = linspace(x_start, x_end, n_x)
         y = linspace(y_start, y_end, n_y)
 
@@ -110,6 +126,7 @@ class TanRun_OHT(BaseComponent):
             zeros(n_x * n_y),  # z=0 for 2D
         ])
 
+        d0_ = 0.0
         # Create quad connectivity
         # Node index at (i,j) = i * ny + j
         quads = []
@@ -133,7 +150,7 @@ class TanRun_OHT(BaseComponent):
 
                 theta = arctan2(y_0, x_0)
 
-                if r < radius + d0:
+                if r < radius + d0_:
                     for k in range(3):
                         flux_n[i, j, k] = nan
 
@@ -152,48 +169,101 @@ class TanRun_OHT(BaseComponent):
                 "N_xx": flatten_flux[:, 0],
                 "N_yy": flatten_flux[:, 1],
                 "N_xy": flatten_flux[:, 2],
+                "sigma_xx": flatten_flux[:, 0] * thickness,
+                "sigma_yy": flatten_flux[:, 1] * thickness,
+                "sigma_xy": flatten_flux[:, 2] * thickness,
             },
         )
         flux_field.write(self.job_directory / "flux.vtk")
 
-        output_data[MetaDataNames.error_code] = atleast_1d(0.0)
+        output_data[MetaDataNames.error_code] = atleast_1d(0)
+        output_data["dx"] = atleast_1d(dx)
+        output_data["dy"] = atleast_1d(dy)
 
         return output_data
 
 
-class PostFieldExtractionFromFile(BaseComponent):
+class PostFieldExtraction(BaseComponent):
     """A post-processor to extract data from a field."""
 
     auto_detect_grammar_files = False
     default_grammar_type = "SimpleGrammar"
 
-    def __init__(self, **options):
-        super().__init__(**options)
+    def __init__(
+        self,
+        load_case: LoadCase | None = None,
+        material_grammar_file: Path | str = "",
+        material: Material | None = None,
+        check_subprocess: bool = False,
+        fields_from_file: Mapping[str, str] | None = None,
+    ):
+        super().__init__(
+            load_case=load_case,
+            material_grammar_file=material_grammar_file,
+            material=material,
+            check_subprocess=check_subprocess,
+        )
+        self._fields_from_file = fields_from_file
 
-        for field_name in self.FIELDS_FROM_FILE:
-            self.input_grammar.update_from_data({field_name: array(["names"])})
-            self.input_grammar.required_names.add(field_name)
+        input_names = ["length", "width", "radius", "d0", "dx", "dy"]
 
-        self.output_grammar.update_from_names(["line_x", "line_y"])
+        self.input_grammar.update_from_data({
+            name: array([0.0]) for name in input_names
+        })
+
+        for name in input_names:
+            self.input_grammar.required_names.add(name)
+
+        self._flux_components = ["sigma_xx", "sigma_yy", "sigma_xy", "Distance"]
+        self._line_name = "line_center"
+        for name in ["y", *self._flux_components]:
+            self.output_grammar.update_from_names([f"{self._line_name}_{name}"])
+
+        self.output_grammar.update_from_names(["sigma_xx_r", "sigma_xx_d0"])
 
     def _run(self, input_data):
+        length = input_data["length"][0]
+        width = input_data["width"][0]
+        radius = input_data["radius"][0]
+        d0 = input_data["d0"][0]
+        input_data["dx"][0]
+        input_data["dy"][0]
 
-        Field.load()
+        line_extremities = {
+            self._line_name: ((0.5 * length, 0.0, 0.0), (0.5 * length, width, 0.0)),
+        }
 
-    line_extremities = [(())]
-    # line = extract_line(
-    #     vtu_file=vtu_file,
-    #     point_a=(0.0, 0.0, 0.0),
-    #     point_b=(0.0, 1.0, 0.0),
-    #     n_points=200,
-    #     fields=["Velocity", "Density", "y", "Distance", "Pressure"],
-    # )
+        output_data = {}
+        for line_name, extremities in line_extremities.items():
+            line = extract_line(
+                vtu_file=self.job_directory / "flux.vtk",
+                point_a=extremities[0],
+                point_b=extremities[1],
+                n_points=100,
+                fields=self._flux_components,
+            )
+            y = line["coords"][:, 1]
+            output_data[f"{line_name}_y"] = y
+            for name in self._flux_components:
+                output_data[f"{line_name}_{name}"] = line[name]
+
+        f = interp1d(
+            y[~isnan(line["sigma_xx"])],
+            line["sigma_xx"][~isnan(line["sigma_xx"])],
+            bounds_error=False,
+            fill_value="extrapolate",
+            kind="quadratic",
+        )
+        output_data["sigma_xx_r"] = atleast_1d(f(0.5 * width + radius))
+        output_data["sigma_xx_d0"] = atleast_1d(f(0.5 * width + radius + d0))
+
+        return output_data
 
 
 class TanOpenHole(IntegratedModel):
     """An Open Hole model based on Tan theory."""
 
-    CURVES: ClassVar[Sequence[tuple[str]]] = []
+    CURVES: ClassVar[Sequence[tuple[str]]] = [("line_center_y", "line_center_sigma_xx")]
 
     FIELDS_FROM_FILE: ClassVar[Mapping[str, str]] = {"flux": r"^flux.vtk$"}
 
@@ -204,8 +274,84 @@ class TanOpenHole(IntegratedModel):
             [
                 ComponentFactory().create(
                     "TanRun",
-                    load_case_name,
-                )
+                    load_case=LoadCaseFactory().create(load_case_name),
+                ),
+                PostFieldExtraction(
+                    load_case=LoadCaseFactory().create(load_case_name),
+                    fields_from_file=self.FIELDS_FROM_FILE,
+                ),
             ],
             **options,
         )
+
+    def _plot_curves(self, figures, result, directory_path, save, show):
+        figures = super()._plot_curves(
+            figures, result, directory_path, save=False, show=False
+        )
+        fig = figures["line_center_sigma_xx_vs_line_center_y"]
+
+        width = self.get_input_data()["width"][0]
+        radius = self.get_input_data()["radius"][0]
+        d0 = self.get_input_data()["d0"][0]
+        sigma_xx = self.get_output_data()["line_center_sigma_xx"]
+        load_x = self.get_input_data()["load"][0]
+        max_sigma = max(
+            self.get_output_data()["sigma_xx_r"][0],
+            self.get_output_data()["sigma_xx_d0"][0],
+        )
+        for y_radius in [0.5 * width - radius, 0.5 * width + radius]:
+            fig.add_trace(
+                Scatter(
+                    x=[y_radius, y_radius],
+                    y=[min(sigma_xx), max_sigma],
+                    mode="lines",
+                    line={"color": "green", "width": 2, "dash": "dash"},
+                    name="radius",
+                )
+            )
+            fig.add_trace(
+                Scatter(
+                    x=[y_radius],
+                    y=[self.get_output_data()["sigma_xx_r"][0]],
+                    mode="markers",
+                    line={"color": "green", "width": 2, "dash": "dash"},
+                    name="sigma_xx radius",
+                )
+            )
+        for y_d0 in [0.5 * width - radius - d0, 0.5 * width + radius + d0]:
+            fig.add_trace(
+                Scatter(
+                    x=[y_d0, y_d0],
+                    y=[min(sigma_xx), max_sigma],
+                    mode="lines",
+                    line={"color": "red", "width": 2, "dash": "dash"},
+                    name="radius+d0",
+                )
+            )
+            fig.add_trace(
+                Scatter(
+                    x=[y_d0],
+                    y=[self.get_output_data()["sigma_xx_d0"][0]],
+                    mode="markers",
+                    line={"color": "red", "width": 2, "dash": "dash"},
+                    name="sigma_xx radius+d0",
+                )
+            )
+
+        fig.add_trace(
+            Scatter(
+                x=[0.0, width],
+                y=[load_x, load_x],
+                mode="lines",
+                line={"color": "black", "width": 2, "dash": "dash"},
+                name="imposed_load_x",
+            )
+        )
+
+        for key, fig in figures.items():
+            file_name = f"{self.name}_{self._load_case.name}_{key}.html"
+            plotly_save_and_show(
+                fig, save=save, show=show, file_path=directory_path / file_name
+            )
+
+        return figures
