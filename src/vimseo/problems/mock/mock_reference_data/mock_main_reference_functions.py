@@ -15,9 +15,6 @@
 
 from __future__ import annotations
 
-from numpy import array
-from numpy import atleast_1d
-
 
 def mock_model_lc1_overall_function(x1):
     """The overall input to output function representing the MockModel load case LC1."""

@@ -28,6 +28,13 @@ if TYPE_CHECKING:
 
 
 class GemseoDisciplineWrapper(Discipline):
+    """A wrapper around a Gemseo Discipline.
+
+    It adds some practical public methods, and allows to check if extra names
+    are present in the input data. It is useful to prevent users from making typos
+    in the input data.
+    """
+
     EXTRA_INPUT_GRAMMAR_CHECK: ClassVar[bool] = False
 
     def _get_input_data(self) -> dict[str, Any]:

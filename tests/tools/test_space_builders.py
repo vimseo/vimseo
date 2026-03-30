@@ -27,9 +27,7 @@ from numpy import sign
 
 import vimseo.tools as tools
 from vimseo.api import create_model
-from vimseo.problems.mock.mock_reference_data.mock_main_reference_functions import (
-    X1_DEFAULT_VALUE,
-)
+from vimseo.problems.mock import X1_DEFAULT_VALUE
 from vimseo.tools.lib.space_builders import FromCenterAndCov
 from vimseo.tools.lib.space_builders import FromMinAndMax
 from vimseo.tools.lib.space_builders import FromModelCenterAndCov
