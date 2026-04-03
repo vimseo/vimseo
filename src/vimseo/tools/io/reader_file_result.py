@@ -20,8 +20,8 @@ from typing import Any
 
 from vimseo.tools.base_tool import BaseTool
 from vimseo.tools.io.base_reader_file import BaseReaderFile
-from vimseo.tools.io.base_reader_file import BaseReaderFileSettings
-from vimseo.tools.io.base_reader_file import StreamlitBaseReaderFileSettings
+from vimseo.tools.io.base_reader_file_settings import BaseFileReaderSettings
+from vimseo.tools.io.base_reader_file_settings import StreamlitBaseFileReaderSettings
 from vimseo.tools.tools_factory import AnalysisToolsFactory
 
 if TYPE_CHECKING:
@@ -29,11 +29,13 @@ if TYPE_CHECKING:
 
 
 class ReaderFileToolResult(BaseReaderFile):
-    results: BaseResult
+    """A tool to read tool data from a file and return the result."""
 
-    _SETTINGS = BaseReaderFileSettings
+    result: BaseResult
 
-    _STREAMLIT_SETTINGS = StreamlitBaseReaderFileSettings
+    _SETTINGS = BaseFileReaderSettings
+
+    _STREAMLIT_SETTINGS = StreamlitBaseFileReaderSettings
 
     _EXTENSION = BaseTool._RESULT_FORMATS
 
@@ -42,7 +44,6 @@ class ReaderFileToolResult(BaseReaderFile):
         tool_name: str,
     ):
         super().__init__()
-        self.__tool_name = tool_name
         self.result = AnalysisToolsFactory().create(tool_name).result
 
     def get_file_extension(self):
@@ -51,7 +52,7 @@ class ReaderFileToolResult(BaseReaderFile):
     @BaseTool.validate
     def execute(
         self,
-        settings: BaseReaderFileSettings | None = None,
+        settings: BaseFileReaderSettings | None = None,
         **options,
     ) -> Any:
         tool = AnalysisToolsFactory().create(options["tool_name"])

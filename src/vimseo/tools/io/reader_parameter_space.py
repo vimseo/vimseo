@@ -18,11 +18,11 @@ from __future__ import annotations
 from vimseo.io.space_io import SpaceToolFileIO
 from vimseo.tools.base_tool import BaseTool
 from vimseo.tools.io.base_reader_file import BaseReaderFile
-from vimseo.tools.io.base_reader_file import BaseReaderFileSettings
+from vimseo.tools.io.base_reader_file_settings import BaseFileReaderSettings
 from vimseo.tools.space.space_tool_result import SpaceToolResult
 
 
-class ParameterSpaceReaderFileSettings(BaseReaderFileSettings):
+class ParameterSpaceReaderFileSettings(BaseFileReaderSettings):
     """The settings of a parameter space reader."""
 
 

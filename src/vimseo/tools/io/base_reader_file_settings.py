@@ -17,28 +17,16 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from vimseo.tools.base_tool import BaseTool
+from vimseo.tools.base_settings import BaseSettings
 
 
-class BaseReaderFile(BaseTool):
-    """A tool to read data from a file."""
+class BaseFileReaderSettings(BaseSettings):
+    """Settings for a base file reader."""
 
-    _EXTENSION = ""
+    file_name: str | Path = ""
+    directory_path: str | Path = ""
+    tool_name: str = ""
 
-    def __init__(
-        self,
-    ):
-        super().__init__(
-            working_directory=Path.cwd(),
-        )
 
-    def get_file_extension(self):
-        """The extension of the file containing the data."""
-        return self._EXTENSION
-
-    def _validate_base_options(self):
-        file_name = self.options["file_name"]
-        self.options["directory_path"] = Path(self.options["directory_path"])
-        if Path(file_name).suffix != self._EXTENSION:
-            msg = f"{self.__class__.__name__} requires the file suffix to be {self._EXTENSION}."
-            raise ValueError(msg)
+class StreamlitBaseFileReaderSettings(BaseSettings):
+    """Streamlit settings for a base file reader."""

@@ -20,11 +20,11 @@ from pathlib import Path
 from vimseo.material.material import Material
 from vimseo.tools.base_tool import BaseTool
 from vimseo.tools.io.base_reader_file import BaseReaderFile
-from vimseo.tools.io.base_reader_file import BaseReaderFileSettings
+from vimseo.tools.io.base_reader_file_settings import BaseFileReaderSettings
 from vimseo.tools.io.material_result import MaterialResult
 
 
-class MaterialReaderFileSettings(BaseReaderFileSettings):
+class MaterialReaderFileSettings(BaseFileReaderSettings):
     """The settings of a material reader."""
 
 

@@ -23,12 +23,12 @@ from pydantic import Field
 
 from vimseo.tools.base_tool import BaseTool
 from vimseo.tools.io.base_reader_file import BaseReaderFile
-from vimseo.tools.io.base_reader_file import BaseReaderFileSettings
+from vimseo.tools.io.base_reader_file_settings import BaseFileReaderSettings
 from vimseo.tools.io.dataset_result import DatasetResult
 from vimseo.utilities.datasets import SEP
 
 
-class ReaderFileDataFrameSettings(BaseReaderFileSettings):
+class ReaderFileDataFrameSettings(BaseFileReaderSettings):
     variable_names: list[str] = Field(
         default=[], description="The names of the variables."
     )
