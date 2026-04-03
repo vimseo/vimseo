@@ -171,7 +171,8 @@ def serialize_value(group: h5py.Group, key: str, value: Any) -> None:
     elif dataclasses.is_dataclass(value) and not isinstance(value, type):
         sub = group.require_group(key)
         sub.attrs["__type__"] = "dataclass"
-        sub.attrs["__class__"] = f"{type(value).__module__}.{type(value).__qualname__}"
+        sub.attrs["__module__"] = f"{type(value).__module__}"
+        sub.attrs["__class__"] = f"{type(value).__name__}"
         for fld in dataclasses.fields(value):
             serialize_value(sub, fld.name, getattr(value, fld.name))
 
@@ -257,29 +258,42 @@ def deserialize_value(node: h5py.Group | h5py.Dataset, key: str) -> Any:
         return [deserialize_value(item, str(i)) for i in range(n)]
 
     if type_ == "dataclass":
-        class_path = item.attrs["__class__"]
-        module_name, _qualname = (
-            class_path.rsplit(".", 1) if "." in class_path else (class_path, "")
-        )
-
-        # First simple search with rsplit,
-        # Then traverse hierarchy for nested classes
-        parts = class_path.split(".")
-
-        # Find appropriate splitting module/class by trying from longest to shortest
-        cls = None
-        for i in range(len(parts) - 1, 0, -1):
-            module_name = ".".join(parts[:i])
-            class_parts = parts[i:]
+        if "__module__" in item.attrs:
+            module_name = item.attrs["__module__"]
+            class_path = item.attrs["__class__"]
             try:
                 module = importlib.import_module(module_name)
-                obj = module
-                for part in class_parts:
-                    obj = getattr(obj, part)
-                cls = obj
-                break
-            except (ModuleNotFoundError, AttributeError):
-                continue
+                cls = getattr(module, class_path)
+            except (ModuleNotFoundError, AttributeError) as e:
+                msg = f"Cannot import dataclass '{class_path}' from module '{module_name}': {e}"
+                raise ImportError(msg) from e
+
+        else:
+            # Fallback for older versions without __module__ attribute,
+            # try to find the class by splitting the class path
+            class_path = item.attrs["__class__"]
+            module_name, _qualname = (
+                class_path.rsplit(".", 1) if "." in class_path else (class_path, "")
+            )
+
+            # First simple search with rsplit,
+            # Then traverse hierarchy for nested classes
+            parts = class_path.split(".")
+
+            # Find appropriate splitting module/class by trying from longest to shortest
+            cls = None
+            for i in range(len(parts) - 1, 0, -1):
+                module_name = ".".join(parts[:i])
+                class_parts = parts[i:]
+                try:
+                    module = importlib.import_module(module_name)
+                    obj = module
+                    for part in class_parts:
+                        obj = getattr(obj, part)
+                    cls = obj
+                    break
+                except (ModuleNotFoundError, AttributeError):
+                    continue
 
         if cls is None:
             msg = f"Cannot import class from '{class_path}'"
