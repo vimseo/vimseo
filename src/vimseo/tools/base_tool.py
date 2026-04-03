@@ -378,6 +378,10 @@ class BaseTool(metaclass=GoogleDocstringInheritanceMeta):
     def load_results(cls, path: Path):
         """Load a result of a tool from the disk.
 
+        For a `JSON` file, only `SpaceToolResult` is supported.
+        This method must be called from class `SpaceTool`.
+        `JSON` format for tool results is deprecated.
+
         Args:
             path: The path to the file.
             tool_name: The name of the tool associated with the result under stored
@@ -394,6 +398,14 @@ class BaseTool(metaclass=GoogleDocstringInheritanceMeta):
             return type(tmp_result).from_hdf5(path)
         # TODO remove support for json
         if path.suffix == ".json":
+            if cls.__name__ == "BaseTool":
+                msg = (
+                    "Loading tool result from JSON format requires to call "
+                    "load_results from the tool class associated with the result stored "
+                    "in the JSON file."
+                )
+                raise ValueError(msg)
+            LOGGER.warning("Loading tool results from JSON format is deprecated.")
             io = IOFactory().create(f"{cls.__name__}FileIO")
             return io.read(
                 file_name=path,
