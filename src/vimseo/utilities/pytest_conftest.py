@@ -33,9 +33,6 @@ import matplotlib.testing.decorators
 import pytest
 from packaging import version
 
-# from vimseo.config.global_configuration import _configuration as config
-# from vimseo.api import set_config
-
 
 def __tmp_wd(tmp_path):
     """Generator to move into a tools directory forth and back.
