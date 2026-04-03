@@ -14,39 +14,6 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 Generate reference data from a model.
-
-layup = [
-    "90_-30_90_-30_-30_90_-30_90"
-]
-
-outputs_to_bias = {}  # {"max_strength": Bias(mult_factor=1.05)}
-
-space_tool_result = BaseTool().load_results(
-    "2024-09-27_T09-44-00_20pct_unif_SpaceToolResult.pickle"
-)
-print(space_tool_result)
-input_data = space_tool_result.parameter_space.compute_samples(
-    n_samples=3, as_dict=False
-)
-reference_data = IODataset()
-reference_data.add_group(
-    IODataset.INPUT_GROUP,
-    input_data,
-    space_tool_result.parameter_space.uncertain_variables,
-)
-model = create_model("OpfmCube", "PST")
-
-df = pd.DataFrame()
-specific_inputs = {"layup": decode_vector(layup), "thickness": atleast_1d(2.0)}
-df = generate_reference_from_dataset(
-    model,
-    reference_data,
-    df=df,
-    specific_inputs=specific_inputs,
-    outputs_to_bias=outputs_to_bias,
-)
-df.to_csv("reference_validation_opfmcube_pst.csv", sep=SEP)
-
 """
 
 from __future__ import annotations
