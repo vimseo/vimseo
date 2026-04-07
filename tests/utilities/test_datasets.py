@@ -113,7 +113,7 @@ def test_dataframe_to_dataset_with_duplicated_names(mock_dataset_with_duplicated
         .get_view(variable_names=["b"], group_names=IODataset.OUTPUT_GROUP)
         .to_numpy()
         .T[0],
-        df["b{" + IODataset.OUTPUT_GROUP + "}[0]"].to_numpy(),
+        df[f"b{{{IODataset.OUTPUT_GROUP}}}[0]"].to_numpy(),
     )
 
 
