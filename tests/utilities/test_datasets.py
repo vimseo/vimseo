@@ -106,7 +106,7 @@ def test_dataframe_to_dataset_with_duplicated_names(mock_dataset_with_duplicated
         .get_view(variable_names=["a"], group_names=IODataset.OUTPUT_GROUP)
         .to_numpy()
         .ravel(),
-        df["a{" + IODataset.OUTPUT_GROUP + "}"].to_numpy(),
+        df[f"a{{{IODataset.OUTPUT_GROUP}}}"].to_numpy(),
     )
     assert_array_equal(
         ds
