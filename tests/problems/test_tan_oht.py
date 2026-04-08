@@ -39,6 +39,6 @@ def test_tan_oh_default_inputs(tmp_wd):
         assert n_data.shape == ((NOMINAL_GRID_SIZE * NOMINAL_GRID_SIZE),)
         assert_array_almost_equal(n_data, sigma_data / input_data["thickness"][0])
 
-    assert output_data["sigma_xx_d0"] == pytest.approx(10490.0, rel=1e-2)
+    assert output_data["sigma_xx_d0"] == pytest.approx(11203.65661, rel=1e-2)
 
     assert (model.archive_manager.job_directory / "flux.vtk").exists()

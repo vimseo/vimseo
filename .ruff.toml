@@ -160,6 +160,7 @@ runtime-evaluated-base-classes = [
     "vimseo.tools.doe.custom_doe.CustomDOESettings",
     "vimseo.tools.verification.verification_result.VerificationResult",
     "vimseo.tools.verification.verification_result.SolutionVerificationResult",
+    "vimseo.material.material_property.MaterialProperty",
 ]
 
 [lint.isort]

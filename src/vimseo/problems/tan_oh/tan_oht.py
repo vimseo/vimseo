@@ -19,6 +19,7 @@ import logging
 from typing import TYPE_CHECKING
 from typing import ClassVar
 
+from composipy import LaminateProperty
 from meshio import Mesh
 from numpy import arctan2
 from numpy import array
@@ -40,6 +41,7 @@ from vimseo.core.load_case_factory import LoadCaseFactory
 from vimseo.core.model_metadata import MetaDataNames
 from vimseo.core.model_settings import IntegratedModelSettings
 from vimseo.lib_vimseo.tan_lib import tan_model
+from vimseo.material_lib.orthotropic import ORTHOTROPIC_MATERIAL
 from vimseo.utilities.fields import extract_line
 from vimseo.utilities.plotting_utils import plotly_save_and_show
 
@@ -60,15 +62,40 @@ DEFAULT_INPUT_DATA = {
     "radius": atleast_1d(3.175),
     "width": atleast_1d(32.0),
     "length": atleast_1d(50.0),
-    "thickness": atleast_1d(1.0),
     "load": array([5000]),
-    "c_strat": array([
-        [453798.95833606, 80454.21661519, 0.0],
-        [80454.21661519, 183534.41794582, 0.0],
-        [0.0, 0.0, 86824.15717525],
-    ]),
     "coarsening_factor": atleast_1d(1.0),
+    "stacking_sequence": array([0, 45, -45, 90, 90, -45, 45, 0]),
 }
+
+material = ORTHOTROPIC_MATERIAL
+PLY_THICKNESS = 0.125e-3
+material.update_from_dict(
+    {
+        "E1": 135e9,
+        "E2": 10e9,
+        "G12": 5e9,
+        "nu12": 0.3,
+        "Xt": 1500e6,
+        "Xc": 1200e6,
+        "Yt": 40e6,
+        "Yc": 120e6,
+        "S12": 50e6,
+    },
+    relation_name="orthotropic",
+)
+material.name_to_material_relation["orthotropic"].set_thickness(PLY_THICKNESS)
+laminate = LaminateProperty(
+    DEFAULT_INPUT_DATA["stacking_sequence"],
+    material.name_to_material_relation["orthotropic"].get_relation(),
+)
+A = laminate.A  # Rigidité de membrane
+# B = laminate.B  # Couplage (devrait être proche de 0 si symétrique)
+# D = laminate.D  # Rigidité de flexion
+total_thickness = len(DEFAULT_INPUT_DATA["stacking_sequence"]) * PLY_THICKNESS
+c_eff = A / total_thickness
+
+DEFAULT_INPUT_DATA["c_strat"] = c_eff
+DEFAULT_INPUT_DATA["thickness"] = atleast_1d(total_thickness)
 
 
 class TanRun_OHT(BaseComponent):
@@ -256,6 +283,9 @@ class PostFieldExtraction(BaseComponent):
         )
         output_data["sigma_xx_r"] = atleast_1d(f(0.5 * width + radius))
         output_data["sigma_xx_d0"] = atleast_1d(f(0.5 * width + radius + d0))
+
+        # TODO: compute reserve factor based on strength criteria instead of just returning 1.0
+        output_data["reserve_factor"] = atleast_1d(1.0)
 
         return output_data
 
