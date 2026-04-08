@@ -148,11 +148,6 @@ def serialize_value(group: h5py.Group, key: str, value: Any) -> None:
         for i, v in enumerate(value):
             serialize_value(sub, str(i), v)
 
-    # TODO handle distributions and parameter_space in a second time
-    # elif isinstance(value, DistributionImplementation):
-    #     group.attrs[key] = value.settings.model_dump_json()
-    #     group.attrs[f"__type__{key}"] = "distribution"
-
     elif isinstance(
         value, (str, int, float, bool, np.integer, np.floating, np.bool_, np.str_)
     ):
