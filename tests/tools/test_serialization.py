@@ -94,7 +94,7 @@ class TestNumpyArrays:
         np.testing.assert_array_equal(rt.raw_samples, arr)
 
     def test_2d_array(self, tmp_hdf5):
-        arr = np.linspace(0,4, 40).reshape((10,4))
+        arr = np.linspace(0, 4, 40).reshape((10, 4))
         result = BayesAnalysisResult(raw_samples=arr)
         rt = roundtrip(result, tmp_hdf5)
         np.testing.assert_array_almost_equal(rt.raw_samples, arr)
@@ -287,10 +287,10 @@ class TestPickleFallback:
 class TestFullResults:
     def test_bayes_analysis_result_full(self, tmp_hdf5):
         result = BayesAnalysisResult(
-            raw_samples=np.random.rand(100, 3),  # noqa: NPY002
+            raw_samples=np.linspace(0, 1, 100 * 3).reshape((100, 3)),  # noqa: NPY002
             thin_number=10,
             ndim=3,
-            processed_samples=np.random.rand(50, 3),  # noqa: NPY002
+            processed_samples=np.linspace(0, 1, 50 * 3).reshape((50, 3)),  # noqa: NPY002
             lppd=-12.5,
             ml=-8.3,
             posterior_predictive=None,
