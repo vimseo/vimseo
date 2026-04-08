@@ -67,7 +67,7 @@ class BaseResult(metaclass=GoogleDocstringInheritanceMeta):
 
     # TODO add an entry point to open myhdf5?
     def to_hdf5(self, path: str | Path) -> None:
-        """Serialization of a BaseResult to hdf5 file.
+        """Serialize a BaseResult into an HDF5 file.
 
         The file can be explored with an on-line reader,
         like <https://myhdf5.hdfgroup.org/>.
