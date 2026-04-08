@@ -133,10 +133,10 @@ def assert_results_equal(r1, r2):
         for fld in dataclasses.fields(r1):
             if fld.name == "generic":
                 continue
-            print("Compared field:", fld.name)
+            LOGGER.info(f"Compared field: {fld.name}")
             assert_results_equal(getattr(r1, fld.name), getattr(r2, fld.name))
     elif isinstance(r1, matplotlib.figure.Figure):
-        # Figures are not comparable, only the type is checked
+        LOGGER.info("Figures are not comparable, only the type is checked")
         assert type(r1) is type(r2)
     elif isinstance(r1, np.ndarray):
         np.testing.assert_array_equal(r1, r2)
