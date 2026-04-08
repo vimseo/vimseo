@@ -127,7 +127,7 @@ class BaseResult(metaclass=GoogleDocstringInheritanceMeta):
 
 
 def assert_results_equal(r1, r2):
-    """Compare récursivement deux dataclasses/dicts/arrays."""
+    """Recursively compare two dataclasses/dicts/arrays."""
     if dataclasses.is_dataclass(r1):
         assert type(r1) is type(r2)
         for fld in dataclasses.fields(r1):
