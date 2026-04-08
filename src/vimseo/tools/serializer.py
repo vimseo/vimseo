@@ -26,7 +26,6 @@ from typing import Any
 import numpy as np
 import pandas as pd
 from gemseo.datasets.dataset import Dataset
-from gemseo.uncertainty.distributions.base_distribution import DistributionSettings
 
 from vimseo.utilities.json_grammar_utils import EnhancedJSONEncoder
 
@@ -36,7 +35,7 @@ if TYPE_CHECKING:
 LOGGER = logging.getLogger(__name__)
 
 
-def to_dataframe(value, key, group, type_name):
+def __to_dataframe(value: pd.DataFrame, key: str, group: h5py.Group, type_name: str):
     """Serialize a Dataframe, possibly multi-index."""
     if key in group:
         del group[key]
@@ -75,7 +74,7 @@ def to_dataframe(value, key, group, type_name):
             )
 
 
-def from_dataframe(item):
+def __from_dataframe(item: h5py.Group) -> pd.DataFrame:
     """Deserialize a Dataframe."""
     is_multiindex = item.attrs.get("is_multiindex", False)
     columns_raw = json.loads(item.attrs["columns"])
@@ -117,10 +116,10 @@ def serialize_value(group: h5py.Group, key: str, value: Any) -> None:
         group[key].attrs["__type__"] = "ndarray"
 
     elif isinstance(value, Dataset):
-        to_dataframe(value, key, group, "dataset")
+        __to_dataframe(value, key, group, "dataset")
 
     elif isinstance(value, pd.DataFrame):
-        to_dataframe(value, key, group, "dataframe")
+        __to_dataframe(value, key, group, "dataframe")
 
     elif isinstance(value, dict):
         if key in group:
@@ -129,13 +128,7 @@ def serialize_value(group: h5py.Group, key: str, value: Any) -> None:
         sub.attrs["__type__"] = "dict"
         sub.attrs["__empty__"] = len(value) == 0
         for k, v in value.items():
-            try:
-                serialize_value(sub, str(k), v)
-            except Exception:  # noqa: BLE001
-                # Fallback pickle for non serializable values
-                data = np.frombuffer(pickle.dumps(v), dtype=np.uint8)
-                sub.create_dataset(str(k), data=data)
-                sub[str(k)].attrs["__type__"] = "pickle"
+            serialize_value(sub, str(k), v)
 
     elif isinstance(value, tuple):
         group.attrs[key] = json.dumps(list(value), cls=EnhancedJSONEncoder)
@@ -223,16 +216,11 @@ def deserialize_value(node: h5py.Group | h5py.Dataset, key: str) -> Any:
         return data
 
     if type_ == "dataset":
-        df = from_dataframe(item)
+        df = __from_dataframe(item)
         return Dataset.from_dataframe(df)
 
     if type_ == "dataframe":
-        return from_dataframe(item)
-
-    # TODO handle distributions and parameter_space in a second time
-    if type_ == "distribution":
-        settings = DistributionSettings(**item)
-        return type(settings.distribution_name)(settings=settings)
+        return __from_dataframe(item)
 
     if type_ == "dict":
         # Empty dict
