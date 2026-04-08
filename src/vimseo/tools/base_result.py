@@ -79,7 +79,7 @@ class BaseResult(metaclass=GoogleDocstringInheritanceMeta):
                 serialize_value(f, fld.name, getattr(self, fld.name))
 
     def to_hdf5_buffer(self) -> BytesIO:
-        """Serialization of a BaseResult to a hdf5 buffer."""
+        """Serialize a BaseResult into an HDF5 buffer."""
         bio = BytesIO()
         with h5py.File(bio, "w") as f:
             f.attrs["__class__"] = type(self).__name__
