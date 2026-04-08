@@ -33,6 +33,7 @@ from gemseo.core.grammars.errors import InvalidDataError
 from gemseo.core.grammars.json_grammar import JSONGrammar
 from gemseo.utils.directory_creator import DirectoryCreator
 from gemseo.utils.directory_creator import DirectoryNamingMethod
+from pydantic import Field
 
 from vimseo.config.global_configuration import _configuration as config
 from vimseo.io.io_factory import IOFactory
@@ -55,10 +56,25 @@ LOGGER = logging.getLogger(__name__)
 
 
 class ToolConstructorSettings(BaseSettings):
-    name: str = ""
-    root_directory: str | Path = config.root_directory
-    directory_naming_method: DirectoryNamingMethod = DirectoryNamingMethod.NUMBERED
-    working_directory: str | Path = config.working_directory
+    name: str = Field(
+        default="",
+        description="The name of the tool. By default, it is the class name.",
+    )
+    root_directory: str | Path = Field(
+        default=config.root_directory,
+        description="The path to the root directory, wherein unique directories will be created at each execution. If set to empty string, use the current working directory.",
+    )
+    directory_naming_method: DirectoryNamingMethod = Field(
+        default=DirectoryNamingMethod.NUMBERED,
+        description="The method to create the execution directories.",
+    )
+    working_directory: str | Path = Field(
+        default=config.working_directory,
+        description="The directory within which to save the results. "
+        "If empty, save the results into the unique generated directory. "
+        "Note that the use of a user-defined working_directory or an automatically generated unique directory is exclusive, "
+        "and the choice is controlled by using leaving or not working_directory to its default value.",
+    )
 
 
 class StreamlitToolConstructorSettings(ToolConstructorSettings):

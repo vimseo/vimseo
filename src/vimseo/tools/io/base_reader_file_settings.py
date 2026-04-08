@@ -17,15 +17,23 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from pydantic import Field
+
 from vimseo.tools.base_settings import BaseSettings
 
 
 class BaseFileReaderSettings(BaseSettings):
     """Settings for a base file reader."""
 
-    file_name: str | Path = ""
-    directory_path: str | Path = ""
-    tool_name: str = ""
+    file_name: str | Path = Field(
+        default="", description="The name of the file to read."
+    )
+    directory_path: str | Path = Field(
+        default="", description="The path to the directory containing the file."
+    )
+    tool_name: str = Field(
+        default="", description="The name of the tool to use for reading the file."
+    )
 
 
 class StreamlitBaseFileReaderSettings(BaseSettings):
