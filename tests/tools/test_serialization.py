@@ -279,26 +279,6 @@ class TestPickleFallback:
         assert rt.custom is not None
 
 
-# TODO handle distributions and parameter_space in a second time
-# def test_distribution(tmp_hdf5):
-#     """Vérifie qu'un serializer custom pour Distribution est utilisé."""
-
-#     dist = OTNormalDistribution()
-
-#     @dataclass
-#     class ResultWithDist(BaseResult):
-#         dist: OTDistribution | None = None
-
-#     # Sans serializer custom, doit tomber en pickle
-#     result = ResultWithDist(dist=dist)
-#     rt = roundtrip(result, tmp_hdf5)
-
-#     import h5py
-
-#     with h5py.File(tmp_hdf5, "r") as f:
-#         assert f["dist"].attrs["__type__"] == "distribution"
-
-
 # ---------------------------------------------------------------------------
 # Tests — real results
 # ---------------------------------------------------------------------------

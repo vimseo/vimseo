@@ -148,6 +148,7 @@ def stochastic_case_result():
 
 @pytest.fixture
 def deterministic_validation_case(reference_data):
+    """A mock ValidationCase set from deterministic validation."""
     validation_case = DeterministicValidationCase()
 
     model = create_model("MockModelPersistent", "LC1")
