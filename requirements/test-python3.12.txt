@@ -28,9 +28,9 @@ certifi==2026.2.25
     # via requests
 cffi==2.0.0
     # via cryptography
-charset-normalizer==3.4.6
+charset-normalizer==3.4.7
     # via requests
-click==8.3.1
+click==8.3.2
     # via
     #   flask
     #   mlflow-skinny
@@ -38,6 +38,8 @@ click==8.3.1
     #   uvicorn
 cloudpickle==3.1.2
     # via mlflow-skinny
+composipy==1.6.0
+    # via vimseo (pyproject.toml)
 contourpy==1.3.3
     # via matplotlib
 covdefaults==2.3.0
@@ -80,7 +82,7 @@ eval-type-backport==0.2.2
     # via vimseo (pyproject.toml)
 execnet==2.1.2
     # via pytest-xdist
-fastapi==0.135.2
+fastapi==0.135.3
     # via mlflow-skinny
 fastjsonschema==2.20.0
     # via
@@ -173,6 +175,7 @@ markupsafe==3.0.3
     #   werkzeug
 matplotlib==3.9.2
     # via
+    #   composipy
     #   gemseo
     #   gemseo-calibration
     #   mlflow
@@ -191,7 +194,7 @@ mlflow-tracing==3.5.1
     # via mlflow
 mpmath==1.3.0
     # via sympy
-narwhals==2.18.1
+narwhals==2.19.0
     # via altair
 nbformat==5.10.4
     # via vimseo (pyproject.toml)
@@ -201,6 +204,7 @@ nlopt==2.7.1
     # via gemseo
 numpy==1.26.4
     # via
+    #   composipy
     #   contourpy
     #   emcee
     #   gemseo
@@ -258,6 +262,7 @@ packaging==24.1
     #   streamlit
 pandas==2.2.2
     # via
+    #   composipy
     #   gemseo
     #   mlflow
     #   seaborn
@@ -315,7 +320,7 @@ pydantic==2.9.1
     #   streamlit-pydantic-sebastienbocquet
 pydantic-core==2.23.3
     # via pydantic
-pydantic-extra-types==2.11.1
+pydantic-extra-types==2.11.2
     # via streamlit-pydantic-sebastienbocquet
 pydantic-settings==2.13.1
     # via
@@ -325,7 +330,7 @@ pydeck==0.9.1
     # via streamlit
 pydoe3==1.0.4
     # via gemseo
-pygments==2.19.2
+pygments==2.20.0
     # via
     #   pytest
     #   rich
@@ -354,7 +359,7 @@ python-dotenv==1.2.2
     #   pydantic-settings
 pytz==2026.1.post1
     # via pandas
-pyvista==0.47.1
+pyvista==0.47.2
     # via vimseo (pyproject.toml)
 pyxdsm==2.3.0
     # via gemseo
@@ -366,7 +371,7 @@ referencing==0.37.0
     # via
     #   jsonschema
     #   jsonschema-specifications
-requests==2.33.0
+requests==2.33.1
     # via
     #   databricks-sdk
     #   docker
@@ -391,6 +396,7 @@ scikit-learn==1.5.2
     #   mlflow
 scipy==1.14.1
     # via
+    #   composipy
     #   gemseo
     #   mlflow
     #   pydoe3
@@ -406,7 +412,7 @@ six==1.17.0
     #   python-dateutil
 smmap==5.0.3
     # via gitdb
-sqlalchemy==2.0.48
+sqlalchemy==2.0.49
     # via
     #   alembic
     #   mlflow
@@ -467,19 +473,19 @@ typing-inspection==0.4.2
     # via
     #   fastapi
     #   pydantic-settings
-tzdata==2025.3
+tzdata==2026.1
     # via pandas
 urllib3==2.6.3
     # via
     #   docker
     #   requests
-uvicorn==0.42.0
+uvicorn==0.44.0
     # via mlflow-skinny
 vtk==9.6.0
     # via pyvista
 watchdog==6.0.0
     # via streamlit
-werkzeug==3.1.7
+werkzeug==3.1.8
     # via
     #   flask
     #   flask-cors

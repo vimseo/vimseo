@@ -36,9 +36,9 @@ certifi==2026.2.25
     # via requests
 cffi==2.0.0
     # via cryptography
-charset-normalizer==3.4.6
+charset-normalizer==3.4.7
     # via requests
-click==8.3.1
+click==8.3.2
     # via
     #   black
     #   flask
@@ -51,6 +51,8 @@ cloudpickle==3.1.2
     # via mlflow-skinny
 colorama==0.4.6
     # via mkdocs-material
+composipy==1.6.0
+    # via vimseo (pyproject.toml)
 contourpy==1.3.3
     # via matplotlib
 cryptography==46.0.6
@@ -85,7 +87,7 @@ et-xmlfile==2.0.0
     # via openpyxl
 eval-type-backport==0.2.2
     # via vimseo (pyproject.toml)
-fastapi==0.135.2
+fastapi==0.135.3
     # via mlflow-skinny
 fastjsonschema==2.20.0
     # via
@@ -139,7 +141,7 @@ griffe-fieldz==0.5.0
     # via vimseo (pyproject.toml:doc)
 griffe-inherited-docstrings==1.1.3
     # via vimseo (pyproject.toml:doc)
-griffelib==2.0.1
+griffelib==2.0.2
     # via
     #   griffe-fieldz
     #   griffe-inherited-docstrings
@@ -214,6 +216,7 @@ markupsafe==3.0.3
     #   werkzeug
 matplotlib==3.9.2
     # via
+    #   composipy
     #   gemseo
     #   gemseo-calibration
     #   mlflow
@@ -259,7 +262,7 @@ mkdocs-gen-files==0.6.1
     # via vimseo (pyproject.toml:doc)
 mkdocs-get-deps==0.2.2
     # via mkdocs
-mkdocs-include-markdown-plugin==7.2.1
+mkdocs-include-markdown-plugin==7.2.2
     # via vimseo (pyproject.toml:doc)
 mkdocs-literate-nav==0.6.3
     # via vimseo (pyproject.toml:doc)
@@ -289,7 +292,7 @@ mpmath==1.3.0
     # via sympy
 mypy-extensions==1.1.0
     # via black
-narwhals==2.18.1
+narwhals==2.19.0
     # via altair
 nbformat==5.10.4
     # via vimseo (pyproject.toml)
@@ -299,6 +302,7 @@ nlopt==2.7.1
     # via gemseo
 numpy==1.26.4
     # via
+    #   composipy
     #   contourpy
     #   emcee
     #   gemseo
@@ -362,6 +366,7 @@ paginate==0.5.7
     # via mkdocs-material
 pandas==2.2.2
     # via
+    #   composipy
     #   gemseo
     #   mkdocs-table-reader-plugin
     #   mlflow
@@ -418,7 +423,7 @@ pyasn1==0.6.3
     # via pyasn1-modules
 pyasn1-modules==0.4.2
     # via google-auth
-pybtex==0.25.1
+pybtex==0.26.1
     # via mkdocs-bibtex
 pycparser==3.0
     # via cffi
@@ -433,7 +438,7 @@ pydantic==2.9.1
     #   streamlit-pydantic-sebastienbocquet
 pydantic-core==2.23.3
     # via pydantic
-pydantic-extra-types==2.11.1
+pydantic-extra-types==2.11.2
     # via streamlit-pydantic-sebastienbocquet
 pydantic-settings==2.13.1
     # via
@@ -443,7 +448,7 @@ pydeck==0.9.1
     # via streamlit
 pydoe3==1.0.4
     # via gemseo
-pygments==2.19.2
+pygments==2.20.0
     # via
     #   mkdocs-material
     #   pygments-ansi-color
@@ -451,7 +456,7 @@ pygments==2.19.2
     #   rich
 pygments-ansi-color==0.3.0
     # via markdown-exec
-pymdown-extensions==10.21
+pymdown-extensions==10.21.2
     # via
     #   markdown-exec
     #   mkdocs-material
@@ -480,7 +485,7 @@ pytokens==0.4.1
     # via black
 pytz==2026.1.post1
     # via pandas
-pyvista==0.47.1
+pyvista==0.47.2
     # via vimseo (pyproject.toml)
 pyxdsm==2.3.0
     # via gemseo
@@ -506,7 +511,7 @@ referencing==0.37.0
     # via
     #   jsonschema
     #   jsonschema-specifications
-requests==2.33.0
+requests==2.33.1
     # via
     #   databricks-sdk
     #   docker
@@ -536,6 +541,7 @@ scikit-learn==1.5.2
     #   mlflow
 scipy==1.14.1
     # via
+    #   composipy
     #   gemseo
     #   mlflow
     #   pydoe3
@@ -553,7 +559,7 @@ six==1.17.0
     #   python-dateutil
 smmap==5.0.3
     # via gitdb
-sqlalchemy==2.0.48
+sqlalchemy==2.0.49
     # via
     #   alembic
     #   mlflow
@@ -619,14 +625,14 @@ typing-inspection==0.4.2
     # via
     #   fastapi
     #   pydantic-settings
-tzdata==2025.3
+tzdata==2026.1
     # via pandas
 urllib3==2.6.3
     # via
     #   docker
     #   requests
     #   responses
-uvicorn==0.42.0
+uvicorn==0.44.0
     # via mlflow-skinny
 validators==0.35.0
     # via mkdocs-bibtex
@@ -641,7 +647,7 @@ watchdog==6.0.0
     #   streamlit
 wcmatch==10.1
     # via mkdocs-include-markdown-plugin
-werkzeug==3.1.7
+werkzeug==3.1.8
     # via
     #   flask
     #   flask-cors

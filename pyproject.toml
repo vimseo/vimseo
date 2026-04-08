@@ -39,6 +39,7 @@ dependencies = [
     "openturns >=1.24, <= 1.24",
     "pydantic-settings",
     "pyvista",
+    "composipy",
 ]
 
 [dependency-groups]
