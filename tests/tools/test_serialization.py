@@ -94,7 +94,7 @@ class TestNumpyArrays:
         np.testing.assert_array_equal(rt.raw_samples, arr)
 
     def test_2d_array(self, tmp_hdf5):
-        arr = np.random.rand(10, 4)  # noqa: NPY002
+        arr = np.linspace(0,4, 40).reshape((10,4))
         result = BayesAnalysisResult(raw_samples=arr)
         rt = roundtrip(result, tmp_hdf5)
         np.testing.assert_array_almost_equal(rt.raw_samples, arr)
