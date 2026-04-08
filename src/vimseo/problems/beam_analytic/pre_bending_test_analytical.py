@@ -20,12 +20,12 @@ import logging
 from numpy import array
 from numpy import empty
 
-from vimseo.core.components.pre.pre_processor import PreProcessor
+from vimseo.core.components.base_component import BaseComponent
 
 LOGGER = logging.getLogger(__name__)
 
 
-class PreBendingTestAnalytical_Cantilever(PreProcessor):
+class PreBendingTestAnalytical_Cantilever(BaseComponent):
     """Preprocessor for the load case Cantilever."""
 
     USE_JOB_DIRECTORY = False
@@ -77,7 +77,7 @@ class PreBendingTestAnalytical_Cantilever(PreProcessor):
         }
 
 
-class PreBendingTestAnalytical_ThreePoints(PreProcessor):
+class PreBendingTestAnalytical_ThreePoints(BaseComponent):
     """Preprocessor for the load case ThreePoints."""
 
     USE_JOB_DIRECTORY = False

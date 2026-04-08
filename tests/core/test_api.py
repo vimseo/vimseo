@@ -30,9 +30,10 @@ def test_available_load_cases(tmp_wd):
 
 def test_available_models(tmp_wd):
     """Check that the models associated with a given load case are correctly found."""
-    assert get_available_models("LC1") == [
+    assert set(get_available_models("LC1")) == {
         "MockModel",
         "MockModelFields",
         "MockModelPersistent",
         "MockModelWithMaterial",
-    ]
+        "MockExternalSoftware",
+    }

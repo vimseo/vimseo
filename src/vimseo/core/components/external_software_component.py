@@ -20,14 +20,16 @@ import shutil
 import subprocess
 from typing import TYPE_CHECKING
 
-from gemseo.core.discipline.discipline import Discipline
+from numpy import atleast_1d
 
-from vimseo.core.base_component import BaseComponent
+from vimseo.core.components.base_component import BaseComponent
+from vimseo.core.model_metadata import MetaDataNames
 from vimseo.job_executor.base_executor import BaseJobExecutor
 
 if TYPE_CHECKING:
     from pathlib import Path
 
+    from vimseo.core.load_case import LoadCase
     from vimseo.material.material import Material
 
 LOGGER = logging.getLogger(__name__)
@@ -48,32 +50,90 @@ class ExternalSoftwareComponent(BaseComponent):
     _job_executor: BaseJobExecutor
     """A job executor."""
 
-    auto_detect_grammar_files = True
-    default_cache_type = Discipline.CacheType.HDF5
-    default_grammar_type = Discipline.GrammarType.JSON
-
     def __init__(
         self,
-        load_case_name: str = "",
+        load_case: LoadCase | None = None,
         material_grammar_file: Path | str = "",
         material: Material | None = None,
         check_subprocess: bool = False,
     ) -> None:
-        super().__init__(load_case_name, material_grammar_file, material)
+        super().__init__(load_case, material_grammar_file, material, check_subprocess)
+
+        self.output_grammar.update_from_data({"error_code": atleast_1d(0)})
+        self.output_grammar.required_names.add("error_code")
+
         self._job_executor = BaseJobExecutor("")
-        self._check_subprocess = check_subprocess
         self._attached_files = []
 
     @property
     def job_executor(self) -> BaseJobExecutor:
         return self._job_executor
 
-    def _check_job_completion(self) -> int:
+    @property
+    def n_cpus(self):
+        """The number of CPUs used to run the external software."""
+        return self._job_executor.options["n_cpus"]
+
+    def write_input_files(self, input_data):
+        """Write the input files for the external software."""
+
+    def pre_run(self, input_data):
+        """Pre-run operations."""
+
+    def post_run(self, input_data, output_data):
+        """Post-run operations."""
+
+    def _run(self, input_data):
+        """Run the external software."""
+
+        self.pre_run(input_data)
+
+        self.write_input_files(input_data)
+
+        self._job_executor._set_job_options(
+            self.job_directory,
+        )
+        error_run = self._job_executor.execute(
+            check_subprocess=self._check_subprocess,
+        )
+        error_run = 0
+        if error_run:
+            LOGGER.warning(
+                f"An error has occurred in {self.__class__.__name__}, "
+                f"running command {self._job_executor._command_line}."
+            )
+
+        error_run = 0
+        error_run = self._check_subprocess_completion(
+            error_run, self._check_subprocess, self._job_executor.command_line.split()
+        )
+
+        if error_run:
+            LOGGER.warning(
+                f"An error has occurred in {self.__class__.__name__}, "
+                f"in check subprocess completion."
+            )
+
+        output_data = {}
+        self.post_run(input_data, output_data)
+        output_data[MetaDataNames.error_code] = atleast_1d(error_run)
+
+        return output_data
+
+    def set_job_executor(self, job_executor: BaseJobExecutor):
+        """Set the job executor.
+
+        Args:
+            job_executor: The job executor.
+        """
+        self._job_executor = job_executor
+
+    def _is_successful_execution(self) -> int:
         """Checks a completion criterion after execution of the subprocess.
 
         Returns: The return code of the subprocess result.
         """
-        return 0
+        return True
 
     def _check_subprocess_completion(
         self,
@@ -92,7 +152,7 @@ class ExternalSoftwareComponent(BaseComponent):
         Returns: The error code.
         """
         if error_subprocess == 0:
-            error_subprocess = self._check_job_completion()
+            error_subprocess = int(not self._is_successful_execution())
 
         if error_subprocess != 0:
             if check:
@@ -103,7 +163,10 @@ class ExternalSoftwareComponent(BaseComponent):
                     stderr=subprocess.STDOUT,
                 )
 
-            LOGGER.warning("Subprocess returned an error which is ignored")
+            LOGGER.warning(
+                "Subprocess returned an error which is ignored "
+                "(``check_subprocess=False``)."
+            )
 
         return error_subprocess
 

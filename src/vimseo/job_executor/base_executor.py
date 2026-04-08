@@ -29,7 +29,6 @@ from typing import ClassVar
 import jinja2
 from docstring_inheritance import GoogleDocstringInheritanceMeta
 
-from vimseo.job_executor.base_job_options import BaseJobSettings
 from vimseo.job_executor.base_user_job_options import BaseUserJobSettings
 
 if TYPE_CHECKING:
@@ -46,7 +45,7 @@ class BaseJobExecutor(metaclass=GoogleDocstringInheritanceMeta):
     _is_blocking_subprocess: bool
     """Whether the subprocess running the command is blocking."""
 
-    __command_line: str
+    _command_line: str
     """The executed command."""
 
     _n_used_tokens: int
@@ -61,7 +60,7 @@ class BaseJobExecutor(metaclass=GoogleDocstringInheritanceMeta):
     _convergence_log_length: int
     """The current number of lines of the convergence log."""
 
-    _job_options: BaseJobSettings | None
+    _job_options: dict | None
     """The full job options.
 
     Except the user job options, they are only known at model execution.
@@ -78,9 +77,6 @@ class BaseJobExecutor(metaclass=GoogleDocstringInheritanceMeta):
 
     _IS_BLOCKING_SUBPROCESS = False
     """Whether the subprocess running the command is blocking."""
-
-    _JOB_OPTIONS_MODEL: ClassVar[BaseJobSettings] = BaseJobSettings
-    """The pydantic model of the job options."""
 
     _USER_JOB_OPTIONS_MODEL: ClassVar[BaseUserJobSettings] = BaseUserJobSettings
     """The pydantic model of the user job options."""
@@ -118,13 +114,13 @@ class BaseJobExecutor(metaclass=GoogleDocstringInheritanceMeta):
             raise TypeError(msg)
         self._user_job_options = options.model_dump()
 
-    def _set_job_options(self, job_directory: Path, **options):
+    def _set_job_options(self, job_directory: Path):
         """Set the job options."""
         self._job_directory = job_directory
-        options.update(self._user_job_options)
+        options = self._user_job_options
         options.update({"executable": self.DEFAULT_EXECUTABLE})
-        self._job_options = self._JOB_OPTIONS_MODEL(**options)
-        self._job_name = self._job_options.job_name
+        self._job_options = options
+        self._job_name = options.get("job_name", "")
 
     @property
     def options(self) -> dict:
@@ -162,14 +158,10 @@ class BaseJobExecutor(metaclass=GoogleDocstringInheritanceMeta):
         """
         return self._render_template(
             template_command,
-            self._job_options.model_dump(),
+            self._job_options,
         )
 
-    def _is_finished(self) -> bool:
-        """Criterion indicating that the subprocess is finished."""
-        return False
-
-    def _fetch_convergence(self):
+    def _fetch_convergence(self) -> None:
         """Fetch the log of simulation convergence."""
 
     def _execute_external_software(
@@ -177,7 +169,6 @@ class BaseJobExecutor(metaclass=GoogleDocstringInheritanceMeta):
         cmd: Sequence[str],
         check_subprocess: bool,
         activate_convergence_fetching: bool = True,
-        activate_termination_detection: bool = True,
     ) -> int:
         """Execute a subprocess.
 
@@ -216,14 +207,10 @@ class BaseJobExecutor(metaclass=GoogleDocstringInheritanceMeta):
                 self._fetch_convergence()
                 time.sleep(1)
 
-            if activate_termination_detection:
-                time.sleep(1)
-                if self._is_finished():
-                    break
-
             if proc.poll() is not None:
                 if activate_convergence_fetching:
                     self._fetch_convergence()
+                time.sleep(1)
                 break
 
         # Last bit of stuff, flushing the buffers eventually

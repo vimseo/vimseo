@@ -21,23 +21,25 @@ classifiers = [
 dynamic = ["version"]
 requires-python = ">=3.10, <3.13"
 dependencies = [
+  "gemseo[all]@git+https://gitlab.com/SebastienBocquet-IRT/gemseo.git@6.0.0-vims",
     "plotly >= 5.15.0, <= 5.24.0",
     "nbformat>=4.2.0, <= 5.10.4",
     "future >= 1.0.0, <= 1.0.0",
-    "gemseo-vimseo[all] >= 6, < 7",
     "PyYAML >= 6.0.2, <= 6.0.3",
     "streamlit >= 1.44.0, <= 1.50.0",
     "streamlit-pydantic-sebastienbocquet == 0.6.1.dev1",
     "pytest-csv >= 3.0.0, <= 3.0.0",
     "statsmodels >= 0.14.4, <= 0.14.5",
     "eval-type-backport >= 0.2.2, <= 0.2.2",
-    "gemseo_calibration-vimseo >= 3.0.2, < 4",
+    "gemseo_calibration@git+https://gitlab.com/SebastienBocquet-IRT/gemseo-calibration.git@dev-ise",
     "seaborn >= 0.13.2, <= 0.13.2",
     "meshio >= 5.3.5, <= 5.3.5",
     "mlflow >= 3.5.1, <= 3.5.1",
     "emcee >= 3.1.6, <= 3.1.6",
     "openturns >=1.24, <= 1.24",
     "pydantic-settings",
+    "pyvista",
+    "composipy",
 ]
 
 [dependency-groups]

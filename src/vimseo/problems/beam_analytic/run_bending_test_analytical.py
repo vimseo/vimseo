@@ -24,12 +24,12 @@ from numpy import vstack
 from numpy import zeros
 from scipy.interpolate import interp1d
 
-from vimseo.core.components.run.run_processor import RunProcessor
+from vimseo.core.components.base_component import BaseComponent
 
 LOGGER = logging.getLogger(__name__)
 
 
-class RunBendingTestAnalytical(RunProcessor):
+class RunBendingTestAnalytical(BaseComponent):
     """Drives the calculation of maximal displacement from loading and boundary
     conditions."""
 

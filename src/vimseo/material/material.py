@@ -69,6 +69,11 @@ class Material(BaseJsonIO):
         return props
 
     @property
+    def name_to_material_relation(self):
+        """The mapping between material relation names and the corresponding material relation."""
+        return {mat_rel.name: mat_rel for mat_rel in self.material_relations}
+
+    @property
     def name_to_property(self):
         """The mapping between property names and the corresponding property."""
         return {prop.name: prop for prop in self.properties}

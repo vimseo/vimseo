@@ -21,19 +21,23 @@ from typing import TYPE_CHECKING
 from gemseo.core.execution_status import ExecutionStatus
 from numpy import atleast_1d
 
-from vimseo.core.base_component import BaseComponent
 from vimseo.core.base_integrated_model import IntegratedModel
+from vimseo.core.components.base_component import BaseComponent
 from vimseo.core.model_metadata import MetaDataNames
 
 if TYPE_CHECKING:
     from gemseo.core.discipline import Discipline
 
+    from vimseo.core.load_case import LoadCase
+
 
 class DisciplineWrapperComponent(BaseComponent):
     """A component that wraps a GEMSEO discipline."""
 
-    def __init__(self, load_case_name: str, discipline: Discipline):
-        super().__init__(load_case_name)
+    auto_detect_grammar_files = False
+
+    def __init__(self, load_case: LoadCase, discipline: Discipline):
+        super().__init__(load_case)
 
         self._discipline = discipline
         self.input_grammar = discipline.input_grammar
