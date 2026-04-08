@@ -436,7 +436,7 @@ class BaseTool(metaclass=GoogleDocstringInheritanceMeta):
 
     def save_results(self, prefix: str = "", file_format="hdf5") -> None:
         """Save the results of the tool on disk. The file path is
-        :attr:`working_directory` / ``{filename}_result.{file_format}``.
+       `BaseTool.working_directory` / ``{filename}_result.{file_format}``.
 
         Args:
             prefix: The prefix of the filename result.
