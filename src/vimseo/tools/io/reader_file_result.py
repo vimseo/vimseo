@@ -28,7 +28,7 @@ if TYPE_CHECKING:
     from vimseo.tools.base_result import BaseResult
 
 
-class ReaderFileToolResult(BaseReaderFile):
+class ResultFileReaderTool(BaseReaderFile):
     """A tool to read tool data from a file and return the result."""
 
     result: BaseResult
