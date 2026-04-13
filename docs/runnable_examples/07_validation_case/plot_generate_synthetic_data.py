@@ -21,7 +21,7 @@
 As a developer, you want ot generate reference data for examples or tests, controlling
 the bias of the data with respect to the model output.
 As a user, you want to generate synthetic experimental data that could be used
-to validate or verify a model. from a model.
+to validate or verify a model.
 
 ## Solution
 
