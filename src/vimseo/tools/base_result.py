@@ -60,7 +60,7 @@ class BaseResult(metaclass=GoogleDocstringInheritanceMeta):
     metadata: ToolResultMetadata | None = None
     """ToolResultMetadata attached to a result."""
 
-    def to_pickle(self, file_path):
+    def to_pickle(self, file_path: str | Path):
         """Save result instance to disk."""
         with Path(file_path).open("wb") as f:
             pickle.dump(self, f)
