@@ -224,7 +224,7 @@ def deserialize_value(node: h5py.Group | h5py.Dataset, key: str) -> Any:
 
     if type_ == "dict":
         # Empty dict
-        if item.attrs.get("__empty__", False):
+        if item.attrs["__empty__"]:
             return {}
 
         all_keys = set(item.keys())
