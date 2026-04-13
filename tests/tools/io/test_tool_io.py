@@ -20,25 +20,22 @@ from pandas import DataFrame
 
 from vimseo.io.test_data import IO_DATA_DIR
 from vimseo.tools.io.reader_file_dataset import ReaderFileGemseoDataset
-from vimseo.tools.io.reader_file_result import BaseReaderFileSettings
-from vimseo.tools.io.reader_file_result import ReaderFileToolResult
+from vimseo.tools.io.reader_file_result import BaseFileReaderSettings
+from vimseo.tools.io.reader_file_result import ResultFileReaderTool
 from vimseo.tools.space.space_tool_result import SpaceToolResult
 from vimseo.utilities.datasets import SEP
 
 
 def test_tool_result_reader():
     tool_name = "SpaceTool"
-    reader = ReaderFileToolResult(tool_name)
+    reader = ResultFileReaderTool(tool_name)
     result = reader.execute(
-        settings=BaseReaderFileSettings(
+        settings=BaseFileReaderSettings(
             file_name=IO_DATA_DIR / "space_tool" / "space_tool_result.json",
+            tool_name=tool_name,
         )
     )
     assert isinstance(result, SpaceToolResult)
-
-
-def test_tool_names_having_a_reader():
-    assert ReaderFileToolResult.get_tool_names() == ["SpaceTool"]
 
 
 def test_gemseo_dataset_reader(tmp_wd):

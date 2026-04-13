@@ -159,7 +159,7 @@ def test_plot(tmp_wd, verificator):
     """Check the ``plot_result`` method."""
     verificator.save_results()
     result = BaseTool.load_results(
-        verificator.working_directory / "CodeVerificationAgainstData_result.pickle"
+        verificator.working_directory / "CodeVerificationAgainstData_result.hdf5"
     )
     output_name = "dplt_at_force_location"
     metric_name = "SquaredErrorMetric"

@@ -33,15 +33,19 @@ from gemseo.core.grammars.errors import InvalidDataError
 from gemseo.core.grammars.json_grammar import JSONGrammar
 from gemseo.utils.directory_creator import DirectoryCreator
 from gemseo.utils.directory_creator import DirectoryNamingMethod
+from pydantic import Field
 
 from vimseo.config.global_configuration import _configuration as config
+from vimseo.io.io_factory import IOFactory
 from vimseo.tools.base_result import BaseResult
 from vimseo.tools.base_settings import BaseSettings
 from vimseo.tools.metadata import ToolResultMetadata
+from vimseo.tools.tool_results_factory import ToolResultsFactory
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
     from collections.abc import Mapping
+    from collections.abc import Sequence
 
     from plotly.graph_objects import Figure
     from pydantic import BaseModel
@@ -52,10 +56,25 @@ LOGGER = logging.getLogger(__name__)
 
 
 class ToolConstructorSettings(BaseSettings):
-    name: str = ""
-    root_directory: str | Path = config.root_directory
-    directory_naming_method: DirectoryNamingMethod = DirectoryNamingMethod.NUMBERED
-    working_directory: str | Path = config.working_directory
+    name: str = Field(
+        default="",
+        description="The name of the tool. By default, it is the class name.",
+    )
+    root_directory: str | Path = Field(
+        default=config.root_directory,
+        description="The path to the root directory, wherein unique directories will be created at each execution. If set to empty string, use the current working directory.",
+    )
+    directory_naming_method: DirectoryNamingMethod = Field(
+        default=DirectoryNamingMethod.NUMBERED,
+        description="The method to create the execution directories.",
+    )
+    working_directory: str | Path = Field(
+        default=config.working_directory,
+        description="The directory within which to save the results. "
+        "If empty, save the results into the unique generated directory. "
+        "Note that the use of a user-defined working_directory or an automatically generated unique directory is exclusive, "
+        "and the choice is controlled by using leaving or not working_directory to its default value.",
+    )
 
 
 class StreamlitToolConstructorSettings(ToolConstructorSettings):
@@ -120,7 +139,9 @@ class BaseTool(metaclass=GoogleDocstringInheritanceMeta):
     _HAS_OPTION_CHECK: ClassVar[bool] = True
     """Whether the tool uses option checking."""
 
-    RESULT_SUFFIX: ClassVar[str] = "_result"
+    _RESULT_SUFFIX: ClassVar[str] = "_result"
+
+    _RESULT_FORMATS: ClassVar[Sequence[str]] = ["hdf5", "json", "pickle"]
 
     _STREAMLIT_CONSTRUCTOR_OPTIONS = StreamlitToolConstructorSettings
 
@@ -236,7 +257,9 @@ class BaseTool(metaclass=GoogleDocstringInheritanceMeta):
             self._directory_creator.create()
         else:
             Path(self._working_directory).mkdir(exist_ok=True, parents=True)
-        LOGGER.info(f"Working directory is {self.working_directory}")
+        LOGGER.info(
+            f"Working directory is {self.working_directory.absolute().resolve()}"
+        )
 
     def set_plot(self, class_name, **options) -> None:
         """Set the type of plot to show the results of this tool.
@@ -371,11 +394,44 @@ class BaseTool(metaclass=GoogleDocstringInheritanceMeta):
     def load_results(cls, path: Path):
         """Load a result of a tool from the disk.
 
+        For a `JSON` file, only `SpaceToolResult` is supported.
+        This method must be called from class `SpaceTool`.
+        `JSON` format for tool results is deprecated.
+
         Args:
             path: The path to the file.
+            tool_name: The name of the tool associated with the result under stored
+            in ``path``.
         """
-        with Path(path).open("rb") as f:
-            return pickle.load(f)
+        import h5py
+
+        path = Path(path)
+        if path.suffix == ".hdf5":
+            class_name = ""
+            with h5py.File(path, "r") as f:
+                class_name = f.attrs["__class__"]
+            tmp_result = ToolResultsFactory().create(class_name)
+            return type(tmp_result).from_hdf5(path)
+        # TODO remove support for json
+        if path.suffix == ".json":
+            if cls.__name__ == "BaseTool":
+                msg = (
+                    "Loading tool result from JSON format requires to call "
+                    "load_results from the tool class associated with the result stored "
+                    "in the JSON file."
+                )
+                raise ValueError(msg)
+            LOGGER.warning("Loading tool results from JSON format is deprecated.")
+            io = IOFactory().create(f"{cls.__name__}FileIO")
+            return io.read(
+                file_name=path,
+            )
+        if path.suffix == ".pickle":
+            with Path(path).open("rb") as f:
+                return pickle.load(f)
+
+        msg = f"Unknow file format {path.suffix}. Supported formats are {cls._RESULT_FORMATS}"
+        raise ValueError(msg)
 
     def _set_options_to_results(self, options):
         """Set current tool options to the metadata field of the results."""
@@ -406,13 +462,9 @@ class BaseTool(metaclass=GoogleDocstringInheritanceMeta):
                 self._check_options(**loaded_options)
             self._options.update(loaded_options)
 
-    # TODO add file_format option, to call to_csv method in the results.
-    # TODO add save_intermediate option to call a save_intermediate method
-    #  which saves the intermediate nodes, or activate the save_results method
-    #  in the computation functions?
-    def save_results(self, prefix: str = "") -> None:
+    def save_results(self, prefix: str = "", file_format="hdf5") -> None:
         """Save the results of the tool on disk. The file path is
-        :attr:`working_directory` / ``{filename}_result.pickle``.
+       `BaseTool.working_directory` / ``{filename}_result.{file_format}``.
 
         Args:
             prefix: The prefix of the filename result.
@@ -420,10 +472,24 @@ class BaseTool(metaclass=GoogleDocstringInheritanceMeta):
         prefix_separator = ""
         if prefix != "":
             prefix_separator = "_"
-        self.result.to_pickle(
+
+        path = (
             self.working_directory
-            / f"{prefix}{prefix_separator}{self.name}{self.RESULT_SUFFIX}"
+            / f"{prefix}{prefix_separator}{self.name}{self._RESULT_SUFFIX}.{file_format}"
         )
+        LOGGER.info(f"Saving result to {path.absolute().resolve()}")
+
+        if file_format not in self._RESULT_FORMATS:
+            msg = f"File format should be in {self._RESULT_FORMATS}"
+            raise ValueError(msg)
+
+        if file_format == "hdf5":
+            self.result.to_hdf5(path)
+        elif file_format == "json":
+            io = IOFactory().create(f"{self.name}FileIO")
+            io.write(self.result, directory_path=path.parent, file_base_name=path.stem)
+        elif file_format == "pickle":
+            self.result.to_pickle(path)
 
     # TODO Choose if it is a class method or not
     @abstractmethod

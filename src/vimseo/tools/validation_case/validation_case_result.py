@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import logging
 from collections import defaultdict
-from dataclasses import field
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from gemseo.datasets.io_dataset import IODataset
@@ -26,6 +26,8 @@ from numpy import ndarray
 from pandas import DataFrame
 
 from vimseo.tools.base_tool import BaseResult
+from vimseo.tools.validation.validation_point_result import ValidationPointResult
+from vimseo.utilities.datasets import GROUP_SEPARATORS
 from vimseo.utilities.datasets import dataframe_to_dataset
 
 if TYPE_CHECKING:
@@ -40,14 +42,17 @@ if TYPE_CHECKING:
 LOGGER = logging.getLogger(__name__)
 
 
+@dataclass
 class ValidationCaseResult(BaseResult):
     """The result of a validation case."""
 
-    element_wise_metrics: IODataset | None = field(default_factory=None)
+    element_wise_metrics: IODataset | None = None
 
     integrated_metrics: Mapping[str, Mapping[str, float]] | None = None
     """A dictionary mapping variable names and metric names to integrated metric values
     corresponding the each validation point (i.e. each sample of the reference data)."""
+
+    stochastic_point_results: Sequence[ValidationPointResult] = ()
 
     def get_common_values(self, data_list: Sequence[list]) -> list:
         """Get the common values across all lists in data_list."""
@@ -68,9 +73,15 @@ class ValidationCaseResult(BaseResult):
         group_data.columns = group_data.get_columns(as_tuple=False)
         group_data = group_data.mean().to_dict()
         for name, value in group_data.items():
-            data[f"{name}[{output_group_name}]"].append(value)
+            data[
+                f"{name}{GROUP_SEPARATORS[0]}{output_group_name}{GROUP_SEPARATORS[1]}"
+            ].append(value)
 
     def set_from_point_results(self, results: Iterable[ValidationPointResult]):
+
+        # TODO check that all points have common settings
+        self.stochastic_point_results = results
+        self.metadata = results[0].metadata
 
         metric_names = self.get_common_values([
             result.metadata.settings["metric_names"] for result in results
@@ -86,10 +97,14 @@ class ValidationCaseResult(BaseResult):
                 # arrays are stringified because they could be of different lengths
                 if isinstance(value, ndarray) and value.size > 1:
                     value = str(value)
-                data[f"{name}[Nominal]"].append(value)
+                data[f"{name}{GROUP_SEPARATORS[0]}Nominal{GROUP_SEPARATORS[1]}"].append(
+                    value
+                )
             for metric_name in metric_names:
                 for name, value in result.integrated_metrics[metric_name].items():
-                    data[f"{name}[{metric_name}]"].append(value)
+                    data[
+                        f"{name}{GROUP_SEPARATORS[0]}{metric_name}{GROUP_SEPARATORS[1]}"
+                    ].append(value)
             self.add_averaged_point(
                 IODataset.INPUT_GROUP,
                 result.simulated_data,
@@ -117,5 +132,7 @@ class ValidationCaseResult(BaseResult):
         for metric_name in metric_names:
             for output_name in output_names:
                 self.integrated_metrics[metric_name][output_name] = mean(
-                    df[f"{output_name}[{metric_name}]"]
+                    df[
+                        f"{output_name}{GROUP_SEPARATORS[0]}{metric_name}{GROUP_SEPARATORS[1]}"
+                    ]
                 )

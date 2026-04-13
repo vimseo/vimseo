@@ -495,7 +495,9 @@ class CalibrationStep(BaseAnalysisTool):
         self.result.posterior_parameters = decapsulate_length_one_array(
             self.result.posterior_parameters
         )
-        self.result.prior_parameters = calibration.prior_parameters
+        self.result.prior_parameters = decapsulate_length_one_array(
+            calibration.prior_parameters
+        )
         self.result.design_space = design_space
         self.result.reference_data = reference_data_dict
         self.result.prior_model_data = calibration.prior_model_data

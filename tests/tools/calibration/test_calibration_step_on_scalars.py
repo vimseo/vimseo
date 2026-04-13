@@ -25,10 +25,12 @@ from numpy import ndarray
 from vimseo.api import create_model
 from vimseo.core.model_settings import IntegratedModelSettings
 from vimseo.io.space_io import SpaceToolFileIO
+from vimseo.tools.base_result import assert_results_equal
 from vimseo.tools.calibration.calibration_step import CalibrationStep
 from vimseo.tools.calibration.calibration_step import CalibrationStepInputs
 from vimseo.tools.calibration.calibration_step import CalibrationStepSettings
 from vimseo.tools.calibration.calibration_step import MetricVariable
+from vimseo.tools.calibration.calibration_step_result import CalibrationStepResult
 from vimseo.tools.calibration.input_data import CALIBRATION_INPUT_DATA
 from vimseo.utilities.generate_validation_reference import (
     generate_reference_from_parameter_space,
@@ -318,3 +320,12 @@ def test_plots_on_scalars(tmp_wd, calibration_on_scalars):
         calibration_step.working_directory
         / "simulated_versus_reference_reaction_forces_load_case_Cantilever_bars.html"
     ).is_file()
+
+
+def test_serialization(tmp_wd, calibration_on_scalars):
+    """Check that a CalibrationStepResult can be serialized to hdf5."""
+    calibration_step, _ = calibration_on_scalars
+    result = calibration_step.result
+    result.to_hdf5("result.hdf5")
+    serialized_result = CalibrationStepResult.from_hdf5("result.hdf5")
+    assert_results_equal(result, serialized_result)

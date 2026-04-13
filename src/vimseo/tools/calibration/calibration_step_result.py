@@ -15,12 +15,10 @@
 
 from __future__ import annotations
 
-import pickle
 from collections.abc import Iterable
 from collections.abc import Mapping
 from dataclasses import dataclass
 from dataclasses import field
-from pathlib import Path
 
 from gemseo.algos.design_space import DesignSpace
 from numpy import ndarray
@@ -69,11 +67,3 @@ class CalibrationStepResult(BaseResult):
     curve_data: Iterable[CurveDataType | None] = field(default_factory=CurveData)
 
     objective: str = ""
-
-
-def to_pickle(self, file_path):
-    """Save result instance to disk."""
-    del self.calibration
-    file_path = f"{file_path}.pickle"
-    with Path(file_path).open("wb") as f:
-        pickle.dump(self, f)

@@ -39,7 +39,6 @@ from pydantic import Field
 
 from vimseo.config.global_configuration import _configuration as config
 from vimseo.core.base_integrated_model import IntegratedModel
-from vimseo.io.space_io import SpaceToolFileIO
 from vimseo.tools.base_analysis_tool import BaseAnalysisTool
 from vimseo.tools.base_settings import BaseInputs
 from vimseo.tools.base_settings import BaseSettings
@@ -362,22 +361,3 @@ class SpaceTool(BaseAnalysisTool):
     def get_available_distributions(self):
         """The available distributions for the current space builder."""
         return self._space_builder.get_available_distributions()
-
-    def save_results(self, prefix: str = "") -> None:
-        prefix_separator = ""
-        if prefix != "":
-            prefix_separator = "_"
-        SpaceToolFileIO().write(
-            self.result,
-            directory_path=self.working_directory,
-            file_base_name=f"{prefix}{prefix_separator}{self.name}{self.RESULT_SUFFIX}",
-        )
-
-    @classmethod
-    def load_results(cls, path: Path):
-        """Load a result of a tool from the disk.
-
-        Args:
-            path: The path to the file.
-        """
-        return SpaceToolFileIO().read(file_name=path)

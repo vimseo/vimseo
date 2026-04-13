@@ -33,8 +33,7 @@ from numpy import ones
 from numpy import vstack
 from numpy.ma import array
 from pandas import DataFrame
-
-from vimseo.tools.post_tools.line_plot import Lines
+from pandas import testing
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -182,6 +181,8 @@ def plot_dataset_element(
      Returns:
          The plot result.
     """
+    from vimseo.tools.post_tools.line_plot import Lines
+
     group_name = Dataset.DEFAULT_GROUP if group_name == "" else group_name
     all_variables = [*variables, abscissa_variable]
     dataset_to_plot = Dataset.from_array(
@@ -238,7 +239,7 @@ def get_scalar_names(dataset: Dataset, group_name: str):
     ]
 
 
-GROUP_SEPARATORS = ("[", "]")
+GROUP_SEPARATORS = ("{", "}")
 COMPONENT_SEPARATORS = ("[", "]")
 
 
@@ -259,6 +260,7 @@ def dataset_to_dataframe(
             f"{name}{sep}{group_name}"
             for name in dataset.get_variable_names(group_name=group_name)
         )
+    group_names = [s.split(sep)[-1] for s in name_and_groups]
 
     names = [v.split(sep)[0] for v in name_and_groups]
     seen = set()
@@ -309,7 +311,9 @@ def dataframe_to_dataset(df: DataFrame) -> Dataset:
     """
 
     def get_group_name(suffixed_name: str) -> str:
-        return (suffixed_name.split(GROUP_SEPARATORS[1])[0]).split("[")[1]
+        return (suffixed_name.split(GROUP_SEPARATORS[1])[0]).split(GROUP_SEPARATORS[0])[
+            1
+        ]
 
     def get_variable_name(suffixed_name: str) -> str:
         return suffixed_name.split(GROUP_SEPARATORS[0])[0]
@@ -452,3 +456,11 @@ def encode_vector(vector_numerical: ndarray | list[float | int]):
 
     # ["0", "90.1", "0"] => ["0_90.1_0"]
     return "_".join(vector_as_str_interm)
+
+
+def assert_frame_equal_unordered(df1: DataFrame, df2: DataFrame, **kwargs):
+    """Compare two DataFrames regardliess of column and row order."""
+    cols = sorted(df1.columns)
+    df1 = df1[cols]
+    df2 = df2[cols]
+    testing.assert_frame_equal(df1, df2, **kwargs)

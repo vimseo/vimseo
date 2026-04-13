@@ -29,10 +29,12 @@ from numpy.testing import assert_array_equal
 from pandas import DataFrame
 
 from vimseo.api import create_model
+from vimseo.tools.base_result import assert_results_equal
 from vimseo.tools.verification.solution_verification import Analysis
 from vimseo.tools.verification.solution_verification import (
     DiscretizationSolutionVerification,
 )
+from vimseo.tools.verification.verification_result import SolutionVerificationResult
 
 ELEMENT_SIZES = [0.45, 0.25, 0.15, 0.1]
 ELEMENT_SIZE_RATIO = 1.2
@@ -202,3 +204,11 @@ def test_from_data(tmp_wd):
         observed_output_names=["y1"],
     )
     verificator.plot_results(verificator.result, save=True, show=False)
+
+
+def test_serialization(tmp_wd, convergence_verificator):
+    """Check that a SolutionVerificationResult can be serialized to hdf5."""
+    result = convergence_verificator.result
+    result.to_hdf5("result.hdf5")
+    serialized_result = SolutionVerificationResult.from_hdf5("result.hdf5")
+    assert_results_equal(result, serialized_result)

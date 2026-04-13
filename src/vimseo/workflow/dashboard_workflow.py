@@ -25,7 +25,7 @@ from zipfile import ZipFile
 import streamlit as st
 from streamlit_pydantic import pydantic_input
 
-from vimseo.tools.io.reader_file_result import ReaderFileToolResult
+from vimseo.tools.io.reader_file_result import ResultFileReaderTool
 from vimseo.tools.io.reader_tools_factory import ReaderToolsFactory
 from vimseo.tools.lib.visualisation.generic_layout import generate_layout
 from vimseo.tools.tools_factory import AnalysisToolsFactory
@@ -122,12 +122,12 @@ def workflow_dashboard():
                 get_reader_tool_names(),
             )
             with st.form("Create a reader"):
-                if tool_name == "ReaderFileToolResult":
+                if tool_name == "ResultFileReaderTool":
                     tool_name_of_reader = st.selectbox(
                         "Select an analysis tool of which the result is to be read",
-                        ReaderFileToolResult.get_tool_names(),
+                        AnalysisToolsFactory().class_names,
                     )
-                    tmp_tool = ReaderFileToolResult(tool_name_of_reader)
+                    tmp_tool = ResultFileReaderTool(tool_name_of_reader)
                     constructor_options = {"tool_name": tool_name_of_reader}
                 else:
                     tmp_tool = ReaderToolsFactory().create(tool_name)

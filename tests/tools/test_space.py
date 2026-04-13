@@ -70,7 +70,7 @@ def test_space_from_statistics(tmp_wd, distribution_name, distribution_options):
     )
 
 
-def test_save_and_load_pickle(tmp_wd):
+def test_save_and_load_json(tmp_wd):
     """Check that a space analysis can be saved and that a new instance can be created
     and loaded from saved data.
 
@@ -86,7 +86,7 @@ def test_save_and_load_pickle(tmp_wd):
         center_values=center_values,
         cov=0.05,
     )
-    space_tool.save_results()
+    space_tool.save_results(file_format="json")
 
     results = space_tool.load_results(
         space_tool.working_directory / "SpaceTool_result.json"

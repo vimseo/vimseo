@@ -121,10 +121,10 @@ def test_save_results(
 
     expected_filename = "MyTool"
     if prefix == "":
-        assert (tool.working_directory / f"{expected_filename}_result.pickle").is_file()
+        assert (tool.working_directory / f"{expected_filename}_result.hdf5").is_file()
     else:
         assert (
-            tool.working_directory / f"{prefix}_{expected_filename}_result.pickle"
+            tool.working_directory / f"{prefix}_{expected_filename}_result.hdf5"
         ).is_file()
 
 
@@ -167,9 +167,9 @@ def test_save_composite_tool_results(
     if directory_naming_method == DirectoryNamingMethod.NUMBERED:
         assert tool.working_directory.name == "1"
 
-    assert (tool.working_directory / f"{expected_filename}_result.pickle").is_file()
+    assert (tool.working_directory / f"{expected_filename}_result.hdf5").is_file()
     assert (
-        tool.working_directory / "MyTool" / f"{expected_subtool_filename}_result.pickle"
+        tool.working_directory / "MyTool" / f"{expected_subtool_filename}_result.hdf5"
     ).is_file()
 
 

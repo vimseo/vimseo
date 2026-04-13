@@ -25,6 +25,7 @@ from numpy.testing import assert_allclose
 
 from vimseo.api import create_model
 from vimseo.problems.mock.mock_reference_data import MOCK_REFERENCE_DIR
+from vimseo.tools.base_result import assert_results_equal
 from vimseo.tools.io.reader_file_dataframe import ReaderFileDataFrame
 from vimseo.tools.io.reader_file_dataframe import ReaderFileDataFrameSettings
 from vimseo.tools.validation.validation_point_result import ValidationPointResult
@@ -63,99 +64,9 @@ def reference_data():
     )
 
 
-@pytest.mark.parametrize(
-    "metric_names",
-    [
-        ([]),
-        ([
-            "RelativeErrorMetric",
-        ]),
-    ],
-)
-def test_end_to_end_deterministic_validation(tmp_wd, reference_data, metric_names):
-    """Check that a sample to sample validation point computes correct error value."""
-    validation_case = DeterministicValidationCase()
-
-    model = create_model("MockModelPersistent", "LC1")
-    model.EXTRA_INPUT_GRAMMAR_CHECK = True
-
-    # TODO see how to manage nominal data for deterministic case
-    settings = {"output_names": ["y4"]}
-    if len(metric_names) > 0:
-        settings.update({"metric_names": metric_names})
-
-    validation_case.execute(
-        inputs=DeterministicValidationCaseInputs(
-            model=model, reference_data=reference_data
-        ),
-        settings=DeterministicValidationCaseSettings(**settings),
-    )
-
-    assert validation_case.result.element_wise_metrics.get_variable_names(
-        IODataset.INPUT_GROUP
-    ) == ["x1", "x2", "x3"]
-    for name in metric_names:
-        assert validation_case.result.element_wise_metrics.get_variable_names(name) == [
-            "y4"
-        ]
-
-    assert_allclose(
-        validation_case.result.element_wise_metrics
-        .get_view(variable_names="y4", group_names="RelativeErrorMetric")
-        .to_numpy()
-        .ravel(),
-        array([0.090909, 0.166667]),
-        rtol=1e-5,
-    )
-
-    assert set(metric_names or validation_case.options["metric_names"]) == set(
-        validation_case.result.integrated_metrics.keys()
-    )
-
-    assert validation_case.result.integrated_metrics["RelativeErrorMetric"][
-        "y4"
-    ] == pytest.approx(0.1287879)
-
-
-def test_validation_plots(tmp_wd, reference_data):
-    """Check that validation plots are saved on disk."""
-    validation_case = DeterministicValidationCase()
-
-    model = create_model("MockModelPersistent", "LC1")
-    model.EXTRA_INPUT_GRAMMAR_CHECK = True
-
-    validation_case.execute(
-        inputs=DeterministicValidationCaseInputs(
-            model=model, reference_data=reference_data
-        ),
-        settings=DeterministicValidationCaseSettings(output_names=["y4"]),
-    )
-    validation_case.plot_results(
-        validation_case.result,
-        "RelativeErrorMetric",
-        "y4",
-        save=True,
-        show=False,
-    )
-    assert (
-        validation_case.working_directory
-        / "error_scatter_matrix_RelativeErrorMetric_y4.html"
-    ).is_file()
-    assert (
-        validation_case.working_directory
-        / "parallel_coordinates_RelativeErrorMetric_y4.html"
-    ).is_file()
-    assert (
-        validation_case.working_directory
-        / "metric_histogram_RelativeErrorMetric_y4.html"
-    ).is_file()
-    assert (validation_case.working_directory / "integrated_metric_bars.html").is_file()
-
-
-def test_to_dataframe(tmp_wd):
-    """Check that a ValidationCaseResult can export a DataFrame containing the
-    nominal input variables, the simulated outputs, the reference outputs
-    and the integrated metrics as outputs."""
+@pytest.fixture
+def stochastic_case_result():
+    """A mock ValidationCaseResult set from stochastic validation points."""
     measured_data = IODataset.from_array(
         [[1.0, 2.0], [3.0, 4.0]],
         variable_names=["x3", "y1"],
@@ -232,7 +143,114 @@ def test_to_dataframe(tmp_wd):
     point_2.metadata.report["measured_output_names"] = ["y1"]
     result = ValidationCaseResult()
     result.set_from_point_results([point_1, point_2])
+    return result
 
+
+@pytest.fixture
+def deterministic_validation_case(reference_data):
+    """A mock ValidationCase set from deterministic validation."""
+    validation_case = DeterministicValidationCase()
+
+    model = create_model("MockModelPersistent", "LC1")
+    model.EXTRA_INPUT_GRAMMAR_CHECK = True
+
+    validation_case.execute(
+        inputs=DeterministicValidationCaseInputs(
+            model=model, reference_data=reference_data
+        ),
+        settings=DeterministicValidationCaseSettings(output_names=["y4"]),
+    )
+    return validation_case
+
+
+@pytest.mark.parametrize(
+    "metric_names",
+    [
+        ([]),
+        ([
+            "RelativeErrorMetric",
+        ]),
+    ],
+)
+def test_end_to_end_deterministic_validation(tmp_wd, reference_data, metric_names):
+    """Check that a sample to sample validation point computes correct error value."""
+    validation_case = DeterministicValidationCase()
+
+    model = create_model("MockModelPersistent", "LC1")
+    model.EXTRA_INPUT_GRAMMAR_CHECK = True
+
+    # TODO see how to manage nominal data for deterministic case
+    settings = {"output_names": ["y4"]}
+    if len(metric_names) > 0:
+        settings.update({"metric_names": metric_names})
+
+    validation_case.execute(
+        inputs=DeterministicValidationCaseInputs(
+            model=model, reference_data=reference_data
+        ),
+        settings=DeterministicValidationCaseSettings(**settings),
+    )
+
+    assert validation_case.result.element_wise_metrics.get_variable_names(
+        IODataset.INPUT_GROUP
+    ) == ["x1", "x2", "x3"]
+    for name in metric_names:
+        assert validation_case.result.element_wise_metrics.get_variable_names(name) == [
+            "y4"
+        ]
+
+    assert_allclose(
+        validation_case.result.element_wise_metrics
+        .get_view(variable_names="y4", group_names="RelativeErrorMetric")
+        .to_numpy()
+        .ravel(),
+        array([0.090909, 0.166667]),
+        rtol=1e-5,
+    )
+
+    assert set(metric_names or validation_case.options["metric_names"]) == set(
+        validation_case.result.integrated_metrics.keys()
+    )
+
+    assert validation_case.result.integrated_metrics["RelativeErrorMetric"][
+        "y4"
+    ] == pytest.approx(0.1287879)
+
+
+def test_validation_plots(tmp_wd, deterministic_validation_case):
+    """Check that validation plots are saved on disk."""
+    deterministic_validation_case.plot_results(
+        deterministic_validation_case.result,
+        "RelativeErrorMetric",
+        "y4",
+        save=True,
+        show=False,
+    )
+    assert (
+        deterministic_validation_case.working_directory
+        / "error_scatter_matrix_RelativeErrorMetric_y4.html"
+    ).is_file()
+    assert (
+        deterministic_validation_case.working_directory
+        / "parallel_coordinates_RelativeErrorMetric_y4.html"
+    ).is_file()
+    assert (
+        deterministic_validation_case.working_directory
+        / "metric_histogram_RelativeErrorMetric_y4.html"
+    ).is_file()
+    assert (
+        deterministic_validation_case.working_directory / "integrated_metric_bars.html"
+    ).is_file()
+
+
+def test_to_dataframe(tmp_wd, stochastic_case_result):
+    """Check that a ValidationCaseResult can export a DataFrame containing the
+    nominal input variables, the simulated outputs, the reference outputs
+    and the integrated metrics as outputs."""
+
+    result = stochastic_case_result
+    point_1 = result.stochastic_point_results[0]
+    point_2 = result.stochastic_point_results[1]
     assert set(
         result.element_wise_metrics.get_variable_names(IODataset.INPUT_GROUP)
     ) == {"x3"}
@@ -287,7 +305,28 @@ def test_to_dataframe(tmp_wd):
     )
     assert set(result.integrated_metrics.keys()) == {"RelativeErrorMetric"}
     assert set(result.integrated_metrics["RelativeErrorMetric"].keys()) == {"y1"}
-    assert result.integrated_metrics["RelativeErrorMetric"]["y1"] == 0.5 * (
-        point_1.integrated_metrics["RelativeErrorMetric"]["y1"]
-        + point_2.integrated_metrics["RelativeErrorMetric"]["y1"]
+    assert result.integrated_metrics["RelativeErrorMetric"]["y1"] == pytest.approx(
+        0.5
+        * (
+            point_1.integrated_metrics["RelativeErrorMetric"]["y1"]
+            + point_2.integrated_metrics["RelativeErrorMetric"]["y1"]
+        )
     )
+
+
+def test_serialization_stochastic_result(tmp_wd, stochastic_case_result):
+    """Check that a ValidationCaseResult obtained from stochastic validation points
+    can be serialized to hdf5."""
+    result = stochastic_case_result
+    result.to_hdf5("result.hdf5")
+    serialized_result = ValidationCaseResult.from_hdf5("result.hdf5")
+    assert_results_equal(result, serialized_result)
+
+
+def test_serialization_deterministic_result(deterministic_validation_case):
+    """Check that a ValidationCaseResult obtained from deterministic validation
+    can be serialized to hdf5."""
+    result = deterministic_validation_case.result
+    result.to_hdf5("result.hdf5")
+    serialized_result = ValidationCaseResult.from_hdf5("result.hdf5")
+    assert_results_equal(result, serialized_result)

@@ -21,9 +21,11 @@ from numpy import atleast_1d
 
 from vimseo.api import create_model
 from vimseo.io.space_io import SpaceToolFileIO
+from vimseo.tools.base_result import assert_results_equal
 from vimseo.tools.calibration.calibration_step import CalibrationStep
 from vimseo.tools.calibration.calibration_step import CalibrationStepInputs
 from vimseo.tools.calibration.calibration_step import CalibrationStepSettings
+from vimseo.tools.calibration.calibration_step_result import CalibrationStepResult
 from vimseo.tools.calibration.input_data import CALIBRATION_INPUT_DATA
 from vimseo.utilities.generate_validation_reference import (
     generate_reference_from_parameter_space,
@@ -94,3 +96,12 @@ def test_calibration_default_axis(tmp_wd):
     calibration_step, x_target = calibration_on_curves("")
     calibration_step.plot_results(calibration_step.result, show=False, save=True)
     assert calibration_step.result.posterior_parameters["x"] == pytest.approx(x_target)
+
+
+def test_serialization(tmp_wd):
+    """Check that a CalibrationStepResult can be serialized to hdf5."""
+    calibration_step, _ = calibration_on_curves("")
+    result = calibration_step.result
+    result.to_hdf5("result.hdf5")
+    serialized_result = CalibrationStepResult.from_hdf5("result.hdf5")
+    assert_results_equal(result, serialized_result)

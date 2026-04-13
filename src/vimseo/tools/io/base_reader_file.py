@@ -17,21 +17,11 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from vimseo.tools.base_settings import BaseSettings
 from vimseo.tools.base_tool import BaseTool
 
 
-class BaseReaderFileSettings(BaseSettings):
-    file_name: str | Path = ""
-    directory_path: str | Path = ""
-
-
-class StreamlitBaseReaderFileSettings(BaseSettings):
-    """Streamlit settings for a base file reader."""
-
-
 class BaseReaderFile(BaseTool):
-    """A tool to read data."""
+    """A tool to read data from a file."""
 
     _EXTENSION = ""
 

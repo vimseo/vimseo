@@ -27,9 +27,11 @@ from vimseo.problems.mock.mock_pre_run_post.mock_main import MockModel
 from vimseo.problems.mock.mock_reference_data.mock_main_reference_functions import (
     mock_model_lc2_overall_function,
 )
+from vimseo.tools.base_result import assert_results_equal
 from vimseo.tools.base_tool import BaseTool
 from vimseo.tools.doe.custom_doe import CustomDOETool
 from vimseo.tools.doe.doe import DOETool
+from vimseo.tools.doe.doe_result import DOEResult
 from vimseo.utilities.datasets import Variable
 from vimseo.utilities.datasets import generate_dataset
 
@@ -152,16 +154,24 @@ def test_opt_lhs_doe(tmp_wd, mock_model_doe):
     assert len(dataset_y1) == N_SAMPLES
 
 
-def test_save_and_load_pickle(tmp_wd, mock_model_doe):
+def test_save_and_load_result(mock_model_doe):
     """Check that a DOE analysis can be saved and that a new instance can be created and
     loaded from saved data."""
     mock_model_doe.save_results()
 
     results = BaseTool.load_results(
-        mock_model_doe.working_directory / "DOETool_result.pickle"
+        mock_model_doe.working_directory / "DOETool_result.hdf5"
     )
     dataset = results.dataset
     dataset_x1 = dataset.get_view(group_names="inputs", variable_names="x1")
     dataset_y1 = dataset.get_view(group_names="outputs", variable_names="y1")
     assert len(dataset_x1) == N_SAMPLES
     assert len(dataset_y1) == N_SAMPLES
+
+
+def test_serialization(tmp_wd, mock_model_doe):
+    """Check that a DOE result can be serialized to hdf5."""
+    result = mock_model_doe.result
+    result.to_hdf5("result.hdf5")
+    serialized_result = DOEResult.from_hdf5("result.hdf5")
+    assert_results_equal(result, serialized_result)

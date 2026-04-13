@@ -12,6 +12,9 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+"""
+Generate reference data from a model.
+"""
 
 from __future__ import annotations
 
@@ -20,13 +23,8 @@ from typing import TYPE_CHECKING
 
 import pandas as pd
 from gemseo.datasets.io_dataset import IODataset
-from numpy.core.shape_base import atleast_1d
 
-from vimseo.api import create_model
-from vimseo.tools.base_tool import BaseTool
 from vimseo.tools.doe.custom_doe import CustomDOETool
-from vimseo.utilities.datasets import SEP
-from vimseo.utilities.datasets import decode_vector
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -121,40 +119,3 @@ def generate_reference_from_parameter_space(
 
     # Reference data is a GEMSEO Dataset:
     return generate_reference_from_dataset(model, reference_data, **options)
-
-
-if __name__ == "__main__":
-    layups = [
-        "90_-30_90_-30_-30_90_-30_90",
-        # "60_0_-60_-60_0_60_0",
-        # "90_-45_90_-45_-45_90_-45_90",
-    ]
-
-    outputs_to_bias = {}  # {"max_strength": Bias(mult_factor=1.05)}
-
-    space_tool_result = BaseTool().load_results(
-        "2024-09-27_T09-44-00_20pct_unif_SpaceToolResult.pickle"
-    )
-    print(space_tool_result)
-    input_data = space_tool_result.parameter_space.compute_samples(
-        n_samples=3, as_dict=False
-    )
-    reference_data = IODataset()
-    reference_data.add_group(
-        IODataset.INPUT_GROUP,
-        input_data,
-        space_tool_result.parameter_space.uncertain_variables,
-    )
-    model = create_model("OpfmCube", "PST")
-
-    df = pd.DataFrame()
-    for layup in layups:
-        specific_inputs = {"layup": decode_vector(layup), "thickness": atleast_1d(2.0)}
-        df = generate_reference_from_dataset(
-            model,
-            reference_data,
-            df=df,
-            specific_inputs=specific_inputs,
-            outputs_to_bias=outputs_to_bias,
-        )
-    df.to_csv("reference_validation_opfmcube_pst.csv", sep=SEP)

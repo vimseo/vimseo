@@ -16,6 +16,7 @@
 from __future__ import annotations
 
 import re
+from collections.abc import Mapping
 
 import pytest
 from matplotlib.figure import Figure
@@ -31,9 +32,10 @@ from numpy.testing import assert_array_equal
 from openturns import ComposedDistribution
 from openturns import Dirac
 from openturns import Uniform
-from sqlalchemy.cyextension.util import Mapping
 
+from vimseo.tools.base_result import assert_results_equal
 from vimseo.tools.bayes.bayes_analysis import BayesTool
+from vimseo.tools.bayes.bayes_analysis_result import BayesAnalysisResult
 
 random.seed(1)  # noqa: NPY002
 
@@ -341,3 +343,10 @@ def test_plot_predictive_distribution_return_type(tmp_wd, processed_analysis):
     )
     assert isinstance(res_plot[0], Axes)
     assert isinstance(res_plot[1], Axes)
+
+
+def test_serialization(tmp_wd, bayes_analysis):
+    """Check that a Bayes analysis result can be serialized to hdf5."""
+    bayes_analysis.result.to_hdf5("result.hdf5")
+    serialized_result = BayesAnalysisResult.from_hdf5("result.hdf5")
+    assert_results_equal(bayes_analysis.result, serialized_result)

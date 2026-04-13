@@ -12,3 +12,29 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
+from __future__ import annotations
+
+from pathlib import Path
+
+from pydantic import Field
+
+from vimseo.tools.base_settings import BaseSettings
+
+
+class BaseFileReaderSettings(BaseSettings):
+    """Settings for a base file reader."""
+
+    file_name: str | Path = Field(
+        default="", description="The name of the file to read."
+    )
+    directory_path: str | Path = Field(
+        default="", description="The path to the directory containing the file."
+    )
+    tool_name: str = Field(
+        default="", description="The name of the tool to use for reading the file."
+    )
+
+
+class StreamlitBaseFileReaderSettings(BaseSettings):
+    """Streamlit settings for a base file reader."""

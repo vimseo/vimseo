@@ -196,6 +196,7 @@ for batch, reference_data in zip(
 
 case_result = ValidationCaseResult()
 case_result.set_from_point_results(results)
+case_result.to_hdf5("validation_case_from_stochastic_points.hdf5")
 case_result
 
 # %%

@@ -69,7 +69,7 @@ class BaseCompositeTool(BaseTool):
 
         return decorated
 
-    def save_results(self, prefix: str = "") -> None:
-        super().save_results(prefix)
+    def save_results(self, prefix: str = "", file_format: str = "hdf5") -> None:
+        super().save_results(prefix, file_format=file_format)
         for tool in self._subtools.values():
-            tool.save_results(prefix)
+            tool.save_results(prefix, file_format=file_format)

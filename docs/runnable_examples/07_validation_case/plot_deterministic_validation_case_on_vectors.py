@@ -89,7 +89,7 @@ print(reference_data)
 # The validation case tool is created and executed.
 # The only setting is that only output ``y4`` is validated.
 validation = DeterministicValidationCase(
-    working_directory="deterministic_validation_case"
+    working_directory="deterministic_validation_case_on_vectors"
 )
 validation.execute(
     inputs=DeterministicValidationCaseInputs(

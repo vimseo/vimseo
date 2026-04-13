@@ -31,6 +31,7 @@ if TYPE_CHECKING:
 
 class DirectMeasureOnCurveSettings(BaseModel):
     """Settings for direct measures on curves."""
+
     x_name: str
     y_name: str
     measure_name: str
@@ -38,6 +39,7 @@ class DirectMeasureOnCurveSettings(BaseModel):
 
 class BaseCurveMeasure(BaseDirectMeasure):
     """A base class for direct measures on curves."""
+
     _SETTINGS_MODEL = DirectMeasureOnCurveSettings
 
     @abstractmethod
@@ -47,6 +49,7 @@ class BaseCurveMeasure(BaseDirectMeasure):
 
 class ModulusE005E025(BaseCurveMeasure):
     """A direct measure for computing the modulus between 0.005 and 0.025 strain."""
+
     def compute(self, a: Curve) -> float:
         return local_slope_computation(
             a.x, a.y, x_min=0.0005, x_max=0.0025, method="average"
@@ -55,6 +58,7 @@ class ModulusE005E025(BaseCurveMeasure):
 
 class Modulus1050(BaseCurveMeasure):
     """A direct measure for computing the modulus between 10% and 50% of the maximum stress."""
+
     def compute(self, a: Curve) -> float:
         stress = a.y
         max_stress = np_max(np_abs(stress))
@@ -69,17 +73,19 @@ class Modulus1050(BaseCurveMeasure):
 
 class MaxStrength(BaseCurveMeasure):
     """A direct measure for computing the maximum strength.
-    
-    Considers the last point of the curve as the maximum strength, 
-    which is a common practice for certain types of curves 
+
+    Considers the last point of the curve as the maximum strength,
+    which is a common practice for certain types of curves
     (e.g., force-displacement curves).
     """
+
     def compute(self, a: Curve) -> float:
         return a.y[-1]
 
 
 class DummyModulus(BaseCurveMeasure):
     """A dummy direct measure for testing purposes, which returns a constant value."""
+
     IMPOSED_MODULUS = 2.1e5
 
     def compute(self, a: Curve) -> float:

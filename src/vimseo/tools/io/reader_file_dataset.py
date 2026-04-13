@@ -21,17 +21,17 @@ from gemseo.datasets.io_dataset import IODataset
 
 from vimseo.tools.base_tool import BaseTool
 from vimseo.tools.io.base_reader_file import BaseReaderFile
-from vimseo.tools.io.base_reader_file import BaseReaderFileSettings
-from vimseo.tools.io.base_reader_file import StreamlitBaseReaderFileSettings
+from vimseo.tools.io.base_reader_file_settings import BaseFileReaderSettings
+from vimseo.tools.io.base_reader_file_settings import StreamlitBaseFileReaderSettings
 from vimseo.tools.io.dataset_result import DatasetResult
 from vimseo.utilities.datasets import SEP
 
 
-class ReaderFileGemseoDatasetSettings(BaseReaderFileSettings):
+class ReaderFileGemseoDatasetSettings(BaseFileReaderSettings):
     """Settings of a GEMSEO Dataset file reader."""
 
 
-class StreamlitReaderFileGemseoDatasetSettings(StreamlitBaseReaderFileSettings):
+class StreamlitReaderFileGemseoDatasetSettings(StreamlitBaseFileReaderSettings):
     """Settings of a GEMSEO Dataset file reader for usage in dashboards."""
 
 
