@@ -79,12 +79,21 @@ class ModelDescription(BaseDescription):
                 )
             )
         text.dedent()
+        for key in ["model_inputs", "model_outputs"]:
+            text.add(f"{key}:")
+            text.indent()
+            text.add(dumps(self.dataflow[key], sort_keys=True, indent=4))
+            text.dedent()
+        text.dedent()
 
         if self.verbose:
+            dataflow = self.dataflow.copy()
+            del dataflow["model_inputs"]
+            del dataflow["model_outputs"]
             text.add("")
             text.add("Dataflow:")
             text.indent()
-            text.add(dumps(self.dataflow, sort_keys=True, indent=4))
+            text.add(dumps(dataflow, sort_keys=True, indent=4))
             text.dedent()
             text.add("Curves:")
             text.indent()
