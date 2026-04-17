@@ -16,7 +16,7 @@
 from __future__ import annotations
 
 import logging
-import uuid
+from datetime import datetime
 from typing import TYPE_CHECKING
 
 import matplotlib.patches as patches
@@ -26,11 +26,9 @@ from gemseo_calibration.measures.integrated_measure import IntegratedMeasure
 from gemseo_calibration.measures.mean_measure import MeanMeasure
 from gemseo_calibration.measures.mse import MSE
 from numpy import abs as np_abs
-from numpy import all as np_all
-from numpy import argwhere
+from numpy import argsort
 from numpy import array
 from numpy import atleast_1d
-from numpy import diff
 from numpy import linspace
 from numpy import max as np_max
 from numpy import mean
@@ -48,6 +46,22 @@ if TYPE_CHECKING:
 LOGGER = logging.getLogger(__name__)
 
 EPSILON = 1e-12
+
+
+def _sort_and_align(x, y):
+    """Sort x (and y accordingly), ensuring x is increasing."""
+    idx = argsort(x)
+    return x[idx], y[idx]
+
+
+def _restrict_to_range(x, y, x_min, x_max):
+    """Restrict (x, y) to the range [x_min, x_max]."""
+    mask = (x >= x_min) & (x <= x_max)
+    return x[mask], y[mask]
+
+
+def _scale_xy(x, y, x0, y0, factor_x, factor_y):
+    return (x - x0) * factor_x, (y - y0) * factor_y
 
 
 class RelativeMSE(MeanMeasure):
@@ -96,40 +110,32 @@ class SBPISE(IntegratedMeasure):
             x_i = model_mesh[i]
             y_i = model_data[i]
 
-            if np_all(diff(x_ref) < 0):
-                x_ref = x_ref[::-1]
-                y_ref = y_ref[::-1]
-            if np_all(diff(x_i) < 0):
-                x_i = x_i[::-1]
-                y_i = y_i[::-1]
+            x_ref, y_ref = _sort_and_align(x_ref, y_ref)
+            x_i, y_i = _sort_and_align(x_i, y_i)
 
+            # Validate
             if x_ref[-1] <= x_i[0] or x_ref[0] >= x_i[-1]:
-                msg = "Reference and model x-axis are disjoints."
+                msg = "Reference and model x-axis are disjoint."
                 raise ValueError(msg)
-
             if x_i[-1] == x_i[0]:
                 msg = "Model x-axis is a point."
                 raise ValueError(msg)
-
             if x_ref[-1] == x_ref[0]:
                 msg = "Reference x-axis is a point."
                 raise ValueError(msg)
 
-            def scale(x, x0, factor):
-                return (x - x0) * factor
-
+            # Scale
             if self._scaling == CurveScaling.XYRange:
-                x0 = mean(x_ref)
-                y0 = mean(y_ref)
+                x0, y0 = mean(x_ref), mean(y_ref)
                 factor_x = 1.0 / max(x_ref[-1] - x_ref[0], x_i[-1] - x_i[0])
                 delta_y = max(np_max(y_ref) - np_min(y_ref), np_max(y_i) - np_min(y_i))
                 factor_y = 1.0 / EPSILON if delta_y < EPSILON else 1.0 / delta_y
-                x_ref = scale(x_ref, x0, factor_x)
-                y_ref = scale(y_ref, y0, factor_y)
-                x_i = scale(x_i, x0, factor_x)
-                y_i = scale(y_i, y0, factor_y)
+                x_ref, y_ref = _scale_xy(x_ref, y_ref, x0, y0, factor_x, factor_y)
+                x_i, y_i = _scale_xy(x_i, y_i, x0, y0, factor_x, factor_y)
+
             y_i_raw = y_i.copy()
 
+            # Exceeding areas
             delta_x_left = abs(x_i[0] - x_ref[0])
             delta_x_right = abs(x_ref[-1] - x_i[-1])
             exceeding_area = (
@@ -138,51 +144,29 @@ class SBPISE(IntegratedMeasure):
                 * (np_max(np_abs(y_ref)) + np_max(np_abs(y_i)))
             )
 
-            mse = MSE(output_name="x_left")
-            mse.set_reference_data({"x_left": atleast_1d(0.0)})
-            exceeding_start_metrics.append(
-                mse._evaluate_measure({"x_left": atleast_1d(delta_x_left)})
-            )
-            mse = MSE(output_name="x_right")
-            mse.set_reference_data({"x_right": atleast_1d(0.0)})
-            exceeding_end_metrics.append(
-                mse._evaluate_measure({"x_right": atleast_1d(delta_x_right)})
-            )
+            for name, value in [("x_left", delta_x_left), ("x_right", delta_x_right)]:
+                mse = MSE(output_name=name)
+                mse.set_reference_data({name: atleast_1d(0.0)})
+                metric = mse._evaluate_measure({name: atleast_1d(value)})
+                (
+                    exceeding_start_metrics
+                    if name == "x_left"
+                    else exceeding_end_metrics
+                ).append(metric)
 
-            is_in_x_ref = x_i <= x_ref[-1]
-            is_in_x_ref = x_i[argwhere(is_in_x_ref)[:, 0]] >= x_ref[0]
-            x_i_in_x_ref = x_i[argwhere(is_in_x_ref)[:, 0]]
-            x_ref_0 = union1d(x_ref, x_i_in_x_ref)
+            # Align x-axes: add x_i points inside x_ref range, interpolate y_ref on them
+            x_i_in_x_ref = x_i[(x_i >= x_ref[0]) & (x_i <= x_ref[-1])]
             interpolator = interp1d(x_ref, y_ref)
-            y_ref_0 = interpolator(x_ref_0)
-            y_ref = y_ref_0
-            x_ref = x_ref_0
+            x_ref = union1d(x_ref, x_i_in_x_ref)
+            y_ref = interpolator(x_ref)  # re-interpolate after union
 
-            x_ref_right_exceeding = x_ref > x_i[-1]
-            x_ref_left_exceeding = x_ref < x_i[0]
+            # Restrict x_ref to x_i range
+            x_ref, y_ref = _restrict_to_range(x_ref, y_ref, x_i[0], x_i[-1])
 
-            if x_ref_left_exceeding.any() and x_ref_right_exceeding.any():
-                max_index = argwhere(x_ref_right_exceeding)[0, 0]
-                min_index = argwhere(x_ref_left_exceeding)[-1, 0]
-                y_ref = y_ref[min_index + 1 : max_index]
-                x_ref = x_ref[min_index + 1 : max_index]
-            elif x_ref_right_exceeding.any():
-                max_index = argwhere(x_ref_right_exceeding)[0, 0]
-                y_ref = y_ref[:max_index]
-                x_ref = x_ref[:max_index]
-            elif x_ref_left_exceeding.any():
-                min_index = argwhere(x_ref_left_exceeding)[-1, 0]
-                y_ref = y_ref[min_index + 1 :]
-                x_ref = x_ref[min_index + 1 :]
+            # Interpolate y_i on the new x_ref grid
+            y_i = interp1d(x_i, y_i, assume_sorted=True, bounds_error=True)(x_ref)
 
-            interpolator = interp1d(x_i, y_i, assume_sorted=True, bounds_error=True)
-            y_i = interpolator(x_ref)
-            compared_data.append(
-                self._compare_data(
-                    y_ref,
-                    y_i,
-                )
-            )
+            compared_data.append(self._compare_data(y_ref, y_i))
             x_refs.append(x_ref)
 
             if self.PLOT:
@@ -196,7 +180,7 @@ class SBPISE(IntegratedMeasure):
                 ax.plot(x_ref, y_ref, "k-o", label=f"ref sample {i}")
                 height = (
                     0.0
-                    if exceeding_area == 0.0
+                    if abs(exceeding_area) < 1e-12
                     else exceeding_area / (delta_x_right + delta_x_left)
                 )
                 rect_start = patches.Rectangle(
@@ -228,7 +212,7 @@ class SBPISE(IntegratedMeasure):
         if self.PLOT:
             plt.legend()
             plt.savefig(
-                f"{self.mesh_name}_{self.output_name}_{uuid.uuid4()}.png".replace(
+                f"{self.mesh_name}_{self.output_name}_{datetime.now().strftime('%Y%m%d_%H%M%S_%f')}.png".replace(
                     ":", "_"
                 )
             )

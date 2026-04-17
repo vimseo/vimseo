@@ -19,9 +19,11 @@ import pytest
 from gemseo.algos.design_space import DesignSpace
 from gemseo.algos.opt.nlopt.settings.nlopt_cobyla_settings import NLOPT_COBYLA_Settings
 from gemseo.datasets.io_dataset import IODataset
+from gemseo.post.hessian_history import np_min
 from gemseo_calibration.measures.integrated_measure import CurveScaling
 from numpy import concatenate
 from numpy import linspace
+from numpy import max as np_max
 
 from vimseo.api import activate_logger
 from vimseo.tools.calibration.calibration_step import CalibrationMetricSettings
@@ -35,9 +37,13 @@ from vimseo.utilities.curves_generator import get_history
 activate_logger()
 
 NB_REF_POINTS = 50
+NB_ITER = 50
+X0_BOUND_REL_SHIFT = 0.05
 
 
-def create_reference_dataset(x_left: float, x_right: float, y_max: float):
+def create_reference_dataset(
+    x_left: float, x_right: float, y_max: float = 1.0
+) -> IODataset:
 
     x_ref = get_history(support=linspace(x_left, x_right, NB_REF_POINTS))
     y_ref = get_history(
@@ -47,8 +53,9 @@ def create_reference_dataset(x_left: float, x_right: float, y_max: float):
         ],
         support=x_ref,
     )
+    y_ref = y_max * y_ref / (np_max(y_ref) - np_min(y_ref))
     reference_data = IODataset.from_array(
-        data=[concatenate([x_ref, y_ref * y_max])],
+        data=[concatenate([x_ref, y_ref])],
         variable_names=["y_axis", "y"],
         variable_names_to_n_components={
             "y": NB_REF_POINTS,
@@ -77,10 +84,30 @@ def create_reference_dataset(x_left: float, x_right: float, y_max: float):
 @pytest.mark.parametrize(
     ("algo", "optimizer_settings", "delta_x_left", "delta_x_right"),
     [
-        ("NLOPT_COBYLA", NLOPT_COBYLA_Settings(), 0.2, 0.2),
-        ("NLOPT_COBYLA", NLOPT_COBYLA_Settings(), -0.2, 0.2),
-        ("NLOPT_COBYLA", NLOPT_COBYLA_Settings(), -0.2, -0.2),
-        ("NLOPT_COBYLA", NLOPT_COBYLA_Settings(), 0.2, -0.2),
+        (
+            "NLOPT_COBYLA",
+            NLOPT_COBYLA_Settings(max_iter=50),
+            X0_BOUND_REL_SHIFT,
+            X0_BOUND_REL_SHIFT,
+        ),
+        (
+            "NLOPT_COBYLA",
+            NLOPT_COBYLA_Settings(max_iter=50),
+            -X0_BOUND_REL_SHIFT,
+            X0_BOUND_REL_SHIFT,
+        ),
+        (
+            "NLOPT_COBYLA",
+            NLOPT_COBYLA_Settings(max_iter=50),
+            -X0_BOUND_REL_SHIFT,
+            -X0_BOUND_REL_SHIFT,
+        ),
+        (
+            "NLOPT_COBYLA",
+            NLOPT_COBYLA_Settings(max_iter=50),
+            X0_BOUND_REL_SHIFT,
+            -X0_BOUND_REL_SHIFT,
+        ),
     ],
 )
 def test_exceeding_abscissa_penalization(
@@ -93,27 +120,23 @@ def test_exceeding_abscissa_penalization(
     x_ref_right,
     y_ref_max,
 ):
-    pytest.skip(
-        "TODO Sebastien review: pytests are long to execute, especially this test "
-        "that is way too long"
-    )
     reference_data = create_reference_dataset(x_ref_left, x_ref_right, y_ref_max)
 
     # The starting point of the model x left and x right:
-    x_left = x_ref_left + delta_x_left * (x_ref_right - x_ref_left)
-    x_right = x_ref_right + delta_x_right * (x_ref_right - x_ref_left)
+    x_left = x_ref_left * (1 + delta_x_left)
+    x_right = x_ref_right * (1 + delta_x_right)
     # The starting point for the max y of the model:
-    y_max = 1.2 * y_ref_max
+    y_max = 1.2 * reference_data.get_view(variable_names=["y"]).to_numpy().max()
 
     design_space = DesignSpace()
     design_space.add_variable(
-        "x_left", value=x_left, lower_bound=x_left * 2, upper_bound=-1e-6
+        "x_left", value=x_left, lower_bound=x_left * 1.5, upper_bound=x_left * 0.5
     )
     design_space.add_variable(
-        "x_right", value=x_right, lower_bound=1e-6, upper_bound=x_right * 2
+        "x_right", value=x_right, lower_bound=x_right * 0.5, upper_bound=x_right * 1.5
     )
     design_space.add_variable(
-        "y_max", value=y_max, lower_bound=0.0, upper_bound=10 * y_max
+        "y_max", value=y_max, lower_bound=0.5 * y_max, upper_bound=2 * y_max
     )
 
     step = CalibrationStep()
@@ -126,7 +149,7 @@ def test_exceeding_abscissa_penalization(
             design_space=design_space,
         ),
         settings=CalibrationStepSettings(
-            model_name={"Dummy": "MockCurvesXRange"},
+            name_to_models={"Dummy": "MockCurvesXRange"},
             control_outputs={
                 "y": CalibrationMetricSettings(
                     measure="SBPISE",
