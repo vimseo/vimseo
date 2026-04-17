@@ -56,7 +56,7 @@ def calibration_on_curves(mesh: str):
             },
         ),
         settings=CalibrationStepSettings(
-            model_name={"Dummy": "MockCurves"},
+            name_to_models={"Dummy": "MockCurves"},
             control_outputs={
                 output_name: CalibrationMetricSettings(
                     measure="SBPISE", mesh=mesh
@@ -73,6 +73,13 @@ def calibration_on_curves(mesh: str):
 
 
 def test_calibration_on_curves(tmp_wd):
+    calibration_step, x_target = calibration_on_curves("y_axis")
+    calibration_step.plot_results(calibration_step.result, show=False, save=True)
+    assert calibration_step.result.posterior_parameters["x"] == pytest.approx(x_target)
+
+
+def test_calibration_monotonic_decreasing_axis(tmp_wd):
+    """Test calibration with a monotonic decreasing axis."""
     calibration_step, x_target = calibration_on_curves("y_axis")
     calibration_step.plot_results(calibration_step.result, show=False, save=True)
     assert calibration_step.result.posterior_parameters["x"] == pytest.approx(x_target)

@@ -116,7 +116,7 @@ step.execute(
         },
     ),
     settings=CalibrationStepSettings(
-        model_name={"Dummy": model},
+        name_to_models={"Dummy": model},
         control_outputs={
             output_name: CalibrationMetricSettings(
                 measure="SBPISE",

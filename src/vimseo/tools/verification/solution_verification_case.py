@@ -152,7 +152,9 @@ class SolutionVerificationCase(BaseAnalysisTool):
         """
         figs = {}
         figs["convergence"] = ConvergenceCase(
-            working_directory=self.working_directory
+            working_directory=directory_path
+            if directory_path != ""
+            else self.working_directory
         ).execute(
             result.convergence_data,
             result.metadata.misc["nb_meshes"],
@@ -166,7 +168,9 @@ class SolutionVerificationCase(BaseAnalysisTool):
         )
 
         figs["cpu_time_compromise"] = CpuTimeCompromiseCase(
-            working_directory=self.working_directory
+            working_directory=directory_path
+            if directory_path != ""
+            else self.working_directory
         ).execute(
             result.convergence_data,
             result.metadata.misc["nb_meshes"],

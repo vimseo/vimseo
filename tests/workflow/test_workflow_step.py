@@ -37,7 +37,7 @@ from vimseo.workflow.workflow_step import WorkflowStep
             inputs=[Input("my_ref", "reference_data")],
             outputs=[Output("my_posterior", "posterior_parameters")],
             tool_settings=CalibrationStepSettings(
-                model_name={"Cantilever": "BendingTestAnalytical"},
+                name_to_models={"Cantilever": "BendingTestAnalytical"},
                 control_outputs={
                     "reaction_forces": CalibrationMetricSettings(measure="MSE")
                 },

@@ -61,7 +61,7 @@ def test_specific_settings(tmp_wd):
             },
         ),
         settings=CalibrationStepSettings(
-            model_name={"Cantilever": "BendingTestAnalytical"},
+            name_to_models={"Cantilever": "BendingTestAnalytical"},
             control_outputs={
                 "reaction_forces": CalibrationMetricSettings(measure="MSE")
             },
