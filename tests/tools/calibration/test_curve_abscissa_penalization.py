@@ -36,14 +36,28 @@ from vimseo.utilities.curves_generator import get_history
 
 activate_logger()
 
-NB_REF_POINTS = 50
-NB_ITER = 50
-X0_BOUND_REL_SHIFT = 0.05
+NB_REF_POINTS = 50  # The number of points in the reference curve.
+NB_ITER = 50  # The number of iterations for the optimization.
+X0_BOUND_REL_SHIFT = (
+    0.05  # The relative shift of the starting point of the optimization
+)
+# compared to the reference curve.
+# It is used to test the penalization of exceeding the abscissa range.
+# For example, if X0_BOUND_REL_SHIFT is 0.05, then the starting point for x_left will be
+# 5% smaller than x_ref_left and the starting point for x_right will be 5% larger than
+# x_ref_right. This means that the starting point will be outside the range defined
+# by x_ref_left and x_ref_right, which should trigger the penalization of exceeding
+# the abscissa range.
 
 
 def create_reference_dataset(
     x_left: float, x_right: float, y_max: float = 1.0
 ) -> IODataset:
+    """Creates a reference dataset for the test.
+
+    The reference curve is generated using the expressions defined in the curves
+    generator utilities. The curve is defined on the range [x_left, x_right]
+    and is scaled so that its maximum y value is y_max."""
 
     x_ref = get_history(support=linspace(x_left, x_right, NB_REF_POINTS))
     y_ref = get_history(
@@ -110,7 +124,7 @@ def create_reference_dataset(
         ),
     ],
 )
-def test_exceeding_abscissa_penalization(
+def test_abscissa_bound_penalization(
     tmp_wd,
     algo,
     optimizer_settings,
@@ -120,6 +134,7 @@ def test_exceeding_abscissa_penalization(
     x_ref_right,
     y_ref_max,
 ):
+    """Checks that the penalization for unmatched abscissa bounds is working as expected."""
     reference_data = create_reference_dataset(x_ref_left, x_ref_right, y_ref_max)
 
     # The starting point of the model x left and x right:

@@ -25,8 +25,6 @@ if TYPE_CHECKING:
     from collections.abc import Iterable
     from numbers import Number
 
-n_points = 50
-
 
 def str_to_func(expression: str):
     """Create a python  function from a string analytical expression."""
@@ -55,7 +53,7 @@ def get_history(
     support: np.ndarray | Iterable[Number] = (),
     nb_points=50,
 ):
-    """Builds a history (half of a curve) by stacking transformation expressions."""
+    """Builds a curve y-values by stacking transformation expressions."""
     if len(support) == 0:
         support = linspace(0.0, 1.0, nb_points)
     hist = support.copy()
