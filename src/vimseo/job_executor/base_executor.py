@@ -1,3 +1,18 @@
+# Copyright 2021 IRT Saint Exupery, https://www.irt-saintexupery.com
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Lesser General Public
+# License version 3 as published by the Free Software Foundation.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with this program; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
 # Copyright 2021 IRT Saint Exupéry, https://www.irt-saintexupery.com
 #
 # This program is free software; you can redistribute it and/or
@@ -19,9 +34,9 @@ from __future__ import annotations
 
 import logging
 import select
+import signal
 import subprocess
 import sys
-import time
 from typing import TYPE_CHECKING
 from typing import Any
 from typing import ClassVar
@@ -134,6 +149,9 @@ class BaseJobExecutor(metaclass=GoogleDocstringInheritanceMeta):
     def command_line(self):
         return self._command_line
 
+    def _terminate_external_software(self):
+        """Terminate the external software if it is still running."""
+
     @classmethod
     def _render_template(
         cls, template: str, substitution_dict: Mapping[str, Any]
@@ -165,19 +183,10 @@ class BaseJobExecutor(metaclass=GoogleDocstringInheritanceMeta):
             self._job_options.model_dump(),
         )
 
-    def _is_finished(self) -> bool:
-        """Criterion indicating that the subprocess is finished."""
-        return False
-
-    def _fetch_convergence(self):
-        """Fetch the log of simulation convergence."""
-
     def _execute_external_software(
         self,
         cmd: Sequence[str],
         check_subprocess: bool,
-        activate_convergence_fetching: bool = True,
-        activate_termination_detection: bool = True,
     ) -> int:
         """Execute a subprocess.
 
@@ -195,55 +204,70 @@ class BaseJobExecutor(metaclass=GoogleDocstringInheritanceMeta):
             stderr=subprocess.PIPE,
             cwd=self._job_directory,
             text=True,
+            start_new_session=True,
         )
+
+        # Save the original signal handler and install our own to handle SIGINT (Ctrl+C)
+        # gracefully
+        original_handler = signal.getsignal(signal.SIGINT)
+
+        def sigint_handler(signum, frame):
+            LOGGER.warning("Interrupted, terminating subprocess...")
+            # Restore the original signal handler to allow a second Ctrl+C to force
+            # kill if needed
+            signal.signal(signal.SIGINT, original_handler)
+            self._terminate_external_software()
+
+        signal.signal(signal.SIGINT, sigint_handler)
+
         self._convergence_log_length = 0
-        while True:
-            # wait for event on stdout and/or stderr
-            r, _, _ = select.select([proc.stdout, proc.stderr], [], [], 0.5)
-            for stream in r:
-                if stream is proc.stdout:
-                    line = stream.readline()
-                    if line:
-                        for val in line.splitlines():
-                            LOGGER.info(val)
-                elif stream is proc.stderr:
-                    line = stream.readline()
-                    if line:
-                        for val in line.splitlines():
-                            LOGGER.error(val)
+        try:
+            while True:
+                if proc.stdout.closed or proc.stderr.closed:
+                    break
+                # wait for event on stdout and/or stderr
+                r, _, _ = select.select([proc.stdout, proc.stderr], [], [], 0.5)
+                for stream in r:
+                    if stream is proc.stdout:
+                        line = stream.readline()
+                        if line:
+                            for val in line.splitlines():
+                                LOGGER.info(val)
+                    elif stream is proc.stderr:
+                        line = stream.readline()
+                        if line:
+                            for val in line.splitlines():
+                                LOGGER.error(val)
 
-            if activate_convergence_fetching:
-                self._fetch_convergence()
-                time.sleep(1)
-
-            if activate_termination_detection:
-                time.sleep(1)
-                if self._is_finished():
+                if proc.poll() is not None:
                     break
 
-            if proc.poll() is not None:
-                if activate_convergence_fetching:
-                    self._fetch_convergence()
-                break
+            # Last bit of stuff, flushing the buffers eventually
+            remaining_stdout, remaining_stderr = proc.communicate()
+            for val in (
+                remaining_stdout.splitlines() if remaining_stdout is not None else []
+            ):
+                LOGGER.info(val)
+            for val in (
+                remaining_stderr.splitlines() if remaining_stderr is not None else []
+            ):
+                LOGGER.error(val)
 
-        # Last bit of stuff, flushing the buffers eventually
-        remaining_stdout, remaining_stderr = proc.communicate()
-        for val in (
-            remaining_stdout.splitlines() if remaining_stdout is not None else []
-        ):
-            LOGGER.info(val)
-        for val in (
-            remaining_stderr.splitlines() if remaining_stderr is not None else []
-        ):
-            LOGGER.error(val)
+        finally:
+            # In any case, restore the original signal handler
+            # and kill the subprocess if it is still running
+            signal.signal(signal.SIGINT, original_handler)
+            if proc.poll() is None:
+                LOGGER.warning("Solver still running, killing it...")
+                self._terminate_external_software()
 
-        # Raise an error here if check_subprocess=True:
+        # Raise an error here if check_subprocess is True:
         if check_subprocess and proc.returncode != 0:
             raise subprocess.CalledProcessError(
                 returncode=proc.returncode,
                 cmd=cmd,
-                output=proc.stdout,
-                stderr=proc.stderr,
+                output=None,
+                stderr=None,
             )
 
         return proc.returncode
