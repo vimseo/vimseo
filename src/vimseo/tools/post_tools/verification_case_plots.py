@@ -68,9 +68,8 @@ class ConvergenceCase(Plotter):
         output_name: str,
         /,
         normalize_index_output: int | None = None,
-        normalize_index_cpu_time: int | None = None,
-        y_max_limit: float | None = None,
         hovering_variables: list[str] = (),
+        dark_mode: bool = False,
         show: bool = False,
         save: bool = True,
     ):
@@ -156,8 +155,8 @@ class ConvergenceCase(Plotter):
             xaxis_title=f"<b>{elt_size_var_name}</b>",
             xaxis_range=[0.0, None],
             margin={"l": 150, "b": 100},
-            yaxis_title="",
-        )  # , yaxis_title=f"<b>Rel. Error {output_name}</b>"
+            yaxis_title=f"<b>{prefix}{output_name}</b>",
+        )
         fig.update_xaxes(
             title_font={"size": 40},
             tickfont={"size": 40},
@@ -168,17 +167,8 @@ class ConvergenceCase(Plotter):
             tickfont={"size": 40},
             tickfont_family="Arial Black",
         )
-        fig.add_annotation(
-            x=0.03,
-            y=y_max_limit,
-            xref="paper",
-            yref="y",
-            showarrow=False,
-            text=f"<b>{prefix}{output_name}</b>",
-            font={"size": 40},
-            textangle=0,
-        )
-        fig.layout.template = "plotly_dark"
+        if dark_mode:
+            fig.layout.template = "plotly_dark"
 
         if save:
             fig.write_html(
@@ -200,9 +190,8 @@ class CpuTimeCompromiseCase(Plotter):
         output_name: str,
         /,
         normalize_index_output: int | None = None,
-        normalize_index_cpu_time: int | None = None,
-        y_max_limit: float | None = None,
         hovering_variables: list[str] = (),
+        dark_mode: bool = False,
         show: bool = False,
         save: bool = True,
     ):
@@ -225,16 +214,11 @@ class CpuTimeCompromiseCase(Plotter):
             )
             if len(df_) > 0:
                 for j in range(len(df_)):
-                    cpu_time_0 = (
-                        1.0
-                        if normalize_index_cpu_time is None
-                        else df_["cpu_time"].values[normalize_index_cpu_time]
-                    )
                     if j < len(df_) - 1:
                         fig2 = go.Scatter(
                             x=[
-                                df_["cpu_time"].values[j] / cpu_time_0,
-                                df_["cpu_time"].values[j + 1] / cpu_time_0,
+                                df_["cpu_time"].values[j],
+                                df_["cpu_time"].values[j + 1],
                             ],
                             y=[y_values[j], y_values[j + 1]],
                             line={"dash": "dash"},
@@ -243,7 +227,7 @@ class CpuTimeCompromiseCase(Plotter):
                         )
                         fig.add_traces(fig2)
                     fig1 = go.Scatter(
-                        x=[df_["cpu_time"].values[j] / cpu_time_0],
+                        x=[df_["cpu_time"].values[j]],
                         y=[y_values[j]],
                         line_color=color,
                         mode="markers",
@@ -259,9 +243,9 @@ class CpuTimeCompromiseCase(Plotter):
 
         fig.update_layout(
             height=700,
-            xaxis_title=f"<b>{prefix}CPU time(s)</b>",
+            xaxis_title="<b>CPU time(s)</b>",
             margin={"l": 150, "b": 100},
-            yaxis_title="",
+            yaxis_title=f"<b>{prefix}{output_name}</b>",
         )
         fig.update_xaxes(
             title_font={"size": 40},
@@ -273,17 +257,8 @@ class CpuTimeCompromiseCase(Plotter):
             tickfont={"size": 40},
             tickfont_family="Arial Black",
         )
-        fig.add_annotation(
-            x=0.03,
-            y=y_max_limit,
-            xref="paper",
-            yref="y",
-            showarrow=False,
-            text=f"<b>{prefix}{output_name}</b>",
-            font={"size": 40},
-            textangle=0,
-        )
-        fig.layout.template = "plotly_dark"
+        if dark_mode:
+            fig.layout.template = "plotly_dark"
         if save:
             fig.write_html(
                 self.working_directory / f"cpu_time_compromise_{output_name}.html"
