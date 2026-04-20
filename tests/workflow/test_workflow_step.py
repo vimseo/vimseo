@@ -1,3 +1,18 @@
+# Copyright 2021 IRT Saint Exupery, https://www.irt-saintexupery.com
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Lesser General Public
+# License version 3 as published by the Free Software Foundation.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with this program; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
 # Copyright 2021 IRT Saint Exupéry, https://www.irt-saintexupery.com
 #
 # This program is free software; you can redistribute it and/or
@@ -58,7 +73,7 @@ def test_to_serializable_settings(step):
         '[{"name": "my_ref", "option_key": "reference_data"}], "outputs": '
         '[{"name": "my_posterior", "attr_name": "posterior_parameters"}], '
         '"tool_constructor_options": {}, "tool_settings": '
-        '{"model_name": {"Cantilever": "BendingTestAnalytical"}, '
+        '{"name_to_models": {"Cantilever": "BendingTestAnalytical"}, '
         '"control_outputs": {"reaction_forces": '
         '{"output": "", "measure": "MSE", "mesh": null, "weight": null, '
         '"scaling": "NONE", "x_left_penalization_factor": 0.0, '
@@ -85,7 +100,7 @@ def test_serialized_settings_to_step():
         "inputs": [{"name": "i1", "option_key": "starting_point"}],
         "outputs": [{"name": "o1", "attr_name": "posterior_parameters"}],
         "tool_settings": {
-            "model_name": {"Cantilever": "BendingTestAnalytical"},
+            "name_to_models": {"Cantilever": "BendingTestAnalytical"},
             "optimizer_settings": {
                 "__pydantic_model__": (
                     "gemseo.algos.opt.nlopt.settings.nlopt_cobyla_settings",
