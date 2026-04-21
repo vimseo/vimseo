@@ -1,3 +1,18 @@
+# Copyright 2021 IRT Saint Exupéry, https://www.irt-saintexupery.com
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Lesser General Public
+# License version 3 as published by the Free Software Foundation.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with this program; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
 # Copyright 2021 IRT Saint Exupery, https://www.irt-saintexupery.com
 #
 # This program is free software; you can redistribute it and/or
@@ -73,9 +88,6 @@ class BaseJobExecutor(metaclass=GoogleDocstringInheritanceMeta):
     _job_directory: str | Path
     """The job directory."""
 
-    _convergence_log_length: int
-    """The current number of lines of the convergence log."""
-
     _job_options: BaseJobSettings | None
     """The full job options.
 
@@ -109,7 +121,6 @@ class BaseJobExecutor(metaclass=GoogleDocstringInheritanceMeta):
         )
         self._job_name = ""
         self._job_directory = ""
-        self._convergence_log_length = 0
         self._job_options = None
         self._user_job_options = self._USER_JOB_OPTIONS_MODEL().model_dump()
 
@@ -220,7 +231,6 @@ class BaseJobExecutor(metaclass=GoogleDocstringInheritanceMeta):
 
         signal.signal(signal.SIGINT, sigint_handler)
 
-        self._convergence_log_length = 0
         try:
             while True:
                 if proc.stdout.closed or proc.stderr.closed:
