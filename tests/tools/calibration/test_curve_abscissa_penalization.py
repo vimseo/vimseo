@@ -55,7 +55,7 @@ def create_reference_dataset(
 ) -> IODataset:
     """Creates a reference dataset for the test.
 
-    The reference curve is generated using the expressions defined in the curves
+    The reference curve is generated using the expressions defined in the curve
     generator utilities. The curve is defined on the range [x_left, x_right]
     and is scaled so that its maximum y value is y_max."""
 
