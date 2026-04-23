@@ -148,11 +148,10 @@ class SBPISE(IntegratedMeasure):
                 mse = MSE(output_name=name)
                 mse.set_reference_data({name: atleast_1d(0.0)})
                 metric = mse._evaluate_measure({name: atleast_1d(value)})
-                (
-                    exceeding_start_metrics
-                    if name == "x_left"
-                    else exceeding_end_metrics
-                ).append(metric)
+                if name == "x_left":
+                                exceeding_start_metrics.append(metric)
+                else:
+                                exceeding_end_metrics.append(metric)
 
             # Align x-axes: add x_i points inside x_ref range, interpolate y_ref on them
             x_i_in_x_ref = x_i[(x_i >= x_ref[0]) & (x_i <= x_ref[-1])]
