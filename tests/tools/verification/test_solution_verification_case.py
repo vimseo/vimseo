@@ -52,6 +52,6 @@ def test_solution_verification_case(tmp_wd):
 
     tool = SolutionVerificationCase()
     result = tool.execute(results=results)
-    tool.plot_results(result, save=True, show=False)
+    tool.plot_results(result, normalize_index_output=4, save=True, show=False)
     assert tool.working_directory / "convergence_case_h_a_h.html"
     assert tool.working_directory / "cpu_time_compromise_a_h.html"

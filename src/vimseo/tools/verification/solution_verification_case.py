@@ -128,9 +128,7 @@ class SolutionVerificationCase(BaseAnalysisTool):
         result: SolutionVerificationCaseResult,
         output_name: str = "",
         normalize_index_output: int | None = None,
-        normalize_index_cpu_time: int | None = None,
-        y_max_limit: float | None = None,
-        file_format="html",
+        dark_mode: bool = False,
         directory_path: str | Path = "",
         save=False,
         show=True,
@@ -150,8 +148,7 @@ class SolutionVerificationCase(BaseAnalysisTool):
             normalize_index_cpu_time: The index of the CPU time (x-axis of the plot)
             used to normalize the CPU time values. It means that the CPU time
             for each convergence trajectories is equal to one at this location.
-            y_max_limit: The maximum limit of the y-axis.
-            file_format: The format to which plots are generated.
+            dark_mode: Whether to use dark mode for the plots.
         """
         figs = {}
         figs["convergence"] = ConvergenceCase(
@@ -162,8 +159,8 @@ class SolutionVerificationCase(BaseAnalysisTool):
             result.metadata.misc["element_size_variable_name"],
             (result.metadata.misc["output_name"] if output_name == "" else output_name),
             normalize_index_output=normalize_index_output,
-            y_max_limit=y_max_limit,
             hovering_variables=result.metadata.misc["variable_names"],
+            dark_mode=dark_mode,
             save=save,
             show=show,
         )
@@ -176,9 +173,8 @@ class SolutionVerificationCase(BaseAnalysisTool):
             result.metadata.misc["element_size_variable_name"],
             (result.metadata.misc["output_name"] if output_name == "" else output_name),
             normalize_index_output=normalize_index_output,
-            normalize_index_cpu_time=normalize_index_cpu_time,
-            y_max_limit=y_max_limit,
             hovering_variables=result.metadata.misc["variable_names"],
+            dark_mode=dark_mode,
             save=save,
             show=show,
         )
