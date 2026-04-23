@@ -33,7 +33,7 @@ if TYPE_CHECKING:
 
 
 def _swap_points(x: ndarray, y: ndarray):
-    """Swap two random points in the curve defined by x and y."""
+    """Swap two points in the curve defined by x and y."""
     idx1 = 0
     idx2 = 1
     x[idx1], x[idx2] = x[idx2], x[idx1]
