@@ -31,6 +31,7 @@ from pydantic import Field
 from statsmodels.distributions import ECDF
 
 from vimseo.config.global_configuration import _configuration as config
+from vimseo.tools.base_analysis_tool import BaseAnalysisTool
 from vimseo.tools.base_settings import BaseInputs
 from vimseo.tools.base_settings import BaseSettings
 from vimseo.tools.base_tool import BaseTool
@@ -93,7 +94,7 @@ class StatisticsSettings(BaseSettings):
     )
 
 
-class StatisticsTool(BaseTool):
+class StatisticsTool(BaseAnalysisTool):
     """Provide methods for calculating Parametric and Empirical statistics for a given
     dataset.
 
