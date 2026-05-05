@@ -21,6 +21,8 @@ from typing import ClassVar
 from gemseo.core.discipline import Discipline
 from numpy import atleast_1d
 from numpy import linspace
+from numpy import max as np_max
+from numpy import min as np_min
 
 from vimseo.core.base_discipline_model import BaseDisciplineModel
 from vimseo.utilities.curves_generator import expressions_convexity
@@ -101,7 +103,7 @@ class MockCurvesXRangeDiscipline(Discipline):
         )
         return {
             "y_axis": y_axis,
-            "y": y * input_data["y_max"][0],
+            "y": y * input_data["y_max"][0] / (np_max(y) - np_min(y)),
             "x_left": input_data["x_left"],
             "x_right": input_data["x_right"],
         }

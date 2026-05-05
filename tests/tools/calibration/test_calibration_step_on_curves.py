@@ -73,6 +73,7 @@ def calibration_on_curves(mesh: str):
 
 
 def test_calibration_on_curves(tmp_wd):
+    """Check that a calibration step based on curves can be executed."""
     calibration_step, x_target = calibration_on_curves("y_axis")
     calibration_step.plot_results(calibration_step.result, show=False, save=True)
     assert calibration_step.result.posterior_parameters["x"] == pytest.approx(x_target)
@@ -100,6 +101,7 @@ def test_plots_on_curves(tmp_wd):
 
 
 def test_calibration_default_axis(tmp_wd):
+    """Check that a calibration step based on curves can be executed with the default axis."""
     calibration_step, x_target = calibration_on_curves("")
     calibration_step.plot_results(calibration_step.result, show=False, save=True)
     assert calibration_step.result.posterior_parameters["x"] == pytest.approx(x_target)
