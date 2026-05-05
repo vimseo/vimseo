@@ -115,7 +115,7 @@ class CalibrationStepInputs(BaseInputs):
 class CalibrationStepSettings(BaseSettings):
     model_config = ConfigDict(arbitrary_types_allowed=True, extra="forbid")
 
-    model_name: dict[str, str | IntegratedModel] = Field(
+    name_to_models: dict[str, str | IntegratedModel] = Field(
         default={},
         description="The mapping between the load cases "
         "and the corresponding model to be used.",
@@ -203,10 +203,10 @@ class CalibrationStep(BaseAnalysisTool):
         load_cases = list(options["reference_data"].keys())
         models = [
             (
-                deepcopy(options["model_name"][load_case])
-                if isinstance(options["model_name"][load_case], IntegratedModel)
+                deepcopy(options["name_to_models"][load_case])
+                if isinstance(options["name_to_models"][load_case], IntegratedModel)
                 else create_model(
-                    options["model_name"][load_case],
+                    options["name_to_models"][load_case],
                     load_case,
                 )
             )

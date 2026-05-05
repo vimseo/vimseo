@@ -168,7 +168,7 @@ step.execute(
         },
     ),
     settings=CalibrationStepSettings(
-        model_name={
+        name_to_models={
             "Cantilever": model_cantilever,
             "ThreePoints": model_three_points,
         },

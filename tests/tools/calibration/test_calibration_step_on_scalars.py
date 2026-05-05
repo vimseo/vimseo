@@ -63,7 +63,7 @@ def calibration_on_scalars():
             },
         ),
         settings=CalibrationStepSettings(
-            model_name={"Cantilever": "BendingTestAnalytical"},
+            name_to_models={"Cantilever": "BendingTestAnalytical"},
             control_outputs={output_name: CalibrationMetricSettings(measure="MSE")},
             input_names=[
                 "height",
@@ -100,7 +100,7 @@ def test_calibration_step_no_starting_point(tmp_wd):
             },
         ),
         settings=CalibrationStepSettings(
-            model_name={"Cantilever": "BendingTestAnalytical"},
+            name_to_models={"Cantilever": "BendingTestAnalytical"},
             control_outputs={
                 "reaction_forces": CalibrationMetricSettings(measure="MSE")
             },
@@ -150,7 +150,7 @@ def test_calibration_step_with_starting_point(tmp_wd):
             },
         ),
         settings=CalibrationStepSettings(
-            model_name={"Cantilever": "BendingTestAnalytical"},
+            name_to_models={"Cantilever": "BendingTestAnalytical"},
             control_outputs={
                 "reaction_forces": CalibrationMetricSettings(measure="MSE")
             },
@@ -258,7 +258,7 @@ def test_calibration_step_on_scalars_multiple_models(tmp_wd):
             },
         ),
         settings=CalibrationStepSettings(
-            model_name={
+            name_to_models={
                 "Cantilever": "BendingTestAnalytical",
                 "ThreePoints": "BendingTestAnalytical",
             },

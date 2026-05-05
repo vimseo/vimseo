@@ -1,4 +1,4 @@
-# Copyright 2021 IRT Saint Exupéry, https://www.irt-saintexupery.com
+# Copyright 2021 IRT Saint Exupery, https://www.irt-saintexupery.com
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -12,7 +12,6 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -79,12 +78,20 @@ class ModelDescription(BaseDescription):
                 )
             )
         text.dedent()
+        for key in ["model_inputs", "model_outputs"]:
+            text.add(f"{key}:")
+            text.indent()
+            text.add(dumps(self.dataflow[key], sort_keys=True, indent=4))
+            text.dedent()
 
         if self.verbose:
+            dataflow = self.dataflow.copy()
+            del dataflow["model_inputs"]
+            del dataflow["model_outputs"]
             text.add("")
             text.add("Dataflow:")
             text.indent()
-            text.add(dumps(self.dataflow, sort_keys=True, indent=4))
+            text.add(dumps(dataflow, sort_keys=True, indent=4))
             text.dedent()
             text.add("Curves:")
             text.indent()

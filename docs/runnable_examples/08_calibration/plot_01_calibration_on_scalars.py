@@ -122,7 +122,7 @@ step.execute(
         },
     ),
     settings=CalibrationStepSettings(
-        model_name={"Cantilever": deepcopy(model)},
+        name_to_models={"Cantilever": deepcopy(model)},
         control_outputs={
             output_name: CalibrationMetricSettings(
                 measure="RelativeMSE",
@@ -204,7 +204,7 @@ step.execute(
         starting_point={"young_modulus": 1.95e5},
     ),
     settings=CalibrationStepSettings(
-        model_name={"Cantilever": deepcopy(model)},
+        name_to_models={"Cantilever": deepcopy(model)},
         control_outputs={
             output_name: CalibrationMetricSettings(
                 measure="RelativeMSE",
@@ -240,7 +240,7 @@ step.execute(
         },
     ),
     settings=CalibrationStepSettings(
-        model_name={"Cantilever": deepcopy(model)},
+        name_to_models={"Cantilever": deepcopy(model)},
         control_outputs={
             output_name: CalibrationMetricSettings(
                 measure="RelativeMSE",
@@ -287,7 +287,7 @@ step.execute(
         design_space=design_space,
     ),
     settings=CalibrationStepSettings(
-        model_name={"Cantilever": deepcopy(model)},
+        name_to_models={"Cantilever": deepcopy(model)},
         control_outputs={
             output_name: CalibrationMetricSettings(
                 measure="RelativeMSE",
