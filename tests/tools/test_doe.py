@@ -1,3 +1,18 @@
+# Copyright 2021 IRT Saint Exupery, https://www.irt-saintexupery.com
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Lesser General Public
+# License version 3 as published by the Free Software Foundation.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with this program; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
 # Copyright 2021 IRT Saint Exupéry, https://www.irt-saintexupery.com
 #
 # This program is free software; you can redistribute it and/or
@@ -154,7 +169,7 @@ def test_opt_lhs_doe(tmp_wd, mock_model_doe):
     assert len(dataset_y1) == N_SAMPLES
 
 
-def test_save_and_load_result(mock_model_doe):
+def test_save_and_load_result(tmp_wd, mock_model_doe):
     """Check that a DOE analysis can be saved and that a new instance can be created and
     loaded from saved data."""
     mock_model_doe.save_results()

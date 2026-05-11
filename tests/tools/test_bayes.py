@@ -1,3 +1,18 @@
+# Copyright 2021 IRT Saint Exupery, https://www.irt-saintexupery.com
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Lesser General Public
+# License version 3 as published by the Free Software Foundation.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with this program; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
 # Copyright 2021 IRT Saint Exupéry, https://www.irt-saintexupery.com
 #
 # This program is free software; you can redistribute it and/or
@@ -40,25 +55,25 @@ from vimseo.tools.bayes.bayes_analysis_result import BayesAnalysisResult
 random.seed(1)  # noqa: NPY002
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture
 def data() -> array:
     """The dataset used to calibrate the probabilistic model."""
     return random.randn(10) + 2  # noqa: NPY002
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture
 def model() -> str:
     """A probabilistic model to calibrate."""
     return "Normal"
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture
 def prior() -> array:
     """A prior for the model parameters."""
     return ComposedDistribution([Uniform(0, 5)] * 2)
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture
 def bayes_analysis(model, prior, data) -> BayesTool:
     """A raw MCMC sampling."""
     analysis = BayesTool()
@@ -66,7 +81,7 @@ def bayes_analysis(model, prior, data) -> BayesTool:
     return analysis
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture
 def processed_analysis(bayes_analysis) -> BayesTool:
     """A MCMC chain."""
     bayes_analysis.post(

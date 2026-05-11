@@ -1,3 +1,18 @@
+# Copyright 2021 IRT Saint Exupery, https://www.irt-saintexupery.com
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Lesser General Public
+# License version 3 as published by the Free Software Foundation.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with this program; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
 # Copyright 2021 IRT Saint Exupéry, https://www.irt-saintexupery.com
 #
 # This program is free software; you can redistribute it and/or
@@ -14,6 +29,8 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 import pytest
 from gemseo.algos.design_space import DesignSpace
@@ -33,6 +50,9 @@ from vimseo.tools.calibration.calibration_step import CalibrationStepSettings
 from vimseo.utilities.curves_generator import expressions_convexity
 from vimseo.utilities.curves_generator import expressions_oscillate
 from vimseo.utilities.curves_generator import get_history
+
+if TYPE_CHECKING:
+    from gemseo.algos.opt.base_optimizer_settings import BaseOptimizerSettings
 
 activate_logger()
 
@@ -85,56 +105,22 @@ def create_reference_dataset(
     return reference_data
 
 
-@pytest.mark.slow
-@pytest.mark.parametrize(
-    ("x_ref_left", "x_ref_right", "y_ref_max"),
-    [
-        (-0.5, 0.5, 1.0),
-        (-5e-4, 5e-4, 1.0),
-        (-0.5, 0.5, 1e-3),
-        (-5e-4, 5e-4, 1e-3),
-    ],
-)
-@pytest.mark.parametrize(
-    ("algo", "optimizer_settings", "delta_x_left", "delta_x_right"),
-    [
-        (
-            "NLOPT_COBYLA",
-            NLOPT_COBYLA_Settings(max_iter=50),
-            X0_BOUND_REL_SHIFT,
-            X0_BOUND_REL_SHIFT,
-        ),
-        (
-            "NLOPT_COBYLA",
-            NLOPT_COBYLA_Settings(max_iter=50),
-            -X0_BOUND_REL_SHIFT,
-            X0_BOUND_REL_SHIFT,
-        ),
-        (
-            "NLOPT_COBYLA",
-            NLOPT_COBYLA_Settings(max_iter=50),
-            -X0_BOUND_REL_SHIFT,
-            -X0_BOUND_REL_SHIFT,
-        ),
-        (
-            "NLOPT_COBYLA",
-            NLOPT_COBYLA_Settings(max_iter=50),
-            X0_BOUND_REL_SHIFT,
-            -X0_BOUND_REL_SHIFT,
-        ),
-    ],
-)
-def test_abscissa_bound_penalization(
-    tmp_wd,
-    algo,
-    optimizer_settings,
-    delta_x_left,
-    delta_x_right,
-    x_ref_left,
-    x_ref_right,
-    y_ref_max,
-):
-    """Checks that the penalization for unmatched abscissa bounds is working as expected."""
+def check_abscissa_bound_penalization(
+    x_ref_left: float,
+    x_ref_right: float,
+    y_ref_max: float,
+    delta_x_left: float,
+    delta_x_right: float,
+    algo: str,
+    optimizer_settings: BaseOptimizerSettings,
+) -> None:
+    """Checks the penalization for exceeding the abscissa bounds.
+
+    The penalization is computed as the sum of the penalization for exceeding
+    the left bound and the penalization for exceeding the right bound. The
+    penalization for exceeding a bound is computed as the product of the
+    penalization factor and the distance between the point and the bound."""
+
     reference_data = create_reference_dataset(x_ref_left, x_ref_right, y_ref_max)
 
     # The starting point of the model x left and x right:
@@ -179,7 +165,7 @@ def test_abscissa_bound_penalization(
             optimizer_settings=optimizer_settings,
         ),
     )
-    step.plot_results(step.result, show=False, save=True)
+    # step.plot_results(step.result, show=False, save=True)
     assert step.result.posterior_parameters["x_left"] == pytest.approx(
         x_ref_left, rel=5e-2
     )
@@ -188,4 +174,97 @@ def test_abscissa_bound_penalization(
     )
     assert step.result.posterior_parameters["y_max"] == pytest.approx(
         y_ref_max, rel=5e-2
+    )
+
+
+@pytest.mark.parametrize(
+    ("x_ref_left", "x_ref_right", "y_ref_max"),
+    [
+        (-0.5, 0.5, 1.0),
+    ],
+)
+@pytest.mark.parametrize(
+    ("algo", "optimizer_settings", "delta_x_left", "delta_x_right"),
+    [
+        (
+            "NLOPT_COBYLA",
+            NLOPT_COBYLA_Settings(max_iter=50),
+            -X0_BOUND_REL_SHIFT,
+            X0_BOUND_REL_SHIFT,
+        ),
+    ],
+)
+def test_abscissa_bound_penalization_nominal_case(
+    tmp_wd,
+    algo,
+    optimizer_settings,
+    delta_x_left,
+    delta_x_right,
+    x_ref_left,
+    x_ref_right,
+    y_ref_max,
+):
+    """Checks that the penalization for unmatched abscissa bounds is working as expected."""
+    check_abscissa_bound_penalization(
+        x_ref_left=x_ref_left,
+        x_ref_right=x_ref_right,
+        y_ref_max=y_ref_max,
+        delta_x_left=delta_x_left,
+        delta_x_right=delta_x_right,
+        algo=algo,
+        optimizer_settings=optimizer_settings,
+    )
+
+
+@pytest.mark.slow
+@pytest.mark.parametrize(
+    ("x_ref_left", "x_ref_right", "y_ref_max"),
+    [
+        (-5e-4, 5e-4, 1.0),
+        (-0.5, 0.5, 1e-3),
+        (-5e-4, 5e-4, 1e-3),
+    ],
+)
+@pytest.mark.parametrize(
+    ("algo", "optimizer_settings", "delta_x_left", "delta_x_right"),
+    [
+        (
+            "NLOPT_COBYLA",
+            NLOPT_COBYLA_Settings(max_iter=50),
+            X0_BOUND_REL_SHIFT,
+            X0_BOUND_REL_SHIFT,
+        ),
+        (
+            "NLOPT_COBYLA",
+            NLOPT_COBYLA_Settings(max_iter=50),
+            -X0_BOUND_REL_SHIFT,
+            -X0_BOUND_REL_SHIFT,
+        ),
+        (
+            "NLOPT_COBYLA",
+            NLOPT_COBYLA_Settings(max_iter=50),
+            X0_BOUND_REL_SHIFT,
+            -X0_BOUND_REL_SHIFT,
+        ),
+    ],
+)
+def test_abscissa_bound_penalization_all_cases(
+    tmp_wd,
+    algo,
+    optimizer_settings,
+    delta_x_left,
+    delta_x_right,
+    x_ref_left,
+    x_ref_right,
+    y_ref_max,
+):
+    """Checks that the penalization for unmatched abscissa bounds is working as expected."""
+    check_abscissa_bound_penalization(
+        x_ref_left=x_ref_left,
+        x_ref_right=x_ref_right,
+        y_ref_max=y_ref_max,
+        delta_x_left=delta_x_left,
+        delta_x_right=delta_x_right,
+        algo=algo,
+        optimizer_settings=optimizer_settings,
     )
