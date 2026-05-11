@@ -115,6 +115,6 @@ def test_serialized_settings_to_step():
     assert isinstance(step.inputs[0], Input)
     assert isinstance(step.outputs[0], Output)
     tool_settings = step.tool_settings
-    assert tool_settings.model_name == {"Cantilever": "BendingTestAnalytical"}
+    assert tool_settings.name_to_models == {"Cantilever": "BendingTestAnalytical"}
     assert isinstance(tool_settings.optimizer_settings, NLOPT_COBYLA_Settings)
-    assert tool_settings.optimizer_settings.model_dump()["init_step"] == 0.5
+    assert tool_settings.optimizer_settings.model_dump()["init_step"] == 0.5  # noqa: RUF069
