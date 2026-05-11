@@ -1,3 +1,18 @@
+# Copyright 2021 IRT Saint Exupery, https://www.irt-saintexupery.com
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Lesser General Public
+# License version 3 as published by the Free Software Foundation.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with this program; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
 # Copyright 2021 IRT Saint Exupéry, https://www.irt-saintexupery.com
 #
 # This program is free software; you can redistribute it and/or
@@ -18,6 +33,7 @@ from __future__ import annotations
 import collections.abc
 
 import pytest
+from gemseo.settings.opt import NLOPT_COBYLA_Settings
 from gemseo_calibration.calibrator import CalibrationMetricSettings
 from numpy import atleast_1d
 from numpy import ndarray
@@ -40,8 +56,7 @@ from vimseo.utilities.model_data import MetricVariableType
 TARGET_YOUNG_MODULUS = 2.2e5
 
 
-@pytest.fixture
-def calibration_on_scalars():
+def calibration_step_on_scalars(max_iter):
     space_tool_result = SpaceToolFileIO().read(
         CALIBRATION_INPUT_DATA / "experimental_space_beam_cantilever.json"
     )
@@ -71,59 +86,54 @@ def calibration_on_scalars():
                 "imposed_dplt",
             ],
             parameter_names=["young_modulus"],
+            optimizer_name="NLOPT_COBYLA",
+            optimizer_settings=NLOPT_COBYLA_Settings(max_iter=max_iter),
         ),
     )
-
     return step, target_model
 
 
-def test_calibration_step_no_starting_point(tmp_wd):
-    space_tool_result = SpaceToolFileIO().read(
-        CALIBRATION_INPUT_DATA / "experimental_space_beam_cantilever.json"
-    )
-    target_model = create_model("BendingTestAnalytical", "Cantilever")
-    target_model.EXTRA_INPUT_GRAMMAR_CHECK = True
-    target_model.default_input_data["young_modulus"] = atleast_1d(TARGET_YOUNG_MODULUS)
-    target_model.cache = None
-    reference_dataset_cantilever = generate_reference_from_parameter_space(
-        target_model,
-        space_tool_result.parameter_space,
-        n_samples=6,
-        as_dataset=True,
-    )
+@pytest.fixture
+def calibration_step_on_scalars_fixture():
+    return calibration_step_on_scalars(15)
 
-    step = CalibrationStep()
-    step.execute(
-        inputs=CalibrationStepInputs(
-            reference_data={
-                "Cantilever": reference_dataset_cantilever,
-            },
-        ),
-        settings=CalibrationStepSettings(
-            name_to_models={"Cantilever": "BendingTestAnalytical"},
-            control_outputs={
-                "reaction_forces": CalibrationMetricSettings(measure="MSE")
-            },
-            input_names=[
-                "height",
-                "width",
-                "imposed_dplt",
-            ],
-            parameter_names=["young_modulus"],
-        ),
-    )
 
-    assert (
-        step.result.prior_parameters["young_modulus"]
-        == create_model("BendingTestAnalytical", "Cantilever").default_input_data[
-            "young_modulus"
-        ][0]
-    )
-    assert list(step.result.prior_parameters.keys()) == ["young_modulus"]
+def test_calibration_step_on_scalars(tmp_wd, calibration_step_on_scalars_fixture):
+    """Check that a calibration step runs correctly on a single load case.
 
-    assert step.result.posterior_parameters["young_modulus"] == pytest.approx(
-        TARGET_YOUNG_MODULUS, rel=1e-2
+    The design space is defined from a starting point and model input bounds.
+    """
+    output_name = "reaction_forces"
+    calibration_step, target_model = calibration_step_on_scalars_fixture
+    assert calibration_step.result.metric_variables == [
+        MetricVariable(
+            "Cantilever:reaction_forces",
+            MetricVariableType.SCALAR,
+        )
+    ]
+    assert calibration_step.result.objective == f"MSE[Cantilever:{output_name}]"
+    # design space values are modified by the optimizer. So it seems that we cannot
+    # easily
+    # check the initial values.
+    # If we set the settings at construction, then we could check it before executing
+    # the tool.
+    assert calibration_step.result.design_space.get_current_value(["young_modulus"])[
+        0
+    ] == pytest.approx(TARGET_YOUNG_MODULUS, rel=1e-2)
+    assert calibration_step.result.posterior_parameters[
+        "young_modulus"
+    ] == pytest.approx(TARGET_YOUNG_MODULUS, rel=1e-2)
+    model_bis = create_model(
+        "BendingTestAnalytical",
+        "Cantilever",
+        **IntegratedModelSettings(
+            cache_file_path="BendingTestAnalytical_Beam_Cantilever_bis_cache.hdf"
+        ).model_dump(),
     )
+    assert model_bis.execute({
+        k: atleast_1d(v)
+        for k, v in calibration_step.result.posterior_parameters.items()
+    })[f"{output_name}"] == pytest.approx(target_model.execute()[output_name], rel=0.01)
 
 
 def test_calibration_step_with_starting_point(tmp_wd):
@@ -163,7 +173,7 @@ def test_calibration_step_with_starting_point(tmp_wd):
         ),
     )
 
-    assert step.result.prior_parameters["young_modulus"] == 2e5
+    assert step.result.prior_parameters["young_modulus"] == 2e5  # noqa: RUF069
     assert step.result.posterior_parameters["young_modulus"] == pytest.approx(
         TARGET_YOUNG_MODULUS, rel=1e-2
     )
@@ -171,44 +181,6 @@ def test_calibration_step_with_starting_point(tmp_wd):
         assert not (
             isinstance(value, (collections.abc.Sequence, ndarray)) and len(value) == 1
         )
-
-
-def test_calibration_step_on_scalars_single_model(tmp_wd, calibration_on_scalars):
-    """Check that a calibration step runs correctly on a single load case.
-
-    The design space is defined from a starting point and model input bounds.
-    """
-    output_name = "reaction_forces"
-    calibration_step, target_model = calibration_on_scalars
-    assert calibration_step.result.metric_variables == [
-        MetricVariable(
-            "Cantilever:reaction_forces",
-            MetricVariableType.SCALAR,
-        )
-    ]
-    assert calibration_step.result.objective == f"MSE[Cantilever:{output_name}]"
-    # design space values are modified by the optimizer. So it seems that we cannot
-    # easily
-    # check the initial values.
-    # If we set the settings at construction, then we could check it before executing
-    # the tool.
-    assert calibration_step.result.design_space.get_current_value(["young_modulus"])[
-        0
-    ] == pytest.approx(TARGET_YOUNG_MODULUS, rel=1e-2)
-    assert calibration_step.result.posterior_parameters[
-        "young_modulus"
-    ] == pytest.approx(TARGET_YOUNG_MODULUS, rel=1e-2)
-    model_bis = create_model(
-        "BendingTestAnalytical",
-        "Cantilever",
-        **IntegratedModelSettings(
-            cache_file_path="BendingTestAnalytical_Beam_Cantilever_bis_cache.hdf"
-        ).model_dump(),
-    )
-    assert model_bis.execute({
-        k: atleast_1d(v)
-        for k, v in calibration_step.result.posterior_parameters.items()
-    })[f"{output_name}"] == pytest.approx(target_model.execute()[output_name], rel=0.01)
 
 
 def test_calibration_step_on_scalars_multiple_models(tmp_wd):
@@ -271,6 +243,8 @@ def test_calibration_step_on_scalars_multiple_models(tmp_wd):
                 "imposed_dplt",
             ],
             parameter_names=["young_modulus"],
+            optimizer_name="NLOPT_COBYLA",
+            optimizer_settings=NLOPT_COBYLA_Settings(max_iter=15),
         ),
     )
 
@@ -292,15 +266,18 @@ def test_calibration_step_on_scalars_multiple_models(tmp_wd):
     )
 
 
-def test_save_result(tmp_wd, calibration_on_scalars):
+def test_save_result(tmp_wd):
     """Check that a calibration result can be saved to disk."""
-    calibration_step, _target_model = calibration_on_scalars
+    calibration_step, _target_model = calibration_step_on_scalars(2)
     calibration_step.save_results()
+    assert (
+        calibration_step.working_directory / "CalibrationStep_result.hdf5"
+    ).is_file()
 
 
-def test_plots_on_scalars(tmp_wd, calibration_on_scalars):
+def test_plots_on_scalars(tmp_wd):
     """Check that a calibration step based on scalar outputs can be plotted."""
-    calibration_step, _target_model = calibration_on_scalars
+    calibration_step, _target_model = calibration_step_on_scalars(2)
 
     calibration_step.plot_results(calibration_step.result, show=False, save=True)
     assert (
@@ -322,9 +299,9 @@ def test_plots_on_scalars(tmp_wd, calibration_on_scalars):
     ).is_file()
 
 
-def test_serialization(tmp_wd, calibration_on_scalars):
+def test_serialization(tmp_wd):
     """Check that a CalibrationStepResult can be serialized to hdf5."""
-    calibration_step, _ = calibration_on_scalars
+    calibration_step, _ = calibration_step_on_scalars(2)
     result = calibration_step.result
     result.to_hdf5("result.hdf5")
     serialized_result = CalibrationStepResult.from_hdf5("result.hdf5")
