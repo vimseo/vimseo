@@ -61,7 +61,7 @@ You can use [uv](https://docs.astral.sh/uv/) for installation. ``uv`` is an extr
 Python project manager. To install, use:
 ```
 uv pip install vimseo
- ```
+```
 
 Pay attention that running the above command will install **VIMSEO** globally on your system.
 
@@ -290,47 +290,47 @@ learn through discussions and tutorials about key topics.
 
 1. Material Modelling
 
-Integration of simulation models dedicated to composite materials, including damage modelling, failure initiation and structural geometries.
+    Integration of simulation models dedicated to composite materials, including damage modelling, failure initiation and structural geometries.
 
 2. Sensitivity Analysis Methods
 
-Development and integration of sensitivity analysis methods, including new approaches and associated quality indicators.
+    Development and integration of sensitivity analysis methods, including new approaches and associated quality indicators.
 
 3. Calibration & Uncertainty Quantification
 
-Development and integration of robust calibration methods accounting for uncertainty and variability, up to inverse and Bayesian approaches.
+    Development and integration of robust calibration methods accounting for uncertainty and variability, up to inverse and Bayesian approaches.
 
 4. Validation & Model Error Correction
 
-Formalisation of the validity domain and development of output space analysis methods to characterise model properties.
+    Formalisation of the validity domain and development of output space analysis methods to characterise model properties.
 
 5. Surrogates & Active Learning
 
-Development and integration of modern surrogate methods, including active learning and physics-informed approaches.
+    Development and integration of modern surrogate methods, including active learning and physics-informed approaches.
 
 6. Multiscale Methods
 
-Evaluation and integration of multiscale methods, including scale-bridging approaches to propagate coupon-level allowables up to large-scale structural reserve factor predictions.
+    Evaluation and integration of multiscale methods, including scale-bridging approaches to propagate coupon-level allowables up to large-scale structural reserve factor predictions.
 
 7. Data Management, Metrics & Traceability
 
-Test data management, development of comparison metrics between curves and fields, and computation-to-test traceability.
+    Test data management, development of comparison metrics between curves and fields, and computation-to-test traceability.
 
 8. Post-processing
 
-Generic and flexible post-processing tooling for exploitation of simulation results.
+    Generic and flexible post-processing tooling for exploitation of simulation results.
 
 9. Infrastructure, UI & Technical Integrations
 
-Software infrastructure evolution, user interface improvements and integrations with third-party tools.
+    Software infrastructure evolution, user interface improvements and integrations with third-party tools.
 
 10. Outreach & Open Source
 
-Communication, openness and community-building actions around VIMSEO.
+     Communication, openness and community-building actions around VIMSEO.
 
 11. Maintenance & User Support
 
-Recurring maintenance, support and knowledge transfer activities towards users.
+     Recurring maintenance, support and knowledge transfer activities towards users.
 
 
 ## License
