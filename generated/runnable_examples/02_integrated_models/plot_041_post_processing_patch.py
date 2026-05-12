@@ -22,16 +22,28 @@ A new model is created by adding a post-processor to an existing model instance.
 The cache of the existing model is reused while running the composed model.
 """
 
+# %%
 from __future__ import annotations
 
 from numpy import atleast_1d
 
+from vimseo import EXAMPLE_RUNS_DIR
 from vimseo.api import create_model
 from vimseo.core.components.post.post_processor import PostProcessor
+from vimseo.core.model_settings import IntegratedModelSettings
 
 # %%
 # A model is created and executed.
-model = create_model("BendingTestAnalytical", "Cantilever")
+model = create_model(
+    "BendingTestAnalytical",
+    "Cantilever",
+    model_options=IntegratedModelSettings(
+        directory_archive_root=EXAMPLE_RUNS_DIR / "archive/post_processing_patch",
+        directory_scratch_root=EXAMPLE_RUNS_DIR / "scratch/post_processing_patch",
+        cache_file_path=EXAMPLE_RUNS_DIR
+        / "caches/post_processing_patch/no_post_cache.hdf",
+    ),
+)
 model.execute()
 
 
@@ -72,6 +84,12 @@ model_with_post = create_model(
     "Cantilever",
     base_model=model,
     post_components=[post_processor],
+    model_options=IntegratedModelSettings(
+        directory_archive_root=EXAMPLE_RUNS_DIR / "archive/post_processing_patch",
+        directory_scratch_root=EXAMPLE_RUNS_DIR / "scratch/post_processing_patch",
+        cache_file_path=EXAMPLE_RUNS_DIR
+        / "caches/post_processing_patch/with_post_cache.hdf",
+    ),
 )
 
 # %%
@@ -79,3 +97,5 @@ model_with_post = create_model(
 # so no computation is done here. Only the new post-processing is computed.
 output_data = model_with_post.execute()
 print("Relative max displacement:", output_data["relative_max_dplt"])
+
+# %%

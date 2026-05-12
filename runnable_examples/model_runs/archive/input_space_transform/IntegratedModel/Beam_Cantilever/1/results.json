@@ -1,0 +1,32 @@
+{
+     "inputs": {
+         "lengthOverWidth": 2.0,
+         "width": 10.0,
+         "height": 40.0,
+         "imposed_dplt": -5.0,
+         "relative_dplt_location": 1.0,
+         "young_modulus": 210000.0,
+         "nu_p": 0.3
+    },
+     "outputs": {
+         "dplt_adim_at_force": -0.24999999999999978
+    },
+     "metadata": {
+         "error_code": 0,
+         "model": "IntegratedModel",
+         "load_case": "Beam_Cantilever",
+         "description": "",
+         "job_name": "",
+         "persistent_result_files": "",
+         "n_cpus": 1,
+         "date": "2026-03-26 14:54:16.045135",
+         "cpu_time": 0.02372145652770996,
+         "user": "sebastien.bocquet",
+         "machine": "IPF7101",
+         "vims_git_version": "d0050d8de498c8354552cdde540fb3e524454871",
+         "directory_archive_root": "/home/sebastien.bocquet/PycharmProjects/vimseo/docs/runnable_examples/model_runs/archive/input_space_transform",
+         "directory_archive_job": "/home/sebastien.bocquet/PycharmProjects/vimseo/docs/runnable_examples/model_runs/archive/input_space_transform/IntegratedModel/Beam_Cantilever/1",
+         "directory_scratch_root": "/home/sebastien.bocquet/PycharmProjects/vimseo/docs/runnable_examples/model_runs/scratch/input_space_transform",
+         "directory_scratch_job": ""
+    }
+}

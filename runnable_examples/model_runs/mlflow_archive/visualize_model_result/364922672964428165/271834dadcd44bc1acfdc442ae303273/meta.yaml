@@ -1,0 +1,15 @@
+artifact_uri: file://home/sebastien.bocquet/PycharmProjects/vimseo/docs/runnable_examples/model_runs/mlflow_archive/visualize_model_result/364922672964428165/271834dadcd44bc1acfdc442ae303273/artifacts
+deleted_time: 1778509861851
+end_time: 1778509427051
+entry_point_name: ''
+experiment_id: '364922672964428165'
+lifecycle_stage: deleted
+run_id: 271834dadcd44bc1acfdc442ae303273
+run_name: classy-whale-85
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1778509426893
+status: 3
+tags: []
+user_id: sebastien.bocquet

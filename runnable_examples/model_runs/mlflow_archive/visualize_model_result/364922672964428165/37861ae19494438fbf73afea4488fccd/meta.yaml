@@ -1,0 +1,14 @@
+artifact_uri: file://home/sebastien.bocquet/PycharmProjects/vimseo/docs/runnable_examples/model_runs/mlflow_archive/visualize_model_result/364922672964428165/37861ae19494438fbf73afea4488fccd/artifacts
+end_time: 1778511117831
+entry_point_name: ''
+experiment_id: '364922672964428165'
+lifecycle_stage: active
+run_id: 37861ae19494438fbf73afea4488fccd
+run_name: bald-ape-393
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1778511117679
+status: 3
+tags: []
+user_id: sebastien.bocquet

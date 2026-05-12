@@ -21,15 +21,16 @@ Usage of the model calibration for several load cases in the same step
 Calibrate a model with coupling several load cases in a step.
 """
 
+# %%
 from __future__ import annotations
 
 import logging
 
+from gemseo.algos.opt.nlopt.settings.nlopt_cobyla_settings import NLOPT_COBYLA_Settings
 from gemseo_calibration.calibrator import CalibrationMetricSettings
 from numpy import atleast_1d
 
-from gemseo.algos.opt.nlopt.settings.nlopt_cobyla_settings import NLOPT_COBYLA_Settings
-from vimseo import EXAMPLE_RUNS_DIR_NAME
+from vimseo import EXAMPLE_RUNS_DIR
 from vimseo.api import activate_logger
 from vimseo.api import create_model
 from vimseo.core.model_settings import IntegratedModelSettings
@@ -68,6 +69,10 @@ target_model_cantilever = create_model(
     model_options=IntegratedModelSettings(
         directory_archive_persistency=PersistencyPolicy.DELETE_ALWAYS,
         directory_scratch_persistency=PersistencyPolicy.DELETE_ALWAYS,
+        directory_archive_root=EXAMPLE_RUNS_DIR / "archive/coupled_load",
+        directory_scratch_root=EXAMPLE_RUNS_DIR / "scratch/coupled_load",
+        cache_file_path=EXAMPLE_RUNS_DIR
+        / f"caches/coupled_load/target_{model_name}_Cantilever_cache.hdf",
     ),
 )
 target_young_modulus_cantilever = 2.2e5
@@ -92,6 +97,10 @@ target_model_three_points = create_model(
     model_options=IntegratedModelSettings(
         directory_archive_persistency=PersistencyPolicy.DELETE_ALWAYS,
         directory_scratch_persistency=PersistencyPolicy.DELETE_ALWAYS,
+        directory_archive_root=EXAMPLE_RUNS_DIR / "archive/coupled_load",
+        directory_scratch_root=EXAMPLE_RUNS_DIR / "scratch/coupled_load",
+        cache_file_path=EXAMPLE_RUNS_DIR
+        / f"caches/coupled_load/target_{model_name}_ThreePoints_cache.hdf",
     ),
 )
 target_young_modulus_three_points = 2.3e5
@@ -112,18 +121,20 @@ model_cantilever = create_model(
     model_name,
     "Cantilever",
     model_options=IntegratedModelSettings(
-        directory_archive_root=f"../../../{EXAMPLE_RUNS_DIR_NAME}/archive/calibration_coupled",
-        directory_scratch_root=f"../../../{EXAMPLE_RUNS_DIR_NAME}/scratch/calibration_coupled",
-        cache_file_path=f"../../../{EXAMPLE_RUNS_DIR_NAME}/caches/calibration_coupled/{model_name}_Cantilever_cache.hdf",
+        directory_archive_root=EXAMPLE_RUNS_DIR / "archive/calibration_coupled",
+        directory_scratch_root=EXAMPLE_RUNS_DIR / "scratch/calibration_coupled",
+        cache_file_path=EXAMPLE_RUNS_DIR
+        / f"caches/calibration_coupled/{model_name}_Cantilever_cache.hdf",
     ),
 )
 model_three_points = create_model(
     model_name,
     "ThreePoints",
     model_options=IntegratedModelSettings(
-        directory_archive_root=f"../../../{EXAMPLE_RUNS_DIR_NAME}/archive/calibration_coupled",
-        directory_scratch_root=f"../../../{EXAMPLE_RUNS_DIR_NAME}/scratch/calibration_coupled",
-        cache_file_path=f"../../../{EXAMPLE_RUNS_DIR_NAME}/caches/calibration_coupled/{model_name}_ThreePoints_cache.hdf",
+        directory_archive_root=EXAMPLE_RUNS_DIR / "archive/calibration_coupled",
+        directory_scratch_root=EXAMPLE_RUNS_DIR / "scratch/calibration_coupled",
+        cache_file_path=EXAMPLE_RUNS_DIR
+        / f"caches/calibration_coupled/{model_name}_ThreePoints_cache.hdf",
     ),
 )
 
@@ -157,7 +168,7 @@ step.execute(
         },
     ),
     settings=CalibrationStepSettings(
-        model_name={
+        name_to_models={
             "Cantilever": model_cantilever,
             "ThreePoints": model_three_points,
         },
@@ -168,7 +179,7 @@ step.execute(
             "imposed_dplt",
         ],
         parameter_names=["young_modulus"],
-        optimizer_settings=NLOPT_COBYLA_Settings(max_iter=50)
+        optimizer_settings=NLOPT_COBYLA_Settings(max_iter=50),
     ),
 )
 step.save_results()

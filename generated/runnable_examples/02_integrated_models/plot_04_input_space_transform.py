@@ -20,16 +20,23 @@ Patch a pre-processor to apply transformation on input variables.
 
 """
 
+# %%
 from __future__ import annotations
 
 from gemseo.disciplines.analytic import AnalyticDiscipline
 from numpy import atleast_1d
 
+from vimseo import EXAMPLE_RUNS_DIR
 from vimseo.api import create_model
 from vimseo.core.base_integrated_model import IntegratedModel
 from vimseo.core.components.discipline_wrapper_component import (
     DisciplineWrapperComponent,
 )
+from vimseo.core.model_settings import IntegratedModelSettings
+
+# %%
+# Instantiate the model to be transformed:
+
 
 model = create_model("BendingTestAnalytical", "Cantilever")
 
@@ -63,6 +70,11 @@ output_transform = AnalyticDiscipline({
 # [input_tranform,
 # model.pre_processor, model.run_processor, model.post_processor,
 # output_transform]
+model_settings = IntegratedModelSettings(
+    directory_archive_root=EXAMPLE_RUNS_DIR / "archive/input_space_transform",
+    directory_scratch_root=EXAMPLE_RUNS_DIR / "scratch/input_space_transform",
+    cache_file_path=EXAMPLE_RUNS_DIR / "caches/input_space_transform/cache.hdf",
+)
 transformed_input_model = IntegratedModel(
     "Beam_Cantilever",
     [
@@ -70,6 +82,7 @@ transformed_input_model = IntegratedModel(
         *list(model._chain.disciplines),
         DisciplineWrapperComponent("Beam_Cantilever", output_transform),
     ],
+    **model_settings.model_dump(),
 )
 
 # %%
@@ -82,6 +95,7 @@ transformed_input_model.cache = None
 
 # %%
 # Execute the transformed model:
+
 output_data = transformed_input_model.execute({
     "lengthOverWidth": atleast_1d(2.0),
     "width": atleast_1d(10.0),

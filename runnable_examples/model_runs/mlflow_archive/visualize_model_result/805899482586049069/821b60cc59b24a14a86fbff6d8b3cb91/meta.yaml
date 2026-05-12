@@ -1,0 +1,14 @@
+artifact_uri: file://home/sebastien.bocquet/PycharmProjects/vimseo/docs/runnable_examples/model_runs/mlflow_archive/visualize_model_result/805899482586049069/821b60cc59b24a14a86fbff6d8b3cb91/artifacts
+end_time: 1778511117661
+entry_point_name: ''
+experiment_id: '805899482586049069'
+lifecycle_stage: active
+run_id: 821b60cc59b24a14a86fbff6d8b3cb91
+run_name: thundering-lark-379
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1778511117507
+status: 3
+tags: []
+user_id: sebastien.bocquet

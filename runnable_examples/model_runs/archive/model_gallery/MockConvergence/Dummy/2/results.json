@@ -1,0 +1,32 @@
+{
+     "inputs": {
+         "a": 1.0,
+         "a_n": 0.1,
+         "h": 2,
+         "n": 2,
+         "a_m": 0.0,
+         "m": 3
+    },
+     "outputs": {
+         "a_h": 0.6,
+         "n_dof": 0.125
+    },
+     "metadata": {
+         "cpu_time": 0.0048067569732666016,
+         "error_code": 0,
+         "model": "MockConvergence",
+         "load_case": "Dummy",
+         "description": "",
+         "job_name": "",
+         "persistent_result_files": "",
+         "n_cpus": 1,
+         "date": "2026-03-26 14:43:28.967996",
+         "user": "sebastien.bocquet",
+         "machine": "IPF7101",
+         "vims_git_version": "d0050d8de498c8354552cdde540fb3e524454871",
+         "directory_archive_root": "/home/sebastien.bocquet/PycharmProjects/vimseo/docs/runnable_examples/model_runs/archive/model_gallery",
+         "directory_archive_job": "/home/sebastien.bocquet/PycharmProjects/vimseo/docs/runnable_examples/model_runs/archive/model_gallery/MockConvergence/Dummy/2",
+         "directory_scratch_root": "/home/sebastien.bocquet/PycharmProjects/vimseo/docs/runnable_examples/model_runs/scratch/model_gallery",
+         "directory_scratch_job": ""
+    }
+}

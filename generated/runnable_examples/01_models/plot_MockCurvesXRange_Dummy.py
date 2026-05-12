@@ -22,9 +22,10 @@ Overview of the MockCurvesXRange for load case Dummy
 
 """
 
+# %%
 from __future__ import annotations
 
-from vimseo import EXAMPLE_RUNS_DIR_NAME
+from vimseo import EXAMPLE_RUNS_DIR
 from vimseo.api import create_model
 from vimseo.core.model_settings import IntegratedModelSettings
 
@@ -38,9 +39,10 @@ model = create_model(
     load_case,
     check_subprocess=True,
     model_options=IntegratedModelSettings(
-        directory_archive_root=f"../../../{EXAMPLE_RUNS_DIR_NAME}/archive/model_gallery",
-        directory_scratch_root=f"../../../{EXAMPLE_RUNS_DIR_NAME}/scratch/model_gallery",
-        cache_file_path=f"../../../{EXAMPLE_RUNS_DIR_NAME}/caches/model_gallery/{model_name}_{load_case}_cache.hdf",
+        directory_archive_root=EXAMPLE_RUNS_DIR / "archive/model_gallery",
+        directory_scratch_root=EXAMPLE_RUNS_DIR / "scratch/model_gallery",
+        cache_file_path=EXAMPLE_RUNS_DIR
+        / f"caches/model_gallery/{model_name}_{load_case}_cache.hdf",
     ),
 )
 

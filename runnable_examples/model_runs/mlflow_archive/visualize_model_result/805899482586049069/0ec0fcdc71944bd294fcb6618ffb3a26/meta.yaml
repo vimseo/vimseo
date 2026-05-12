@@ -1,0 +1,15 @@
+artifact_uri: file://home/sebastien.bocquet/PycharmProjects/vimseo/docs/runnable_examples/model_runs/mlflow_archive/visualize_model_result/805899482586049069/0ec0fcdc71944bd294fcb6618ffb3a26/artifacts
+deleted_time: 1778509861852
+end_time: 1778509426874
+entry_point_name: ''
+experiment_id: '805899482586049069'
+lifecycle_stage: deleted
+run_id: 0ec0fcdc71944bd294fcb6618ffb3a26
+run_name: rambunctious-lamb-97
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1778509426713
+status: 3
+tags: []
+user_id: sebastien.bocquet

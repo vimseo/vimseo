@@ -1,0 +1,15 @@
+artifact_uri: file://home/sebastien.bocquet/PycharmProjects/vimseo/docs/runnable_examples/model_runs/mlflow_archive/visualize_model_result/364922672964428165/3af8f88c5c5b42fb9a31a98ae03d5c70/artifacts
+deleted_time: 1778511117448
+end_time: 1778509862257
+entry_point_name: ''
+experiment_id: '364922672964428165'
+lifecycle_stage: deleted
+run_id: 3af8f88c5c5b42fb9a31a98ae03d5c70
+run_name: orderly-sponge-528
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1778509862104
+status: 3
+tags: []
+user_id: sebastien.bocquet

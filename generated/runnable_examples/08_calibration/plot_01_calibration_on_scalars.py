@@ -21,6 +21,7 @@ Usage of the model calibration based on scalar outputs
 Calibrate a model based on scalar outputs.
 """
 
+# %%
 from __future__ import annotations
 
 import logging
@@ -30,14 +31,14 @@ from gemseo.algos.design_space import DesignSpace
 from gemseo.algos.opt.multi_start.settings.multi_start_settings import (
     MultiStart_Settings,
 )
+from gemseo.algos.opt.nlopt.settings.nlopt_cobyla_settings import NLOPT_COBYLA_Settings
 from gemseo_calibration.calibrator import CalibrationMetricSettings
 from matplotlib.image import imread
 from matplotlib.pyplot import imshow
 from numpy import asarray
 from numpy import atleast_1d
 
-from gemseo.algos.opt.nlopt.settings.nlopt_cobyla_settings import NLOPT_COBYLA_Settings
-from vimseo import EXAMPLE_RUNS_DIR_NAME
+from vimseo import EXAMPLE_RUNS_DIR
 from vimseo.api import activate_logger
 from vimseo.api import create_model
 from vimseo.core.model_settings import IntegratedModelSettings
@@ -99,9 +100,10 @@ model = create_model(
     model_name,
     load_case,
     model_options=IntegratedModelSettings(
-        directory_archive_root=f"../../../{EXAMPLE_RUNS_DIR_NAME}/archive/calibration_scalars",
-        directory_scratch_root=f"../../../{EXAMPLE_RUNS_DIR_NAME}/scratch/calibration_scalars",
-        cache_file_path=f"../../../{EXAMPLE_RUNS_DIR_NAME}/caches/calibration_scalars/{model_name}_{load_case}_cache.hdf",
+        directory_archive_root=EXAMPLE_RUNS_DIR / "archive/calibration_scalars",
+        directory_scratch_root=EXAMPLE_RUNS_DIR / "scratch/calibration_scalars",
+        cache_file_path=EXAMPLE_RUNS_DIR
+        / f"caches/calibration_scalars/{model_name}_{load_case}_cache.hdf",
     ),
 )
 
@@ -120,7 +122,7 @@ step.execute(
         },
     ),
     settings=CalibrationStepSettings(
-        model_name={"Cantilever": deepcopy(model)},
+        name_to_models={"Cantilever": deepcopy(model)},
         control_outputs={
             output_name: CalibrationMetricSettings(
                 measure="RelativeMSE",
@@ -202,7 +204,7 @@ step.execute(
         starting_point={"young_modulus": 1.95e5},
     ),
     settings=CalibrationStepSettings(
-        model_name={"Cantilever": deepcopy(model)},
+        name_to_models={"Cantilever": deepcopy(model)},
         control_outputs={
             output_name: CalibrationMetricSettings(
                 measure="RelativeMSE",
@@ -214,7 +216,7 @@ step.execute(
             "imposed_dplt",
         ],
         parameter_names=["young_modulus"],
-        optimizer_settings=NLOPT_COBYLA_Settings(max_iter=50)
+        optimizer_settings=NLOPT_COBYLA_Settings(max_iter=50),
     ),
 )
 step.save_results()
@@ -238,7 +240,7 @@ step.execute(
         },
     ),
     settings=CalibrationStepSettings(
-        model_name={"Cantilever": deepcopy(model)},
+        name_to_models={"Cantilever": deepcopy(model)},
         control_outputs={
             output_name: CalibrationMetricSettings(
                 measure="RelativeMSE",
@@ -251,7 +253,9 @@ step.execute(
         ],
         parameter_names=["young_modulus"],
         optimizer_name="MultiStart",
-        optimizer_settings=MultiStart_Settings(opt_algo_name="NLOPT_COBYLA", max_iter=50),
+        optimizer_settings=MultiStart_Settings(
+            opt_algo_name="NLOPT_COBYLA", max_iter=50
+        ),
     ),
 )
 step.save_results()
@@ -283,7 +287,7 @@ step.execute(
         design_space=design_space,
     ),
     settings=CalibrationStepSettings(
-        model_name={"Cantilever": deepcopy(model)},
+        name_to_models={"Cantilever": deepcopy(model)},
         control_outputs={
             output_name: CalibrationMetricSettings(
                 measure="RelativeMSE",
@@ -295,7 +299,7 @@ step.execute(
             "imposed_dplt",
         ],
         parameter_names=["young_modulus"],
-        optimizer_settings=NLOPT_COBYLA_Settings(max_iter=50)
+        optimizer_settings=NLOPT_COBYLA_Settings(),
     ),
 )
 step.save_results()

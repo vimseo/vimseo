@@ -22,6 +22,7 @@ The :class:`~.BayesTool` provides methods to perform the calibration
 under uncertainties of a model.
 """
 
+# %%
 from __future__ import annotations
 
 from gemseo.datasets.dataset import Dataset
