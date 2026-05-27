@@ -1,3 +1,18 @@
+# Copyright 2021 IRT Saint Exupery, https://www.irt-saintexupery.com
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Lesser General Public
+# License version 3 as published by the Free Software Foundation.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with this program; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
 # Copyright 2021 IRT Saint Exupéry, https://www.irt-saintexupery.com
 #
 # This program is free software; you can redistribute it and/or
@@ -23,7 +38,7 @@ from typing import TYPE_CHECKING
 from gemseo.core.discipline.discipline import Discipline
 
 from vimseo.core.base_component import BaseComponent
-from vimseo.job_executor.base_executor import BaseJobExecutor
+from vimseo.job_executor.base_executor import JobExecutor
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -45,7 +60,7 @@ class ExternalSoftwareComponent(BaseComponent):
     _attached_files: list
     """A list of files that are copied to the job directory."""
 
-    _job_executor: BaseJobExecutor
+    _job_executor: JobExecutor
     """A job executor."""
 
     auto_detect_grammar_files = True
@@ -60,12 +75,12 @@ class ExternalSoftwareComponent(BaseComponent):
         check_subprocess: bool = False,
     ) -> None:
         super().__init__(load_case_name, material_grammar_file, material)
-        self._job_executor = BaseJobExecutor("")
+        self._job_executor = JobExecutor("")
         self._check_subprocess = check_subprocess
         self._attached_files = []
 
     @property
-    def job_executor(self) -> BaseJobExecutor:
+    def job_executor(self) -> JobExecutor:
         return self._job_executor
 
     def _check_job_completion(self) -> int:
@@ -85,7 +100,7 @@ class ExternalSoftwareComponent(BaseComponent):
 
         Args:
             error_subprocess: The error code from the
-                ``BaseJobExecutor._execute_external_software`` method.
+                ``JobExecutor._execute_external_software`` method.
             check: Whether the subprocess raises an error if it fails.
             cmd: The subprocess command.
 
