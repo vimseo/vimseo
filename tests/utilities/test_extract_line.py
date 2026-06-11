@@ -1,3 +1,18 @@
+# Copyright 2021 IRT Saint Exupery, https://www.irt-saintexupery.com
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Lesser General Public
+# License version 3 as published by the Free Software Foundation.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with this program; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
 # Copyright 2021 IRT Saint Exupéry, https://www.irt-saintexupery.com
 #
 # This program is free software; you can redistribute it and/or
@@ -26,6 +41,7 @@ the interpolation along the extraction line.
 
 from __future__ import annotations
 
+import logging
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -101,7 +117,7 @@ def toy_vtu(tmp_path_factory) -> Path:
 # =============================================================================
 
 
-def test_returns_expected_keys(self, toy_vtu):
+def test_returns_expected_keys(toy_vtu):
     """Result contains the expected keys."""
     result = extract_line(
         str(toy_vtu),
@@ -114,7 +130,7 @@ def test_returns_expected_keys(self, toy_vtu):
     assert "u" in result
 
 
-def test_coords_shape(self, toy_vtu):
+def test_coords_shape(toy_vtu):
     """Coordinates array has the expected shape."""
     n_points = 50
     result = extract_line(
@@ -127,7 +143,7 @@ def test_coords_shape(self, toy_vtu):
     assert result["dist"].shape == (n_points + 1,)
 
 
-def test_dist_starts_at_zero(self, toy_vtu):
+def test_dist_starts_at_zero(toy_vtu):
     """Curvilinear distance starts at 0."""
     result = extract_line(
         str(toy_vtu),
@@ -137,7 +153,7 @@ def test_dist_starts_at_zero(self, toy_vtu):
     assert result["dist"][0] == pytest.approx(0.0, abs=1e-10)
 
 
-def test_dist_ends_at_segment_length(self, toy_vtu):
+def test_dist_ends_at_segment_length(toy_vtu):
     """Curvilinear distance ends at the segment length."""
     pa = np.array([0.0, 0.0, 0.0])
     pb = np.array([1.0, 0.0, 0.0])
@@ -147,7 +163,7 @@ def test_dist_ends_at_segment_length(self, toy_vtu):
     assert result["dist"][-1] == pytest.approx(expected_length, abs=1e-10)
 
 
-def test_scalar_field_horizontal_line(self, toy_vtu):
+def test_scalar_field_horizontal_line(toy_vtu):
     """
     Horizontal line at y=0.5 : p(x, 0.5) = x + 0.5
     Verifies interpolation of scalar field p.
@@ -165,7 +181,7 @@ def test_scalar_field_horizontal_line(self, toy_vtu):
     np.testing.assert_allclose(p_values, p_expected, atol=1e-6)
 
 
-def test_scalar_field_vertical_line(self, toy_vtu):
+def test_scalar_field_vertical_line(toy_vtu):
     """
     Vertical line at x=0.5 : p(0.5, y) = 0.5 + y
     Verifies interpolation of scalar field p.
@@ -183,7 +199,7 @@ def test_scalar_field_vertical_line(self, toy_vtu):
     np.testing.assert_allclose(p_values, p_expected, atol=1e-6)
 
 
-def test_scalar_field_diagonal_line(self, toy_vtu):
+def test_scalar_field_diagonal_line(toy_vtu):
     """
     Diagonal line from (0,0) to (1,1) : p(t, t) = 2t
     """
@@ -201,7 +217,7 @@ def test_scalar_field_diagonal_line(self, toy_vtu):
     np.testing.assert_allclose(p_values, p_expected, atol=1e-6)
 
 
-def test_vector_field(self, toy_vtu):
+def test_vector_field(toy_vtu):
     """
     Vector field u = (x, y, 0) on horizontal line y=0.5 :
     u_x(x, 0.5) = x, u_y(x, 0.5) = 0.5
@@ -220,7 +236,7 @@ def test_vector_field(self, toy_vtu):
     np.testing.assert_allclose(u_values[:, 2], 0.0, atol=1e-6)  # u_z = 0
 
 
-def test_field_selection(self, toy_vtu):
+def test_field_selection(toy_vtu):
     """Only requested fields are returned."""
     result = extract_line(
         str(toy_vtu),
@@ -232,22 +248,21 @@ def test_field_selection(self, toy_vtu):
     assert "u" not in result
 
 
-def test_missing_field_warning(self, toy_vtu, capsys):
+def test_missing_field_warning(toy_vtu, caplog):
     """A non-existent field triggers a warning and is ignored."""
-    result = extract_line(
-        str(toy_vtu),
-        point_a=(0.0, 0.5, 0.0),
-        point_b=(1.0, 0.5, 0.0),
-        fields=["p", "nonexistent_field"],
-    )
-    captured = capsys.readouterr()
-    assert "WARN" in captured.out
-    assert "nonexistent_field" in captured.out
-    assert "p" in result
-    assert "nonexistent_field" not in result
+    with caplog.at_level(logging.WARNING, logger="vimseo.utilities.fields"):
+        extract_line(
+            str(toy_vtu),
+            point_a=(0.0, 0.5, 0.0),
+            point_b=(1.0, 0.5, 0.0),
+            fields=["p", "nonexistent_field"],
+        )
+
+    assert "nonexistent_field" in caplog.text
+    assert "Available fields are:" in caplog.text
 
 
-def test_default_points_use_mesh_bounds(self, toy_vtu):
+def test_default_points_use_mesh_bounds(toy_vtu):
     """Without point_a/point_b, mesh bounds are used as defaults."""
     result = extract_line(str(toy_vtu))
     coords = result["coords"]

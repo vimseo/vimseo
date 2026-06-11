@@ -1,3 +1,18 @@
+# Copyright 2021 IRT Saint Exupery, https://www.irt-saintexupery.com
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Lesser General Public
+# License version 3 as published by the Free Software Foundation.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with this program; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
 # Copyright 2021 IRT Saint Exupéry, https://www.irt-saintexupery.com
 #
 # This program is free software; you can redistribute it and/or
@@ -90,8 +105,12 @@ def extract_line(
     """
     mesh = pv.read(vtu_file)
 
-    pa = array(point_a, dtype=float)
-    pb = array(point_b, dtype=float)
+    pa = (
+        array(point_a, dtype=float) if point_a else mesh.bounds[::2]
+    )  # Use x_min, y_min, z_min if not provided
+    pb = (
+        array(point_b, dtype=float) if point_b else mesh.bounds[1::2]
+    )  # Use x_max, y_max, z_max if not provided
 
     line = mesh.sample_over_line(tuple(pa), tuple(pb), resolution=n_points)
 
