@@ -2,25 +2,25 @@
 #    uv pip compile --python-version 3.12 -o requirements/check.txt requirements/check.in
 cfgv==3.5.0
     # via pre-commit
-distlib==0.4.0
+distlib==0.4.2
     # via virtualenv
-filelock==3.25.2
+filelock==3.29.1
     # via
     #   python-discovery
     #   virtualenv
-identify==2.6.18
+identify==2.6.19
     # via pre-commit
 nodeenv==1.10.0
     # via pre-commit
-platformdirs==4.9.4
+platformdirs==4.10.0
     # via
     #   python-discovery
     #   virtualenv
-pre-commit==4.5.1
+pre-commit==4.6.0
     # via -r requirements/check.in
-python-discovery==1.2.1
+python-discovery==1.4.0
     # via virtualenv
 pyyaml==6.0.3
     # via pre-commit
-virtualenv==21.2.0
+virtualenv==21.4.2
     # via pre-commit
