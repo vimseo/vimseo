@@ -38,11 +38,11 @@ from __future__ import annotations
 
 from composipy import OrthotropicMaterial
 
-from vimseo.material import material_relation
 from vimseo.material.material_property import MaterialProperty
+from vimseo.material.material_relation import MaterialRelation
 
 
-class OrthotropicRelation(material_relation):
+class OrthotropicRelation(MaterialRelation):
     """A class representing the properties of an orthotropic material."""
 
     name: str = "orthotropic"
