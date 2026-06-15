@@ -1,4 +1,13 @@
 <!--
+ Copyright 2021 IRT Saint Exupery, https://www.irt-saintexupery.com
+
+ This work is licensed under the Creative Commons Attribution-ShareAlike 4.0
+ International License. To view a copy of this license, visit
+ http://creativecommons.org/licenses/by-sa/4.0/ or send a letter to Creative
+ Commons, PO Box 1866, Mountain View, CA 94042, USA.
+-->
+
+<!--
  Copyright 2021 IRT Saint Exupéry, https://www.irt-saintexupery.com
 
  This work is licensed under the Creative Commons Attribution-ShareAlike 4.0
@@ -13,7 +22,7 @@ Since January 2026, VIMSEO is open source, under the [LGPL v3 license](https://w
 
 ## Contributions
 
-Anyone can contribute to the development of GEMSEO. The types of contributions are multiple:
+Anyone can contribute to the development of VIMSEO. The types of contributions are multiple:
 
 - improving the documentation,
 - declaring a bug, solving a bug,
@@ -22,7 +31,7 @@ Anyone can contribute to the development of GEMSEO. The types of contributions a
 - suggesting a new feature,
 - etc.
 
-[//]: # In order to elicit contributions, we invite you to read the [Roadmap](roadmap.md).
+Check out the [Roadmap](index.md#roadmap) to see where the project is headed.
 
 ## Contact
 
@@ -40,4 +49,4 @@ Signed-off-by: Name <email address>
 
 ## Development
 
-For the technical aspects, we invite you to read: [Developer information](https://vimseo.github.io/vimseo/developing.md).
+For the technical aspects, we invite you to read: [Developer information](https://vimseo.github.io/vimseo/user_guide/developer_install/).
