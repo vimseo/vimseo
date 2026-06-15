@@ -17,6 +17,7 @@ import numpy as np
 
 
 def principal_stress(N: np.ndarray) -> float:
+    """Return the angle of the principal stress directions."""
 
     if N[0] == N[1]:
         a1 = np.pi / 4 * (N[2] > 0) - np.pi / 4 * (N[2] < 0)
@@ -28,6 +29,7 @@ def principal_stress(N: np.ndarray) -> float:
 
 
 def Mat_rot(angle: float) -> np.ndarray:
+    """Return the rotation matrix for a given angle."""
 
     s = np.sin(angle)
 
@@ -43,14 +45,15 @@ def Mat_rot(angle: float) -> np.ndarray:
     )
 
 
-def Effort_IeII(
-    R: float,  # rayon du trou
+def force_fluxes(
+    R: float,
     s1: complex,
     s2: complex,
-    p: np.ndarray,  # contrainte principales
+    p: np.ndarray,
     x: float,
     y: float,
 ) -> np.ndarray:
+    """Return the force fluxes at a given point."""
 
     Phi_12 = phi(x, y, p, s1, s2, R)  # tuple de (phi1,phi2)
 
@@ -74,8 +77,9 @@ def Effort_IeII(
 
 
 def Calc_S_matrix(C_strat: np.ndarray) -> list[np.ndarray, float]:
+    """Return the effective compliance matrix and the angle of the orthotropic axes."""
 
-    # Détermination des repères possibles
+    # Identification of possible reference points
 
     if np.abs(C_strat[0, 0] - C_strat[1, 1]) > 1e-9:
         frac = 2 * (C_strat[0, 2] + C_strat[1, 2]) / (C_strat[0, 0] - C_strat[1, 1])
@@ -97,13 +101,13 @@ def Calc_S_matrix(C_strat: np.ndarray) -> list[np.ndarray, float]:
     else:
         omega2 = np.pi / 8
 
-    # matrices de rotation possibles
+    # Possible rotation matrices
 
     T_omega_inv1 = Mat_rot(omega1)
 
     T_omega_inv2 = Mat_rot(omega2)
 
-    # matrices de rigidité dans les repères tournés
+    # stiffness matrices in rotated coordinate systems
 
     C_try1 = np.linalg.multi_dot([T_omega_inv1, C_strat, T_omega_inv1.T])
 
@@ -121,7 +125,7 @@ def Calc_S_matrix(C_strat: np.ndarray) -> list[np.ndarray, float]:
 
         omega = omega1
 
-    # nettoyage d erreurs numeriques
+    # Clean-up numerical errors
 
     C_final[-1, :2] = np.zeros(2)
 
@@ -131,6 +135,7 @@ def Calc_S_matrix(C_strat: np.ndarray) -> list[np.ndarray, float]:
 
 
 def S_12(S_strat: np.ndarray) -> tuple[complex, complex]:
+    """Return the two roots of the characteristic equation."""
 
     gamma0 = np.sqrt(S_strat[1, 1] / S_strat[0, 0])
 
@@ -151,12 +156,13 @@ def S_12(S_strat: np.ndarray) -> tuple[complex, complex]:
 
 
 def Calc_S12_eff(C_strat: np.ndarray) -> tuple[complex, complex]:
+    """Return the effective s1 and s2 for a given stiffness matrix."""
 
-    # détermination de la matrice de souplesse adaptee
+    # Determination of the appropriate flexibility matrix
 
     S_strat_omega, omega = Calc_S_matrix(C_strat)
 
-    # resolution de l équation caractéristique
+    # Solving characteristic equation
 
     s1_st, s2_st = S_12(S_strat_omega)
 
@@ -174,6 +180,7 @@ def Calc_S12_eff(C_strat: np.ndarray) -> tuple[complex, complex]:
 def zeta(
     z1: complex, z2: complex, s1: complex, s2: complex, R: float
 ) -> tuple[complex, complex]:
+    """Return the zeta values for given z1, z2, s1, s2 and R."""
 
     val1 = z1 / np.sqrt(z1**2 - R**2 * (1 + s1**2))
 
@@ -194,6 +201,7 @@ def zeta(
 def phi(
     x: float, y: float, p: np.ndarray, s1: complex, s2: complex, R: float
 ) -> tuple[np.ndarray, np.ndarray]:
+    """Return the phi1 and phi2 values for given x, y, p, s1, s2 and R."""
 
     phi1 = np.zeros(2, dtype=complex)
 
@@ -218,22 +226,24 @@ def phi(
 
 def tan_model(
     r: float, theta: float, N: np.ndarray, C_strat: np.ndarray, R: float, w: float
-) -> np.ndarray:  # fonction synthèse
-
-    # r, theta : position du point où on calcule les contraintes
-    # N : effort appliqué
-
-    # C_strat : rigidité du startifié
-
-    # R : rayon du trou
-
-    # w : largeur de la plaque
-
-    a = principal_stress(N)  # angle du repère principal
+) -> np.ndarray:
+    """Return the stress at a given point for a given set of parameters.
+    
+    Args:
+        r: The distance from the hole center to the point where the stress is calculated.
+        theta: The angle between the x-axis and the line connecting the hole center to the point where the stress is calculated.
+        N: The applied load vector (N_x, N_y, N_xy).
+        C_strat: The stiffness matrix of the laminate.
+        R: The radius of the hole.
+        w: The width of the plate.
+    """
+    # angle of the principal axis
+    a = principal_stress(N)  
 
     M_rot = Mat_rot(a)
 
-    p = np.dot(M_rot, N)  # efforts dans le repère principal
+    # stress in the principal frame
+    p = np.dot(M_rot, N)  
 
     p[2] = 0
 
@@ -241,18 +251,21 @@ def tan_model(
 
     y = r * np.sin(theta - a)
 
+    # stiffness in the principal frame
     C_pli = np.linalg.multi_dot([
         M_rot,
         C_strat,
         M_rot.T,
-    ])  # rigidité dans le repère principa
+    ])  
 
-    s1, s2 = Calc_S12_eff(C_pli)  # calcul de s1 et s2
+    s1, s2 = Calc_S12_eff(C_pli)  
 
-    F_ = Effort_IeII(R, s1, s2, p, x, y)  # efforts infinis dans les 2 directions
+    # Infinite force fluxes along direction 1 and 2
+    F_ = force_fluxes(R, s1, s2, p, x, y)  
 
     u = 2 * R / w
 
-    coeff = (2 + (1 - u) ** 3) / (3 - 3 * u)  # correction pour une plaque finie
+    # Correction for a finite plate
+    coeff = (2 + (1 - u) ** 3) / (3 - 3 * u)  
 
     return coeff * np.linalg.solve(M_rot, np.sum(F_, axis=0))

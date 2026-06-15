@@ -1,3 +1,18 @@
+# Copyright 2021 IRT Saint Exupery, https://www.irt-saintexupery.com
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Lesser General Public
+# License version 3 as published by the Free Software Foundation.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with this program; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
 # Copyright 2021 IRT Saint Exupéry, https://www.irt-saintexupery.com
 #
 # This program is free software; you can redistribute it and/or
@@ -129,7 +144,7 @@ class BayesInputs(BaseInputs):
         "of parameters of the model.",
     )
     n_mcmc: int = Field(
-        default=1_000, description="The number of steps of the mcmc analysis.yes"
+        default=1_000, description="The number of steps of the mcmc analysis."
     )
 
     n_walkers: int = Field(default=30, description="The number of walkers.")

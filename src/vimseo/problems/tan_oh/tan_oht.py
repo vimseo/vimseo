@@ -1,3 +1,18 @@
+# Copyright 2021 IRT Saint Exupery, https://www.irt-saintexupery.com
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Lesser General Public
+# License version 3 as published by the Free Software Foundation.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with this program; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
 # Copyright 2021 IRT Saint Exupéry, https://www.irt-saintexupery.com
 #
 # This program is free software; you can redistribute it and/or
@@ -61,8 +76,8 @@ DEFAULT_INPUT_DATA = {
     "d0": atleast_1d(0.71),
     "radius": atleast_1d(3.175),
     "width": atleast_1d(32.0),
-    "length": atleast_1d(50.0),
-    "load": array([5000]),
+    "length": atleast_1d(80.0),
+    "load": array([1000.0]),
     "coarsening_factor": atleast_1d(1.0),
     "stacking_sequence": array([0, 45, -45, 90, 90, -45, 45, 0]),
 }
@@ -98,8 +113,11 @@ DEFAULT_INPUT_DATA["c_strat"] = c_eff
 DEFAULT_INPUT_DATA["thickness"] = atleast_1d(total_thickness)
 
 
-class TanRun_OHT(BaseComponent):
-    """An Open Hole Tension model based on Tan theory (#open-hole-plate-model-tan-model)."""
+class TanRun_Tension(BaseComponent):
+    """An Open Hole Tension model based on Tan theory (#open-hole-plate-model-tan-model).
+
+    No grammar is defined for the material (and thus no bounds).
+    """
 
     USE_JOB_DIRECTORY = True
 
