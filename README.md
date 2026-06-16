@@ -346,8 +346,6 @@ We welcome contributions! Please refer to the contribution guidelines.
 Please use the [github issue tracker](https://github.com/vimseo/vimseo/issues/)
 to submit bugs or questions.
 
-[//]: # (Join our [Discord]&#40;https://; server for questions and discussions.)
-
 ## Contributing
 
 Refer to our contribution guide here: [Contributing](https://vimseo.github.io/vimseo/contributing/)
