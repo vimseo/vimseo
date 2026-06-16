@@ -9,7 +9,7 @@
 
 <div align="center">
 <a href="https://github.com/vimseo/vimseo/">
-<img width="1800" alt="" src="/docs/images/analysis_workflow_and_credibility.png" />
+<img width="1800" alt="" src="images/analysis_workflow_and_credibility.png" />
 </a>
 
 <div align="center">
@@ -110,7 +110,7 @@ to run VV&UQ workflows (see figure below), namely _code and solution verificatio
 _sensitivity analysis_, _surrogate modelling_ or _stochastic validation_. Other analysis tools allows to exploit validated simulations to support design offices
 (e.g. generate virtual allowables).
 
-![VV&UQ process](/docs/images/vvuq_process.png "ASME VVUQ 10-2019")
+![VV&UQ process](images/vvuq_process.png "ASME VVUQ 10-2019")
 
 - Heavy models can be run on High Performance Computing (HPC) clusters, by selecting a specific model executor
 instead of the default interactive executor.
@@ -199,14 +199,14 @@ The database GUI is then opened to explore the results:
 mlflow ui  --backend-store-uri file:\\\\\\C:\\Users\\john.doe\\sandbox\\mlflow_archive\\visualize_model_result
 ```
 
-![Database of this numerical experiment](/docs/images/mlflow_ui_quickstart.png)
+![Database of this numerical experiment](images/mlflow_ui_quickstart.png)
 
 All simulation runs have been stored. The GUI allows to query some runs
 based on a SQL-like syntax
 (see [MLflow Tracking](https://mlflow.org/docs/latest/ml/tracking/)
 for more information).
 
-![Result exploration with contour plot](/docs/images/mlflow_ui_comparison_quickstart.png)
+![Result exploration with contour plot](images/mlflow_ui_comparison_quickstart.png)
 
 The GUI also proposes basic exploration visualisations.
 In this contour plot, in the central region, we see vertical isolines,
@@ -228,7 +228,7 @@ dashboard_workflow
 Here a sensitivity analysis on the above linear beam model is defined,
 exploring a parameter space defined by the geometry of the beam:
 
-![Workflow setup](/docs/images/workflow_gui.png){ width="500" }
+![Workflow setup](images/workflow_gui.png){ width="500" }
 
 The workflow can be downloaded as a ``JSON`` file.
 It means that a workflow can be fully serialised in a human-readable format.
@@ -348,7 +348,7 @@ to submit bugs or questions.
 
 ## Contributing
 
-Refer to our contribution guide here: [Contributing](https://vimseo.github.io/vimseo/contributing/)
+Refer to our contribution guide here: [Contributing](contributing.md)
 
 ## Contributors
 

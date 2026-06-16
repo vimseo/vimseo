@@ -1,4 +1,13 @@
 <!--
+ Copyright 2021 IRT Saint Exupery, https://www.irt-saintexupery.com
+
+ This work is licensed under the Creative Commons Attribution-ShareAlike 4.0
+ International License. To view a copy of this license, visit
+ http://creativecommons.org/licenses/by-sa/4.0/ or send a letter to Creative
+ Commons, PO Box 1866, Mountain View, CA 94042, USA.
+-->
+
+<!--
  Copyright 2021 IRT Saint Exupéry, https://www.irt-saintexupery.com
 
  This work is licensed under the Creative Commons Attribution-ShareAlike 4.0
@@ -69,7 +78,7 @@ representative at an online or offline event.
 
 Instances of abusive, harassing, or otherwise unacceptable behavior may be
 reported to the community leaders responsible for enforcement at
-<info@voltagent.dev>.
+<sebastien.bocquet@irt-saintexupery.com>.
 All complaints will be reviewed and investigated promptly and fairly.
 
 All community leaders are obligated to respect the privacy and security of the
