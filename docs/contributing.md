@@ -49,4 +49,4 @@ Signed-off-by: Name <email address>
 
 ## Development
 
-For the technical aspects, we invite you to read: [Developer information](https://vimseo.github.io/vimseo/user_guide/developer_install/).
+For the technical aspects, we invite you to read: [Developer information](user_guide/developer_information.md).
