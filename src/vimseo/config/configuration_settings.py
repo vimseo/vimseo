@@ -1,3 +1,18 @@
+# Copyright 2021 IRT Saint Exupery, https://www.irt-saintexupery.com
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Lesser General Public
+# License version 3 as published by the Free Software Foundation.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with this program; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
 # Copyright 2021 IRT Saint Exupéry, https://www.irt-saintexupery.com
 #
 # This program is free software; you can redistribute it and/or
@@ -44,7 +59,16 @@ class VimseoSettings(
     logging: str = Field(default="info")
 
     solvers: dict[str, Solver] = Field(
-        default={"dummy": Solver()}, description="The solver command."
+        default={
+            "dummy": Solver(),
+            "abaqus": Solver(
+                job_executor="InteractiveAbaqus",
+                command_pre="abq2022 cae noGUI={{abaqus_script}}",
+                command_run="abq2022 job={{job_name}} cpus={{n_cpus}}{% if subroutine_names|length > 0 %} user={{subroutine_names[0]}}{% endif %} {% if is_implicit == False %}double=both {% endif %}inter",
+                command_post="",
+            ),
+        },
+        description="The solver command.",
     )
 
     root_directory: str = Field(
