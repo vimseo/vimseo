@@ -1,0 +1,15 @@
+artifact_uri: file:///C:\Users\sebastien.bocquet\PycharmProjects\vimseo\docs\runnable_examples\model_runs\mlflow_archive\visualize_model_result/659041833149900979/b6ecb05a18f04fbcbc2f0e8e643765e6/artifacts
+deleted_time: 1781600262587
+end_time: 1778499687223
+entry_point_name: ''
+experiment_id: '659041833149900979'
+lifecycle_stage: deleted
+run_id: b6ecb05a18f04fbcbc2f0e8e643765e6
+run_name: fearless-wasp-712
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1778499684900
+status: 3
+tags: []
+user_id: unknown

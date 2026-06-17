@@ -9,7 +9,7 @@
          "nu_p": 0.3
     },
      "outputs": {
-         "dplt_adim_at_force": -0.24999999999999978
+         "dplt_adim_at_force": -0.24999999999999972
     },
      "metadata": {
          "error_code": 0,
@@ -19,14 +19,14 @@
          "job_name": "",
          "persistent_result_files": "",
          "n_cpus": 1,
-         "date": "2026-05-11 16:51:53.551826",
-         "cpu_time": 0.022483348846435547,
+         "date": "2026-06-16 19:44:39.386626",
+         "cpu_time": 0.07674288749694824,
          "user": "sebastien.bocquet",
-         "machine": "IPF7101",
-         "vims_git_version": "45528c25944ac4bb00d0644363b39dcb47cf0899",
-         "directory_archive_root": "/home/sebastien.bocquet/PycharmProjects/vimseo/docs/runnable_examples/model_runs/archive/input_space_transform",
-         "directory_archive_job": "/home/sebastien.bocquet/PycharmProjects/vimseo/docs/runnable_examples/model_runs/archive/input_space_transform/IntegratedModel/Beam_Cantilever/4",
-         "directory_scratch_root": "/home/sebastien.bocquet/PycharmProjects/vimseo/docs/runnable_examples/model_runs/scratch/input_space_transform",
+         "machine": "PCBM20250036",
+         "vims_git_version": "5cd5cf5ab4caf1fa2c2190f0396e06b5b5639fd0",
+         "directory_archive_root": "C:\\Users\\sebastien.bocquet\\Dev\\vimseo\\docs\\runnable_examples\\model_runs\\archive\\input_space_transform",
+         "directory_archive_job": "C:\\Users\\sebastien.bocquet\\Dev\\vimseo\\docs\\runnable_examples\\model_runs\\archive\\input_space_transform\\IntegratedModel\\Beam_Cantilever\\4",
+         "directory_scratch_root": "C:\\Users\\sebastien.bocquet\\Dev\\vimseo\\docs\\runnable_examples\\model_runs\\scratch\\input_space_transform",
          "directory_scratch_job": ""
     }
 }

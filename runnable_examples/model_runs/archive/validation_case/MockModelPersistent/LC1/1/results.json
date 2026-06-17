@@ -19,14 +19,14 @@
          "job_name": "",
          "persistent_result_files": ["green_ellipse.png", "blue_line.png"],
          "n_cpus": 1,
-         "date": "2026-03-26 14:57:15.267467",
-         "cpu_time": 0.004889965057373047,
+         "date": "2026-03-17 09:05:15.626859",
+         "cpu_time": 0.043856143951416016,
          "user": "sebastien.bocquet",
-         "machine": "IPF7101",
-         "vims_git_version": "d0050d8de498c8354552cdde540fb3e524454871",
-         "directory_archive_root": "/home/sebastien.bocquet/PycharmProjects/vimseo/docs/runnable_examples/model_runs/archive/validation_case",
-         "directory_archive_job": "/home/sebastien.bocquet/PycharmProjects/vimseo/docs/runnable_examples/model_runs/archive/validation_case/MockModelPersistent/LC1/1",
-         "directory_scratch_root": "/home/sebastien.bocquet/PycharmProjects/vimseo/docs/runnable_examples/model_runs/scratch/validation_case",
-         "directory_scratch_job": "/home/sebastien.bocquet/PycharmProjects/vimseo/docs/runnable_examples/model_runs/scratch/validation_case/MockModelPersistent/LC1/1"
+         "machine": "B20191729",
+         "vims_git_version": "1b6e7132b9faba0cc93317d127a381ee76a8cb8e",
+         "directory_archive_root": "C:\\Users\\sebastien.bocquet\\PycharmProjects\\vimseo\\docs\\runnable_examples\\model_runs\\archive\\validation_case",
+         "directory_archive_job": "C:\\Users\\sebastien.bocquet\\PycharmProjects\\vimseo\\docs\\runnable_examples\\model_runs\\archive\\validation_case\\MockModelPersistent\\LC1\\1",
+         "directory_scratch_root": "C:\\Users\\sebastien.bocquet\\PycharmProjects\\vimseo\\docs\\runnable_examples\\model_runs\\scratch\\validation_case",
+         "directory_scratch_job": "C:\\Users\\sebastien.bocquet\\PycharmProjects\\vimseo\\docs\\runnable_examples\\model_runs\\scratch\\validation_case\\MockModelPersistent\\LC1\\1"
     }
 }

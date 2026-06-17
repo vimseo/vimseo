@@ -1,0 +1,15 @@
+artifact_uri: file:///C:\Users\sebastien.bocquet\PycharmProjects\vimseo\docs\runnable_examples\model_runs\mlflow_archive\visualize_model_result/550884670975321896/a84b5f56989c4eba8546a4ccaaa2e9ef/artifacts
+deleted_time: 1781600262582
+end_time: 1778499689168
+entry_point_name: ''
+experiment_id: '550884670975321896'
+lifecycle_stage: deleted
+run_id: a84b5f56989c4eba8546a4ccaaa2e9ef
+run_name: selective-cow-682
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1778499687325
+status: 3
+tags: []
+user_id: unknown

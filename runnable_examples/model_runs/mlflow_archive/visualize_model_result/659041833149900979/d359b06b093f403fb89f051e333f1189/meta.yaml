@@ -1,0 +1,15 @@
+artifact_uri: file:///C:\Users\sebastien.bocquet\PycharmProjects\vimseo\docs\runnable_examples\model_runs\mlflow_archive\visualize_model_result/659041833149900979/d359b06b093f403fb89f051e333f1189/artifacts
+deleted_time: 1781631884967
+end_time: 1781600263995
+entry_point_name: ''
+experiment_id: '659041833149900979'
+lifecycle_stage: deleted
+run_id: d359b06b093f403fb89f051e333f1189
+run_name: skittish-bee-425
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1781600263220
+status: 3
+tags: []
+user_id: unknown

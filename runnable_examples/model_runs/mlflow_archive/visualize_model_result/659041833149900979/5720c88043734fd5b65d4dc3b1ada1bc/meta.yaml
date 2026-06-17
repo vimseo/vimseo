@@ -1,0 +1,15 @@
+artifact_uri: file:///C:\Users\sebastien.bocquet\PycharmProjects\vimseo\docs\runnable_examples\model_runs\mlflow_archive\visualize_model_result/659041833149900979/5720c88043734fd5b65d4dc3b1ada1bc/artifacts
+deleted_time: 1778499683644
+end_time: 1773734693209
+entry_point_name: ''
+experiment_id: '659041833149900979'
+lifecycle_stage: deleted
+run_id: 5720c88043734fd5b65d4dc3b1ada1bc
+run_name: unruly-fox-85
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1773734691361
+status: 3
+tags: []
+user_id: unknown

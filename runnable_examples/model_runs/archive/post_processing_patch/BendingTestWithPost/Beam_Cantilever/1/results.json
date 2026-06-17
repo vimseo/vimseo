@@ -9,7 +9,7 @@
          "relative_dplt_location": 1.0
     },
      "outputs": {
-         "relative_max_dplt": -0.008333333333333338
+         "relative_max_dplt": -0.008333333333333323
     },
      "metadata": {
          "error_code": 0,
@@ -19,14 +19,14 @@
          "job_name": "",
          "persistent_result_files": "",
          "n_cpus": 1,
-         "date": "2026-03-26 14:54:13.317899",
-         "cpu_time": 0.014191150665283203,
+         "date": "2026-03-17 09:04:41.835579",
+         "cpu_time": 0.03921079635620117,
          "user": "sebastien.bocquet",
-         "machine": "IPF7101",
-         "vims_git_version": "d0050d8de498c8354552cdde540fb3e524454871",
-         "directory_archive_root": "/home/sebastien.bocquet/PycharmProjects/vimseo/docs/runnable_examples/model_runs/archive/post_processing_patch",
-         "directory_archive_job": "/home/sebastien.bocquet/PycharmProjects/vimseo/docs/runnable_examples/model_runs/archive/post_processing_patch/BendingTestWithPost/Beam_Cantilever/1",
-         "directory_scratch_root": "/home/sebastien.bocquet/PycharmProjects/vimseo/docs/runnable_examples/model_runs/scratch/post_processing_patch",
+         "machine": "B20191729",
+         "vims_git_version": "1b6e7132b9faba0cc93317d127a381ee76a8cb8e",
+         "directory_archive_root": "C:\\Users\\sebastien.bocquet\\PycharmProjects\\vimseo\\docs\\runnable_examples\\model_runs\\archive\\post_processing_patch",
+         "directory_archive_job": "C:\\Users\\sebastien.bocquet\\PycharmProjects\\vimseo\\docs\\runnable_examples\\model_runs\\archive\\post_processing_patch\\BendingTestWithPost\\Beam_Cantilever\\1",
+         "directory_scratch_root": "C:\\Users\\sebastien.bocquet\\PycharmProjects\\vimseo\\docs\\runnable_examples\\model_runs\\scratch\\post_processing_patch",
          "directory_scratch_job": ""
     }
 }

@@ -1,0 +1,15 @@
+artifact_uri: file:///C:\Users\sebastien.bocquet\PycharmProjects\vimseo\docs\runnable_examples\model_runs\mlflow_archive\visualize_model_result/550884670975321896/67de48e469284fb78ea2a308c2739004/artifacts
+deleted_time: 1781600262577
+end_time: 1778499690967
+entry_point_name: ''
+experiment_id: '550884670975321896'
+lifecycle_stage: deleted
+run_id: 67de48e469284fb78ea2a308c2739004
+run_name: welcoming-gull-914
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1778499689238
+status: 3
+tags: []
+user_id: unknown

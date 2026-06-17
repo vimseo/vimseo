@@ -16,14 +16,14 @@
          "job_name": "",
          "persistent_result_files": "",
          "n_cpus": 1,
-         "date": "2026-03-26 14:57:24.010373",
-         "cpu_time": 0.0011000633239746094,
+         "date": "2026-03-17 09:05:34.576542",
+         "cpu_time": 0.010165214538574219,
          "user": "sebastien.bocquet",
-         "machine": "IPF7101",
-         "vims_git_version": "d0050d8de498c8354552cdde540fb3e524454871",
-         "directory_archive_root": "/home/sebastien.bocquet/PycharmProjects/vimseo/docs/runnable_examples/model_runs/archive/calibration_curves",
-         "directory_archive_job": "/home/sebastien.bocquet/PycharmProjects/vimseo/docs/runnable_examples/model_runs/archive/calibration_curves/MockCurves/Dummy/15",
-         "directory_scratch_root": "/home/sebastien.bocquet/PycharmProjects/vimseo/docs/runnable_examples/model_runs/scratch/calibration_curves",
+         "machine": "B20191729",
+         "vims_git_version": "1b6e7132b9faba0cc93317d127a381ee76a8cb8e",
+         "directory_archive_root": "C:\\Users\\sebastien.bocquet\\PycharmProjects\\vimseo\\docs\\runnable_examples\\model_runs\\archive\\calibration_curves",
+         "directory_archive_job": "C:\\Users\\sebastien.bocquet\\PycharmProjects\\vimseo\\docs\\runnable_examples\\model_runs\\archive\\calibration_curves\\MockCurves\\Dummy\\15",
+         "directory_scratch_root": "C:\\Users\\sebastien.bocquet\\PycharmProjects\\vimseo\\docs\\runnable_examples\\model_runs\\scratch\\calibration_curves",
          "directory_scratch_job": ""
     }
 }

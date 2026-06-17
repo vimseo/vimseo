@@ -1,0 +1,14 @@
+artifact_uri: file:///C:\Users\sebastien.bocquet\PycharmProjects\vimseo\docs\runnable_examples\model_runs\mlflow_archive\visualize_model_result/550884670975321896/97daff22ce9d4b6992f087578638e3fd/artifacts
+end_time: 1781631890833
+entry_point_name: ''
+experiment_id: '550884670975321896'
+lifecycle_stage: active
+run_id: 97daff22ce9d4b6992f087578638e3fd
+run_name: grandiose-cod-418
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1781631888428
+status: 3
+tags: []
+user_id: sebastien.bocquet

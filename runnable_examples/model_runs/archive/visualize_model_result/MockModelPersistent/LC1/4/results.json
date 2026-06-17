@@ -19,14 +19,14 @@
          "job_name": "",
          "persistent_result_files": ["green_ellipse.png", "blue_line.png"],
          "n_cpus": 1,
-         "date": "2026-05-11 16:51:57.376778",
-         "cpu_time": 0.004634857177734375,
+         "date": "2026-06-16 19:44:44.317761",
+         "cpu_time": 0.02451634407043457,
          "user": "sebastien.bocquet",
-         "machine": "IPF7101",
-         "vims_git_version": "45528c25944ac4bb00d0644363b39dcb47cf0899",
-         "directory_archive_root": "/home/sebastien.bocquet/PycharmProjects/vimseo/docs/runnable_examples/model_runs/archive/visualize_model_result",
-         "directory_archive_job": "/home/sebastien.bocquet/PycharmProjects/vimseo/docs/runnable_examples/model_runs/archive/visualize_model_result/MockModelPersistent/LC1/4",
-         "directory_scratch_root": "/home/sebastien.bocquet/PycharmProjects/vimseo/docs/runnable_examples/model_runs/scratch/visualize_model_result",
-         "directory_scratch_job": "/home/sebastien.bocquet/PycharmProjects/vimseo/docs/runnable_examples/model_runs/scratch/visualize_model_result/MockModelPersistent/LC1/4"
+         "machine": "PCBM20250036",
+         "vims_git_version": "5cd5cf5ab4caf1fa2c2190f0396e06b5b5639fd0",
+         "directory_archive_root": "C:\\Users\\sebastien.bocquet\\Dev\\vimseo\\docs\\runnable_examples\\model_runs\\archive\\visualize_model_result",
+         "directory_archive_job": "C:\\Users\\sebastien.bocquet\\Dev\\vimseo\\docs\\runnable_examples\\model_runs\\archive\\visualize_model_result\\MockModelPersistent\\LC1\\4",
+         "directory_scratch_root": "C:\\Users\\sebastien.bocquet\\Dev\\vimseo\\docs\\runnable_examples\\model_runs\\scratch\\visualize_model_result",
+         "directory_scratch_job": "C:\\Users\\sebastien.bocquet\\Dev\\vimseo\\docs\\runnable_examples\\model_runs\\scratch\\visualize_model_result\\MockModelPersistent\\LC1\\4"
     }
 }
