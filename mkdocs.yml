@@ -91,7 +91,7 @@ nav:
   - Credits: credits.md
   - Licenses: licenses.md
 - User Guide:
-  - Installation for developers: user_guide/developer_install.md
+  - Installation for developers: user_guide/developer_information.md
   - Command line interface: user_guide/cli.md
 - How-to guides:
   - Runnable examples:
