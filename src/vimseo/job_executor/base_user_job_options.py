@@ -43,7 +43,3 @@ class BaseUserJobSettings(BaseSettings):
     n_cpus: int = Field(
         default=1, description="The number of CPUs used by the external software."
     )
-
-
-class InteractiveAbaqusUserJobSettings(BaseUserJobSettings):
-    """The user options for an Abaqus interactive job."""

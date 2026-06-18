@@ -31,7 +31,7 @@ import logging
 import subprocess
 
 from vimseo.job_executor.base_interactive_executor import BaseInteractiveExecutor
-from vimseo.job_executor.base_user_job_options import InteractiveAbaqusUserJobSettings
+from vimseo.job_executor.user_job_options import InteractiveAbaqusUserJobSettings
 
 LOGGER = logging.getLogger(__name__)
 

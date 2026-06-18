@@ -37,3 +37,5 @@ from vimseo.job_executor.base_user_job_options import BaseUserJobSettings
 
 class InteractiveAbaqusUserJobSettings(BaseUserJobSettings):
     """The user options for an Abaqus interactive job."""
+
+    abaqus_script: str = ""

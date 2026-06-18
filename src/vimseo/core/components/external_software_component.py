@@ -1,3 +1,18 @@
+# Copyright 2021 IRT Saint Exupery, https://www.irt-saintexupery.com
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Lesser General Public
+# License version 3 as published by the Free Software Foundation.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with this program; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
 # Copyright 2021 IRT Saint Exupéry, https://www.irt-saintexupery.com
 #
 # This program is free software; you can redistribute it and/or
@@ -50,6 +65,9 @@ class ExternalSoftwareComponent(BaseComponent):
     _job_executor: BaseJobExecutor
     """A job executor."""
 
+    _ERROR_CODE_NAME = "error_code"
+    """The name of the error code in the output grammar."""
+
     def __init__(
         self,
         load_case: LoadCase | None = None,
@@ -59,8 +77,8 @@ class ExternalSoftwareComponent(BaseComponent):
     ) -> None:
         super().__init__(load_case, material_grammar_file, material, check_subprocess)
 
-        self.output_grammar.update_from_data({"error_code": atleast_1d(0)})
-        self.output_grammar.required_names.add("error_code")
+        self.output_grammar.update_from_data({self._ERROR_CODE_NAME: 0})
+        self.output_grammar.required_names.add(self._ERROR_CODE_NAME)
 
         self._job_executor = BaseJobExecutor("")
         self._attached_files = []
