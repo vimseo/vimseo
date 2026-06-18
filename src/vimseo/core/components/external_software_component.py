@@ -35,10 +35,7 @@ import shutil
 import subprocess
 from typing import TYPE_CHECKING
 
-from numpy import atleast_1d
-
 from vimseo.core.components.base_component import BaseComponent
-from vimseo.core.model_metadata import MetaDataNames
 from vimseo.job_executor.base_executor import BaseJobExecutor
 
 if TYPE_CHECKING:
@@ -98,7 +95,7 @@ class ExternalSoftwareComponent(BaseComponent):
     def pre_run(self, input_data):
         """Pre-run operations."""
 
-    def post_run(self, input_data, output_data):
+    def post_run(self, input_data, output_data, error_code):
         """Post-run operations."""
 
     def _run(self, input_data):
@@ -133,8 +130,8 @@ class ExternalSoftwareComponent(BaseComponent):
             )
 
         output_data = {}
-        self.post_run(input_data, output_data)
-        output_data[MetaDataNames.error_code] = atleast_1d(error_run)
+        self.post_run(input_data, output_data, error_run)
+        output_data[self._ERROR_CODE_NAME] = error_run
 
         return output_data
 

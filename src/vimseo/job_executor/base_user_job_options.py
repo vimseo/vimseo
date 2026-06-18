@@ -43,3 +43,9 @@ class BaseUserJobSettings(BaseSettings):
     n_cpus: int = Field(
         default=1, description="The number of CPUs used by the external software."
     )
+    executable: str = Field(
+        default="", description="The path to the executable of the external software."
+    )
+    job_name: str = Field(
+        default="", description="The job name used for the job directory."
+    )

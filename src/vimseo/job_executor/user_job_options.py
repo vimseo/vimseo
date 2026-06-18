@@ -32,10 +32,25 @@
 
 from __future__ import annotations
 
+from pydantic import Field
+
 from vimseo.job_executor.base_user_job_options import BaseUserJobSettings
 
 
 class InteractiveAbaqusUserJobSettings(BaseUserJobSettings):
     """The user options for an Abaqus interactive job."""
 
+    is_implicit: bool = True
+    subroutine_names: list[str] = Field(default_factory=lambda: [""])
     abaqus_script: str = ""
+
+
+class SlurmAbaqusUserJobSettings(BaseUserJobSettings):
+    """The user options for an Abaqus job submitted through Slurm."""
+
+    max_wall_clock_time: int = Field(
+        default=1, description="The maximum wall clock time in hours."
+    )
+    job_type: str = Field(
+        default="mono", description="The job type, among 'mono', 'noeud', 'mesca'."
+    )
