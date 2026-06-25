@@ -139,11 +139,14 @@ class PreRunPostModel(IntegratedModel):
             self.run.job_executor._user_job_options.update({"n_cpus": self.N_CPUS})
 
     @property
+<<<<<<< HEAD
     def run(self) -> BaseComponent:
         """The component running the external software."""
         return self._run_processor
 
     @property
+=======
+>>>>>>> bcb60f3c (Normalize license headers to non-accented "Exupery")
     def n_cpus(self):
         """The number of CPUs to run this model."""
         return self._run_processor.n_cpus
