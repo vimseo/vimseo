@@ -13,21 +13,6 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-# Copyright 2021 IRT Saint Exupéry, https://www.irt-saintexupery.com
-#
-# This program is free software; you can redistribute it and/or
-# modify it under the terms of the GNU Lesser General Public
-# License version 3 as published by the Free Software Foundation.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-# Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program; if not, write to the Free Software Foundation,
-# Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-
 from __future__ import annotations
 
 import logging
@@ -91,6 +76,9 @@ class PreRunPostModel(IntegratedModel):
     SUBROUTINES_NAMES: ClassVar[Sequence[str]] = []
     """The names of the subroutines."""
 
+    _RUN_COMPONENT_INDEX: ClassVar[int] = 1
+    """The run-processor is the second component of the pre/run/post chain."""
+
     N_CPUS = 1
     """The default number of cpus used to run the model."""
 
@@ -153,11 +141,14 @@ class PreRunPostModel(IntegratedModel):
             self.run.job_executor._user_job_options.update({"n_cpus": self.N_CPUS})
 
     @property
+<<<<<<< HEAD
     def run(self) -> BaseComponent:
         """The component running the external software."""
         return self._run_processor
 
     @property
+=======
+>>>>>>> bcb60f3c (Normalize license headers to non-accented "Exupery")
     def n_cpus(self):
         """The number of CPUs to run this model."""
         return self.run.n_cpus

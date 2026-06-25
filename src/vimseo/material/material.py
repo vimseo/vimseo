@@ -1,4 +1,4 @@
-# Copyright 2021 IRT Saint Exupéry, https://www.irt-saintexupery.com
+# Copyright 2021 IRT Saint Exupery, https://www.irt-saintexupery.com
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -173,26 +173,13 @@ class Material(BaseJsonIO):
                         prop.value = value
                         # TODO identify uncertain properties in another way than by
                         #  this indirect check
-                        if prop.distribution.name != "":
-                            if prop.distribution.name == "Normal":
-                                prop.distribution.sigma *= value / prop.distribution.mu
-                                prop.distribution.mu = value
-                            elif prop.distribution.name == "Uniform":
-                                pass
-                                # delta = value - 0.5 * (
-                                #     prop.distribution.upper + prop.distribution.lower
-                                # )
-                                # prop.distribution.lower += delta
-                                # prop.distribution.upper += delta
-                            else:
-                                msg = (
-                                    f"Only deterministic, Normal and Uniform distributions "
-                                    f"properties can be updated. "
-                                    f"You are trying to update "
-                                    f"variable {prop.name} having a "
-                                    f"{prop.distribution.name} distribution."
-                                )
-                                raise ValueError(msg)
+                        # The supported distributions are enforced at
+                        # ``MaterialProperty`` construction, so only Normal needs its
+                        # parameters updated here (Uniform and deterministic are
+                        # left untouched).
+                        if prop.distribution.name == "Normal":
+                            prop.distribution.sigma *= value / prop.distribution.mu
+                            prop.distribution.mu = value
 
     # def update_from_dict(self, values: Mapping[str, Number]):
     #     """Set deterministic values from a dictionary."""

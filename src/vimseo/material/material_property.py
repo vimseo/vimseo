@@ -1,4 +1,4 @@
-# Copyright 2021 IRT Saint Exupéry, https://www.irt-saintexupery.com
+# Copyright 2021 IRT Saint Exupery, https://www.irt-saintexupery.com
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -21,9 +21,14 @@ from typing import Any
 
 from pydantic import BaseModel
 from pydantic import Field
+from pydantic import field_validator
 
 from vimseo.utilities.distribution import DEFAULT_MIN_MAX
 from vimseo.utilities.distribution import DistributionParameters
+
+#: The distribution names a material property can be defined with,
+#: ``""`` standing for a deterministic property.
+SUPPORTED_DISTRIBUTIONS = ("", "Normal", "Uniform")
 
 
 class MaterialProperty(BaseModel):
@@ -37,6 +42,20 @@ class MaterialProperty(BaseModel):
     distribution: DistributionParameters = Field(
         default_factory=lambda: DistributionParameters()
     )
+
+    @field_validator("distribution")
+    @classmethod
+    def _check_supported_distribution(
+        cls, distribution: DistributionParameters
+    ) -> DistributionParameters:
+        """Reject distributions that a material property cannot handle."""
+        if distribution.name not in SUPPORTED_DISTRIBUTIONS:
+            msg = (
+                f"Only deterministic, Normal and Uniform distributions are supported "
+                f"for a material property, got a {distribution.name} distribution."
+            )
+            raise ValueError(msg)
+        return distribution
 
     def model_post_init(self, __context: Any) -> None:
         """Set the distribution bounds equal to the property bounds."""

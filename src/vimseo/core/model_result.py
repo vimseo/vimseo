@@ -1,4 +1,4 @@
-# Copyright 2021 IRT Saint Exupéry, https://www.irt-saintexupery.com
+# Copyright 2021 IRT Saint Exupery, https://www.irt-saintexupery.com
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -15,6 +15,7 @@
 
 from __future__ import annotations
 
+import logging
 from collections.abc import Iterable
 from collections.abc import Mapping
 from dataclasses import dataclass
@@ -38,6 +39,8 @@ from vimseo.utilities.fields import Field
 if TYPE_CHECKING:
     from vimseo.core.base_integrated_model import IntegratedModel
     from vimseo.storage_management.base_archive_storage import ModelDataType
+
+LOGGER = logging.getLogger(__name__)
 
 ScalarDataType = Mapping[str, float | int | str]
 
@@ -125,6 +128,9 @@ class ModelResult(BaseResult):
             curve for curve in self.curves if curve.variable_names == variable_names
         ]
         if len(curves) == 0:
+            LOGGER.warning(
+                "Curve with variable names %s not found in result.", variable_names
+            )
             return []
         return curves[0]
 
