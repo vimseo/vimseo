@@ -4,6 +4,7 @@ source = vimseo
 omit =
   */vimseo/lib_vimseo/*
   */vimseo/utilities/sandbox/*
+  */vimseo/dashboards/*
 
 [report]
 # Override covdefaults.

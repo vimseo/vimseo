@@ -1,4 +1,4 @@
-# Copyright 2021 IRT Saint Exupéry, https://www.irt-saintexupery.com
+# Copyright 2021 IRT Saint Exupery, https://www.irt-saintexupery.com
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -19,14 +19,14 @@ import runpy
 import sys
 from pathlib import Path
 
-import vimseo.workflow.dashboard_workflow as dashboard
+from vimseo.dashboards.database_viewer import db_viewer
 
 
 def main() -> None:
     sys.argv = [
         "streamlit",
         "run",
-        str(Path(dashboard.__file__)),
+        str(Path(db_viewer.__file__)),
     ]
     runpy.run_module("streamlit", run_name="__main__")
 

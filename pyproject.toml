@@ -75,8 +75,8 @@ Issues = "https://github.com/vimseo/vimseo/issues"
 gemseo_plugins = { vimseo = "vimseo" }
 
 [project.scripts]
-dashboard_workflow = "vimseo.workflow.entry_point:main"
-dashboard_database_viewer = "vimseo.storage_management.dashboard.db_viewer_entry_point:main"
+dashboard_workflow = "vimseo.dashboards.workflow.entry_point:main"
+dashboard_database_viewer = "vimseo.dashboards.database_viewer.db_viewer_entry_point:main"
 workflow_executor = "vimseo.workflow.workflow_executor:main"
 dashboard_mlflow = "vimseo.storage_management.mlflow_ui_entry_point:main"
 

@@ -1,4 +1,4 @@
-# Copyright 2021 IRT Saint Exupéry, https://www.irt-saintexupery.com
+# Copyright 2021 IRT Saint Exupery, https://www.irt-saintexupery.com
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -25,24 +25,24 @@ from zipfile import ZipFile
 import streamlit as st
 from streamlit_pydantic import pydantic_input
 
+from vimseo.dashboards.visualisation.generic_layout import generate_layout
+from vimseo.dashboards.workflow.dashboard_workflow_model import WORKFLOW_DATA_DIR
+from vimseo.dashboards.workflow.dashboard_workflow_model import add_step
+from vimseo.dashboards.workflow.dashboard_workflow_model import add_unhandled_settings
+from vimseo.dashboards.workflow.dashboard_workflow_model import filter_settings
+from vimseo.dashboards.workflow.dashboard_workflow_model import get_analysis_tool_names
+from vimseo.dashboards.workflow.dashboard_workflow_model import get_input_description
+from vimseo.dashboards.workflow.dashboard_workflow_model import get_output_description
+from vimseo.dashboards.workflow.dashboard_workflow_model import get_reader_tool_names
+from vimseo.dashboards.workflow.dashboard_workflow_model import get_result_attr_names
+from vimseo.dashboards.workflow.dashboard_workflow_model import get_workflow_file_name
+from vimseo.dashboards.workflow.dashboard_workflow_model import initialize
+from vimseo.dashboards.workflow.dashboard_workflow_model import load_workflow
+from vimseo.dashboards.workflow.dashboard_workflow_model import show_graph
+from vimseo.dashboards.workflow.dashboard_workflow_model import update_tool
 from vimseo.tools.io.reader_file_result import ResultFileReaderTool
 from vimseo.tools.io.reader_tools_factory import ReaderToolsFactory
-from vimseo.tools.lib.visualisation.generic_layout import generate_layout
 from vimseo.tools.tools_factory import AnalysisToolsFactory
-from vimseo.workflow.dashboard_workflow_model import WORKFLOW_DATA_DIR
-from vimseo.workflow.dashboard_workflow_model import add_step
-from vimseo.workflow.dashboard_workflow_model import add_unhandled_settings
-from vimseo.workflow.dashboard_workflow_model import filter_settings
-from vimseo.workflow.dashboard_workflow_model import get_analysis_tool_names
-from vimseo.workflow.dashboard_workflow_model import get_input_description
-from vimseo.workflow.dashboard_workflow_model import get_output_description
-from vimseo.workflow.dashboard_workflow_model import get_reader_tool_names
-from vimseo.workflow.dashboard_workflow_model import get_result_attr_names
-from vimseo.workflow.dashboard_workflow_model import get_workflow_file_name
-from vimseo.workflow.dashboard_workflow_model import initialize
-from vimseo.workflow.dashboard_workflow_model import load_workflow
-from vimseo.workflow.dashboard_workflow_model import show_graph
-from vimseo.workflow.dashboard_workflow_model import update_tool
 from vimseo.workflow.workflow_step import Input
 from vimseo.workflow.workflow_step import Output
 

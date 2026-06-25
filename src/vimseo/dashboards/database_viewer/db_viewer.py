@@ -1,4 +1,4 @@
-# Copyright 2021 IRT Saint Exupéry, https://www.irt-saintexupery.com
+# Copyright 2021 IRT Saint Exupery, https://www.irt-saintexupery.com
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -23,11 +23,11 @@ from vimseo.api import get_available_load_cases
 from vimseo.api import get_available_models
 from vimseo.core.model_metadata import MetaDataNames
 from vimseo.core.model_result import ModelResult
-from vimseo.storage_management.dashboard.db_viewer_model import initialize
-from vimseo.storage_management.dashboard.db_viewer_model import visualize_curves
-from vimseo.storage_management.dashboard.db_viewer_model import visualize_scalars
-from vimseo.tools.lib.visualisation.generic_layout import generate_layout
-from vimseo.tools.lib.visualisation.utils import st_create_model
+from vimseo.dashboards.database_viewer.db_viewer_model import initialize
+from vimseo.dashboards.database_viewer.db_viewer_model import visualize_curves
+from vimseo.dashboards.database_viewer.db_viewer_model import visualize_scalars
+from vimseo.dashboards.visualisation.generic_layout import generate_layout
+from vimseo.dashboards.visualisation.utils import st_create_model
 
 matplotlib.use("agg")
 

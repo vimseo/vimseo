@@ -1,4 +1,4 @@
-# Copyright 2021 IRT Saint Exupéry, https://www.irt-saintexupery.com
+# Copyright 2021 IRT Saint Exupery, https://www.irt-saintexupery.com
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -20,8 +20,8 @@ from pathlib import Path
 
 import streamlit as st
 
-from vimseo.tools.lib.visualisation.identity import IDENTITY_COLORS
-from vimseo.tools.lib.visualisation.identity import VISUALISATION_IDENTITY_PATH
+from vimseo.dashboards.visualisation.identity import IDENTITY_COLORS
+from vimseo.dashboards.visualisation.identity import VISUALISATION_IDENTITY_PATH
 
 
 def banner_display(color):
