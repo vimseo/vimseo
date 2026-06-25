@@ -15,11 +15,14 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 from gemseo.core.grammars.json_grammar import JSONGrammar
 
 from vimseo.io.space_io import SpaceToolFileIO
 from vimseo.material.material import Material
+from vimseo.material.material import create_material_from_legacy_grammar
 from vimseo.material.material_property import MaterialProperty
 from vimseo.material.material_relation import MaterialRelation
 from vimseo.material.metadata import MaterialMetadata
@@ -179,3 +182,91 @@ def test_update_stochastic_material():
     assert prop.distribution.name == "Normal"
     assert prop.distribution.mu == new_value
     assert prop.distribution.sigma == pytest.approx(sigma * new_value / mu)
+
+
+def test_get_property_unknown_relation_raises():
+    """Getting a property from an unknown material relation raises."""
+    material = Material.from_json(MATERIAL_LIB_DIR / "Ta6v.json")
+    with pytest.raises(ValueError, match="No material relation"):
+        material.get_property("UnknownRelation", "young_modulus")
+
+
+def test_get_property_unknown_property_raises():
+    """Getting an unknown property from a known relation raises."""
+    material = Material.from_json(MATERIAL_LIB_DIR / "Ta6v.json")
+    with pytest.raises(ValueError, match="No material property"):
+        material.get_property("Ta6v_elastic_iso", "unknown_property")
+
+
+def test_to_json_schema(tmp_wd):
+    """A material can be exported as a JSON schema file."""
+    material = Material.from_json(MATERIAL_LIB_DIR / "Ta6v.json")
+    material.to_json_schema()
+    assert Path(f"{material.name}_grammar.json").is_file()
+
+
+def test_update_uniform_distribution_keeps_parameters():
+    """Updating a Uniform-distributed property updates the value but not the
+    distribution parameters."""
+    prop = MaterialProperty(
+        name="x",
+        value=1.0,
+        lower_bound=0.0,
+        upper_bound=2.0,
+        distribution=DistributionParameters(name="Uniform"),
+    )
+    material = Material(
+        name="m", material_relations=[MaterialRelation(name="r", properties=[prop])]
+    )
+    material.update_from_dict({"x": 1.5})
+    assert prop.value == 1.5  # noqa: RUF069
+    assert prop.distribution.name == "Uniform"
+
+
+def test_update_unsupported_distribution_raises():
+    """Updating a property with an unsupported distribution raises."""
+    prop = MaterialProperty(
+        name="x",
+        value=1.0,
+        distribution=DistributionParameters(name="Triangular"),
+    )
+    material = Material(
+        name="m", material_relations=[MaterialRelation(name="r", properties=[prop])]
+    )
+    with pytest.raises(ValueError, match="Only deterministic, Normal and Uniform"):
+        material.update_from_dict({"x": 2.0})
+
+
+def test_to_parameter_space_includes_deterministic_variable():
+    """A deterministic property explicitly requested is added as a design variable."""
+    mat_rel = MaterialRelation(
+        name="r",
+        properties=[
+            MaterialProperty(
+                name="young_modulus",
+                value=2.1e5,
+                lower_bound=1.9e5,
+                upper_bound=2.3e5,
+                distribution=DistributionParameters(name="Normal", mu=2.1e5, sigma=1e2),
+            ),
+            MaterialProperty(name="nu_p", value=0.3, lower_bound=0.2, upper_bound=0.4),
+        ],
+    )
+    material = Material(name="m", material_relations=[mat_rel])
+    parameter_space = material.to_parameter_space(
+        variable_names=["young_modulus", "nu_p"]
+    )
+    assert set(parameter_space.variable_names) == {"young_modulus", "nu_p"}
+
+
+def test_create_material_from_legacy_grammar():
+    """A material can be created from a legacy JSON grammar and default values."""
+    material = create_material_from_legacy_grammar(
+        "Ta6v",
+        MATERIAL_TEST_REFERENCES / "Ta6v_legacy_grammar.json",
+        default_values={"young_modulus": 2.1e5, "nu_p": 0.3},
+    )
+    assert material.name == "Ta6v"
+    values = material.get_values_as_dict()
+    assert values["young_modulus"] == 2.1e5  # noqa: RUF069
+    assert values["nu_p"] == 0.3  # noqa: RUF069

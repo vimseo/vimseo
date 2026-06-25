@@ -15,6 +15,7 @@
 
 from __future__ import annotations
 
+import pandas as pd
 import pytest
 from gemseo import create_discipline
 from gemseo.algos.parameter_space import ParameterSpace
@@ -29,6 +30,7 @@ from vimseo.tools.base_result import assert_results_equal
 from vimseo.tools.post_tools.distribution_comparison_plot import DistributionComparison
 from vimseo.tools.space.random_variable_interface import add_random_variable_interface
 from vimseo.tools.validation.test_data import VALIDATION_DATA_DIR
+from vimseo.tools.validation.validation_point import NominalValuesOutputType
 from vimseo.tools.validation.validation_point import StochasticValidationPoint
 from vimseo.tools.validation.validation_point import read_nominal_values
 from vimseo.tools.validation.validation_point_result import ValidationPointResult
@@ -243,6 +245,51 @@ def test_read_nominal_values(master_value):
     else:
         assert_array_equal(nominal_values["batch"], array([2]))
         assert_array_equal(nominal_values["nominal_length"], array([3.0]))
+
+
+def test_simulated_input_space_default_is_none():
+    """Before execution, the simulated input space is not defined."""
+    tool = StochasticValidationPoint()
+    assert tool.simulated_input_space is None
+
+
+def test_read_nominal_values_csv_and_df_raises():
+    """Providing both a csv path and a dataframe raises."""
+    with pytest.raises(ValueError, match="Only one of"):
+        read_nominal_values("batch", csv_path="x.csv", df=pd.DataFrame())
+
+
+def test_read_nominal_values_dictionary_default_additional_names():
+    """Without additional_names, all non-master columns are averaged per batch."""
+    df = pd.DataFrame({"batch": [1, 1, 2], "length": [2.0, 4.0, 6.0]})
+    out = read_nominal_values(
+        "batch", df=df, output_type=NominalValuesOutputType.DICTIONARY
+    )
+    assert_array_equal(out["batch"], array([1, 2]))
+    assert_array_equal(out["length"], array([3.0, 6.0]))
+
+
+def test_read_nominal_values_gemseo_dataset_with_remapping():
+    """Nominal values can be returned as a GEMSEO dataset with renamed variables."""
+    df = pd.DataFrame({"batch": [1, 2], "length": [2.0, 3.0]})
+    ds = read_nominal_values(
+        "batch",
+        df=df,
+        additional_names=["length"],
+        name_remapping={"length": "L"},
+        output_type=NominalValuesOutputType.GEMSEO_DATASET,
+        variable_names_to_group_names={"batch": "inputs", "length": "inputs"},
+    )
+    assert isinstance(ds, Dataset)
+
+
+def test_read_nominal_values_invalid_output_type_raises():
+    """An unknown output type raises."""
+    df = pd.DataFrame({"batch": [1], "length": [2.0]})
+    with pytest.raises(ValueError, match="Invalid output type"):
+        read_nominal_values(
+            "batch", df=df, additional_names=["length"], output_type="bogus"
+        )
 
 
 def test_serialization(tmp_wd, validation_point):

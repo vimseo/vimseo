@@ -24,6 +24,7 @@ from vimseo.tools.statistics.statistics_result import StatisticsResult
 from vimseo.tools.statistics.statistics_tool import StatisticsInputs
 from vimseo.tools.statistics.statistics_tool import StatisticsSettings
 from vimseo.tools.statistics.statistics_tool import StatisticsTool
+from vimseo.tools.statistics.statistics_tool import compute_ecdf
 from vimseo.utilities.datasets import DatasetAddFromStatistics
 from vimseo.utilities.distribution import DistributionParameters
 
@@ -94,3 +95,11 @@ def test_serialization(tmp_wd):
     result.to_hdf5("result.hdf5")
     serialized_result = StatisticsResult.from_hdf5("result.hdf5")
     assert_results_equal(result, serialized_result)
+
+
+def test_compute_ecdf():
+    """The empirical CDF of a dataset is returned as a dataset of x/y curves."""
+    dataset = Dataset.from_array([[1.0], [2.0], [3.0]], variable_names=["x"])
+    ecdf = compute_ecdf(dataset, prefix="p")
+    assert "p_x_x" in ecdf.variable_names
+    assert "p_x_y" in ecdf.variable_names

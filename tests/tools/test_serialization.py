@@ -17,10 +17,13 @@
 
 from __future__ import annotations
 
+import json
 from collections import OrderedDict
 from dataclasses import dataclass
+from dataclasses import field
 from pathlib import Path
 
+import h5py
 import numpy as np
 import pandas as pd
 import pytest
@@ -34,6 +37,8 @@ from vimseo.tools.base_result import assert_results_equal
 from vimseo.tools.bayes.bayes_analysis_result import BayesAnalysisResult
 from vimseo.tools.metadata import ToolResultMetadata
 from vimseo.tools.sensitivity.sensitivity_result import SensitivityResult
+from vimseo.tools.serializer import deserialize_value
+from vimseo.tools.serializer import serialize_value
 from vimseo.tools.statistics.statistics_result import StatisticsResult
 from vimseo.tools.validation.validation_point_result import ValidationPointResult
 from vimseo.tools.validation_case.validation_case_result import ValidationCaseResult
@@ -388,6 +393,99 @@ class TestRobustness:
 # ---------------------------------------------------------------------------
 # Tests — metadata
 # ---------------------------------------------------------------------------
+@dataclass
+class _DataclassWithDefaults:
+    """A dataclass mixing a required field and fields with defaults."""
+
+    required: int
+    with_default: int = 7
+    with_factory: list = field(default_factory=list)
+
+
+class TestSerializerLowLevel:
+    """Directly exercise serialize_value / deserialize_value edge cases."""
+
+    def test_numpy_integer_is_converted(self, tmp_path):
+        path = tmp_path / "f.h5"
+        with h5py.File(path, "w") as f:
+            serialize_value(f, "i", np.int64(7))
+        with h5py.File(path, "r") as f:
+            value = deserialize_value(f, "i")
+        assert value == 7
+
+    def test_reserialization_overwrites_existing_key(self, tmp_path):
+        path = tmp_path / "f.h5"
+        df = pd.DataFrame({"a": [1.0]})
+        with h5py.File(path, "w") as f:
+            serialize_value(f, "d", {"x": 1})
+            serialize_value(f, "d", {"x": 2})  # overwrite a dict group
+            serialize_value(f, "df", df)
+            serialize_value(f, "df", df)  # overwrite a dataframe group
+        with h5py.File(path, "r") as f:
+            assert deserialize_value(f, "d") == {"x": 2}
+            pd.testing.assert_frame_equal(deserialize_value(f, "df"), df)
+
+    def test_unpicklable_value_stored_as_none(self, tmp_path):
+        path = tmp_path / "f.h5"
+        with h5py.File(path, "w") as f:
+            # A generator cannot be pickled and raises a TypeError.
+            serialize_value(f, "gen", (i for i in range(3)))
+        with h5py.File(path, "r") as f:
+            assert deserialize_value(f, "gen") is None
+
+    def test_dataframe_with_object_column(self, tmp_path):
+        path = tmp_path / "f.h5"
+        df = pd.DataFrame({"s": ["a", "b"], "n": [1.0, 2.0]})
+        with h5py.File(path, "w") as f:
+            serialize_value(f, "df", df)
+        with h5py.File(path, "r") as f:
+            out = deserialize_value(f, "df")
+        assert list(out["s"]) == ["a", "b"]
+
+    def test_deserialize_attr_edge_cases(self, tmp_path):
+        path = tmp_path / "f.h5"
+        with h5py.File(path, "w") as f:
+            f.attrs["__type__p"] = "primitive"  # primitive, value missing
+            f.attrs["__type__j"] = "json"
+            f.attrs["j"] = json.dumps([1, 2, 3])
+            f.attrs["__type__jmiss"] = "json"  # json, value missing
+            f.attrs["__type__tmiss"] = "tuple"  # tuple, value missing
+            bogus = f.create_group("bogus")
+            bogus.attrs["__type__"] = "weird"  # unhandled type
+        with h5py.File(path, "r") as f:
+            assert deserialize_value(f, "p") is None
+            assert deserialize_value(f, "j") == [1, 2, 3]
+            assert deserialize_value(f, "jmiss") is None
+            assert deserialize_value(f, "tmiss") is None
+            assert deserialize_value(f, "missing_key") is None
+            assert deserialize_value(f, "bogus") is None
+
+    def test_deserialize_dataclass_unknown_class_raises(self, tmp_path):
+        path = tmp_path / "f.h5"
+        with h5py.File(path, "w") as f:
+            group = f.create_group("dc")
+            group.attrs["__type__"] = "dataclass"
+            group.attrs["__class__"] = "nonexistent_module_xyz.NoClass"
+        with h5py.File(path, "r") as f, pytest.raises(ImportError):
+            deserialize_value(f, "dc")
+
+    def test_deserialize_dataclass_uses_field_defaults(self, tmp_path):
+        path = tmp_path / "f.h5"
+        class_path = (
+            f"{_DataclassWithDefaults.__module__}.{_DataclassWithDefaults.__qualname__}"
+        )
+        with h5py.File(path, "w") as f:
+            group = f.create_group("dc")
+            group.attrs["__type__"] = "dataclass"
+            group.attrs["__class__"] = class_path
+            # No field is stored: all values must fall back to defaults.
+        with h5py.File(path, "r") as f:
+            obj = deserialize_value(f, "dc")
+        assert obj.required is None
+        assert obj.with_default == 7
+        assert obj.with_factory == []
+
+
 def test_metadata(tmp_hdf5):
     """Correct metadata round-trip."""
     result = ValidationPointResult()

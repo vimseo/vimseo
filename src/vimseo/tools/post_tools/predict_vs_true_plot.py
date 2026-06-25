@@ -28,7 +28,6 @@ from vimseo.config.global_configuration import _configuration as config
 from vimseo.tools.base_tool import BaseTool
 from vimseo.tools.post_tools.base_plot import Plotter
 from vimseo.utilities.datasets import GROUP_SEPARATORS
-from vimseo.utilities.datasets import get_values
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -109,9 +108,10 @@ class PredictVsTrue(Plotter):
                 customdata=(
                     metrics
                     if hovering_variable_name == ""
-                    else get_values(
-                        df, hovering_variable_name, group_name=hovering_group_name
-                    )
+                    else df[
+                        f"{hovering_variable_name}{GROUP_SEPARATORS[0]}"
+                        f"{hovering_group_name}{GROUP_SEPARATORS[1]}"
+                    ].to_numpy()
                 ),
                 hovertemplate="<b> Point prop<br>"
                 "Ref: %{x}<br>"

@@ -376,27 +376,6 @@ def dataframe_to_dataset(df: DataFrame) -> Dataset:
     return dataset.astype({col: df.dtypes[i] for i, col in enumerate(dataset.columns)})
 
 
-def get_values(df: DataFrame, variable_name: str, group_name: str = ""):
-    """Return the values from a suffixed DataFrame based ont he name of a variable (not
-    suffixed) and an optional group name."""
-    if group_name == "":
-        candidate_variable_names = [
-            name_and_group
-            for name_and_group in df.columns.values
-            if name_and_group.split("[")[0] == variable_name
-        ]
-        if len(candidate_variable_names) > 1:
-            msg = (
-                f"Variable name {variable_name} is ambiguous since it is suffixed "
-                f"by more than one group."
-            )
-            raise ValueError(msg)
-        return df[candidate_variable_names[0]].to_numpy()
-    return df[
-        f"{variable_name}{GROUP_SEPARATORS[0]}{group_name}{GROUP_SEPARATORS[1]}"
-    ].to_numpy()
-
-
 def decode_vector(vector_as_str: str, separator="_") -> ndarray:
     """Decode a stringified vector.
 
