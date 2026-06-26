@@ -28,7 +28,7 @@
 [![PyPI - License](https://img.shields.io/pypi/l/vimseo)](https://www.gnu.org/licenses/lgpl-3.0.en.html)
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/vimseo)](https://pypi.org/project/vimseo/)
 [![PyPI](https://img.shields.io/pypi/v/vimseo)](https://pypi.org/project/vimseo/)
-[![Codecov branch](https://img.shields.io/codecov/github/vimseo/vimseo/tree/main)](https://app.codecov.io/github/vimseo/vimseo/tree/main)
+[![codecov](https://codecov.io/gh/vimseo/vimseo/branch/main/graph/badge.svg)](https://codecov.io/gh/vimseo/vimseo)
 
 ## Why VIMSEO?
 
