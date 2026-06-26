@@ -1,4 +1,4 @@
-# Copyright 2021 IRT Saint Exupéry, https://www.irt-saintexupery.com
+# Copyright 2021 IRT Saint Exupery, https://www.irt-saintexupery.com
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -14,22 +14,3 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 from __future__ import annotations
-
-import runpy
-import sys
-from pathlib import Path
-
-from vimseo.storage_management.dashboard import db_viewer
-
-
-def main() -> None:
-    sys.argv = [
-        "streamlit",
-        "run",
-        str(Path(db_viewer.__file__)),
-    ]
-    runpy.run_module("streamlit", run_name="__main__")
-
-
-if __name__ == "__main__":
-    main()

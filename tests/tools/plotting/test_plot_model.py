@@ -1,4 +1,4 @@
-# Copyright 2021 IRT Saint Exupéry, https://www.irt-saintexupery.com
+# Copyright 2021 IRT Saint Exupery, https://www.irt-saintexupery.com
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -51,3 +51,24 @@ def test_plot_model(tmp_wd, model, load_case):
         assert Path(
             f"{model}_{load_case}_{variables[1]}_vs_{variables[0]}.html"
         ).is_file()
+
+
+def test_plot_model_scalars(tmp_wd):
+    """Check that the scalar outputs of a model can be plotted in a scatter matrix.
+
+    A non-existing directory is passed to also check that it is created.
+    """
+    m = create_model("MockModel", "LC2")
+    m.EXTRA_INPUT_GRAMMAR_CHECK = True
+    m.execute()
+    figures = m.plot_results(directory_path="plots_subdir", data="SCALARS")
+    assert "scalars" in figures
+
+
+def test_plot_model_unknown_data_type_raises(tmp_wd):
+    """Check that an unknown data type to plot raises."""
+    m = create_model("MockModel", "LC2")
+    m.EXTRA_INPUT_GRAMMAR_CHECK = True
+    m.execute()
+    with pytest.raises(ValueError, match="Unknown data type"):
+        m.plot_results(data="BOGUS")

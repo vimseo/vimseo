@@ -4,6 +4,14 @@ source = vimseo
 omit =
   */vimseo/lib_vimseo/*
   */vimseo/utilities/sandbox/*
+  */vimseo/dashboards/*
+  # Test-support helpers (not product code).
+  */vimseo/utilities/test_utils.py
+  */vimseo/utilities/pytest_conftest.py
+  # Documentation / reference generation scripts.
+  */vimseo/utilities/doc/*
+  */vimseo/utilities/generate_material_description_table.py
+  */vimseo/utilities/generate_validation_reference.py
 
 [report]
 # Override covdefaults.

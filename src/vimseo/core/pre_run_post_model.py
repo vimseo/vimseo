@@ -1,4 +1,4 @@
-# Copyright 2021 IRT Saint Exupéry, https://www.irt-saintexupery.com
+# Copyright 2021 IRT Saint Exupery, https://www.irt-saintexupery.com
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -77,6 +77,9 @@ class PreRunPostModel(IntegratedModel):
     SUBROUTINES_NAMES: ClassVar[Sequence[str]] = []
     """The names of the subroutines."""
 
+    _RUN_COMPONENT_INDEX: ClassVar[int] = 1
+    """The run-processor is the second component of the pre/run/post chain."""
+
     N_CPUS = 1
     """The default number of cpus used to run the model."""
 
@@ -137,11 +140,6 @@ class PreRunPostModel(IntegratedModel):
         self._set_differentiated_names(self.run)
 
         self.run.job_executor._user_job_options.update({"n_cpus": self.N_CPUS})
-
-    @property
-    def run(self) -> RunProcessor:
-        """The component running the external software."""
-        return self._run_processor
 
     @property
     def n_cpus(self):

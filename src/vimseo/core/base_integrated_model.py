@@ -1,4 +1,4 @@
-# Copyright 2021 IRT Saint Exupéry, https://www.irt-saintexupery.com
+# Copyright 2021 IRT Saint Exupery, https://www.irt-saintexupery.com
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -173,6 +173,10 @@ class IntegratedModel(GemseoDisciplineWrapper):
 
     _ERROR_CODE_DEFAULT = -1
     """Default value of error_code."""
+
+    _RUN_COMPONENT_INDEX: ClassVar[int] = 0
+    """The index, in the component chain, of the component running the external
+    software (returned by the :attr:`run` property). Defaults to the first component."""
 
     MATERIAL_FILE: ClassVar[Path | str] = ""
     """The path to the json file defining the material values."""
@@ -472,7 +476,7 @@ class IntegratedModel(GemseoDisciplineWrapper):
 
         output_data.update({
             name: array([str(file_name) for file_name in field_file_names[name]])
-            for name, file_names in field_file_names.items()
+            for name in field_file_names
         })
 
         # metadata as additional outputs
@@ -670,7 +674,7 @@ class IntegratedModel(GemseoDisciplineWrapper):
     @property
     def run(self) -> BaseComponent:
         """The component running the external software."""
-        return self._chain.disciplines[0]
+        return self._chain.disciplines[self._RUN_COMPONENT_INDEX]
 
     def _classify_variables(self, data):
         """Split a dictionary of variables according to the variable groups:

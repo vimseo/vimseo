@@ -1,4 +1,4 @@
-# Copyright 2021 IRT Saint Exupéry, https://www.irt-saintexupery.com
+# Copyright 2021 IRT Saint Exupery, https://www.irt-saintexupery.com
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -22,9 +22,15 @@ from numpy import array
 from numpy.ma.testutils import assert_array_equal
 from pandas._testing import assert_frame_equal
 
+from vimseo.utilities.datasets import Variable
+from vimseo.utilities.datasets import _to_slice_or_list
 from vimseo.utilities.datasets import assert_frame_equal_unordered
 from vimseo.utilities.datasets import dataframe_to_dataset
 from vimseo.utilities.datasets import dataset_to_dataframe
+from vimseo.utilities.datasets import decode_vector
+from vimseo.utilities.datasets import encode_vector
+from vimseo.utilities.datasets import generate_dataset
+from vimseo.utilities.datasets import list_to_str
 
 
 @pytest.fixture
@@ -149,3 +155,48 @@ def test_dataset_to_dataframe_round_trip(dataset_fixture, request):
     df = dataset_to_dataframe(dataset, suffix_by_group=True)
     round_trip_dataset = dataframe_to_dataset(df)
     assert_frame_equal_unordered(dataset, round_trip_dataset)
+
+
+def test_list_to_str():
+    """A list is joined into an underscore-separated string."""
+    assert list_to_str([1, 2, 3]) == "1_2_3"
+
+
+def test_to_slice_or_list():
+    """Objects are converted to a slice or a list as expected."""
+    a_slice = slice(1, 3)
+    assert _to_slice_or_list(a_slice) is a_slice
+    assert _to_slice_or_list(None) == slice(None)
+    assert _to_slice_or_list([1, 2]) == [1, 2]
+    assert _to_slice_or_list(0) == [0]
+
+
+def test_decode_vector():
+    """A stringified vector is decoded into a float array."""
+    assert_array_equal(decode_vector("[0_4_7]"), array([0.0, 4.0, 7.0]))
+
+
+def test_encode_vector_from_list():
+    """A numerical list is encoded into an underscore-separated string."""
+    assert encode_vector([0, 90, 0]) == "0_90_0"
+
+
+def test_encode_vector_non_1d_raises():
+    """A non 1D array cannot be encoded."""
+    with pytest.raises(ValueError, match="Expecting 1D array"):
+        encode_vector(array([[1, 2], [3, 4]]))
+
+
+def test_encode_vector_non_numeric_raises():
+    """A non numerical array cannot be encoded."""
+    with pytest.raises(TypeError, match="numerical array"):
+        encode_vector(array(["a", "b"]))
+
+
+def test_generate_dataset_with_varying_variable():
+    """A non-constant variable produces varying samples."""
+    dataset = generate_dataset(
+        {IODataset.INPUT_GROUP: [Variable("x", 1.0, cov=0.1, is_constant_value=False)]},
+        5,
+    )
+    assert dataset.shape[0] == 5
