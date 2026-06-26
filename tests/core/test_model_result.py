@@ -86,6 +86,28 @@ def test_scalars_to_dataframe():
     assert_frame_equal(df, expected_df)
 
 
+def test_str():
+    """A model result has a readable string representation."""
+    result = ModelResult(
+        scalars={"x": 1.0},
+        vectors={"v": array([1.0, 2.0])},
+        curves=[Curve({"xc": array([0.0, 1.0]), "yc": array([0.0, 1.0])})],
+    )
+    text = str(result)
+    assert "Scalars:" in text
+    assert "Vectors:" in text
+    assert "Curves:" in text
+    assert "Fields:" in text
+
+
+def test_get_curve_not_found_returns_empty():
+    """Requesting an unknown curve returns an empty list."""
+    result = ModelResult(
+        curves=[Curve({"xc": array([0.0, 1.0]), "yc": array([0.0, 1.0])})],
+    )
+    assert result.get_curve(("unknown_x", "unknown_y")) == []
+
+
 def test_fields(tmp_wd):
     """Check that a model can read fields contained in files."""
     model = create_model(
