@@ -1,3 +1,18 @@
+# Copyright 2021 IRT Saint Exupery, https://www.irt-saintexupery.com
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Lesser General Public
+# License version 3 as published by the Free Software Foundation.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with this program; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
 # Copyright 2021 IRT Saint Exupéry, https://www.irt-saintexupery.com
 #
 # This program is free software; you can redistribute it and/or
@@ -80,6 +95,8 @@ class PreRunPostModel(IntegratedModel):
     """The default number of cpus used to run the model."""
 
     _INDEX_DISC_OUTPUT_TO_REMOVE: ClassVar[Sequence[int]] = [0, 1]
+    """The index of the components whose outputs are removed
+    from the model outputs."""
 
     def __init__(self, load_case_name: str, **options):
 
@@ -120,15 +137,6 @@ class PreRunPostModel(IntegratedModel):
                 check_subprocess=options["check_subprocess"],
             ),
         ]
-
-        # # TODO update run grammar after super.init.
-        # # run component has its grammar defined from pre and post components:
-        # components[1].input_grammar = deepcopy(components[0].output_grammar)
-        # # TODO is it neccesary? Should be done explicitly by the user instead.
-        # components[1].input_grammar.update(components[0].input_grammar)
-        # components[1].output_grammar = deepcopy(components[2].input_grammar)
-        # components[1].output_grammar.update_from_data({"error_code": atleast_1d(0)})
-        # components[1].output_grammar.required_names.add("error_code")
 
         super().__init__(load_case_name, components, **options)
 

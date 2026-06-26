@@ -31,7 +31,6 @@
 from __future__ import annotations
 
 import logging
-from copy import deepcopy
 from pathlib import Path
 from typing import TYPE_CHECKING
 from typing import ClassVar
@@ -87,7 +86,9 @@ class PostProcessor(ExternalSoftwareComponent):
     ) -> None:
         super().__init__(load_case, material_grammar_file, material, check_subprocess)
 
-        self._output_physical_var_names = deepcopy(self.output_grammar.names)
+        self._output_physical_var_names = set(self.output_grammar.names) - {
+            self._ERROR_CODE_NAME
+        }
         self.output_grammar.update_from_data({
             MetaDataNames.error_code.name: atleast_1d(
                 IntegratedModel._ERROR_CODE_DEFAULT
