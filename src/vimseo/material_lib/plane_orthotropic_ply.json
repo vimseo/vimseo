@@ -1,0 +1,228 @@
+{
+  "name": "plane_orthotropic_ply",
+  "description": "Orthotropic composite ply used by the Tan open-hole model (SI units, Pa).",
+  "material_relations": [
+    {
+      "tag": "",
+      "name": "orthotropic",
+      "metadata": {
+        "generic": {
+          "datetime": "04-07-2026_23-45-54",
+          "version": "0.1.7.dev15+g6b02e0101"
+        },
+        "misc": {},
+        "author": "",
+        "source": ""
+      },
+      "properties": [
+        {
+          "name": "E1",
+          "description": "",
+          "value": 135000000000.0,
+          "lower_bound": -1000000000000.0,
+          "upper_bound": 1000000000000.0,
+          "distribution": {
+            "name": "",
+            "mode": 0.0,
+            "lower": -1000000000000.0,
+            "upper": 1000000000000.0,
+            "sigma": 0.0,
+            "mu": 1.0,
+            "mean": 0.0,
+            "loc": 0.0,
+            "location": 0.0,
+            "shape": 1.0,
+            "scale": 1.0,
+            "rate": 1.0,
+            "lower_bound": -1000000000000.0,
+            "upper_bound": 1000000000000.0
+          }
+        },
+        {
+          "name": "E2",
+          "description": "",
+          "value": 10000000000.0,
+          "lower_bound": -1000000000000.0,
+          "upper_bound": 1000000000000.0,
+          "distribution": {
+            "name": "",
+            "mode": 0.0,
+            "lower": -1000000000000.0,
+            "upper": 1000000000000.0,
+            "sigma": 0.0,
+            "mu": 1.0,
+            "mean": 0.0,
+            "loc": 0.0,
+            "location": 0.0,
+            "shape": 1.0,
+            "scale": 1.0,
+            "rate": 1.0,
+            "lower_bound": -1000000000000.0,
+            "upper_bound": 1000000000000.0
+          }
+        },
+        {
+          "name": "G12",
+          "description": "",
+          "value": 5000000000.0,
+          "lower_bound": -1000000000000.0,
+          "upper_bound": 1000000000000.0,
+          "distribution": {
+            "name": "",
+            "mode": 0.0,
+            "lower": -1000000000000.0,
+            "upper": 1000000000000.0,
+            "sigma": 0.0,
+            "mu": 1.0,
+            "mean": 0.0,
+            "loc": 0.0,
+            "location": 0.0,
+            "shape": 1.0,
+            "scale": 1.0,
+            "rate": 1.0,
+            "lower_bound": -1000000000000.0,
+            "upper_bound": 1000000000000.0
+          }
+        },
+        {
+          "name": "nu12",
+          "description": "",
+          "value": 0.3,
+          "lower_bound": -1000000000000.0,
+          "upper_bound": 1000000000000.0,
+          "distribution": {
+            "name": "",
+            "mode": 0.0,
+            "lower": -1000000000000.0,
+            "upper": 1000000000000.0,
+            "sigma": 0.0,
+            "mu": 1.0,
+            "mean": 0.0,
+            "loc": 0.0,
+            "location": 0.0,
+            "shape": 1.0,
+            "scale": 1.0,
+            "rate": 1.0,
+            "lower_bound": -1000000000000.0,
+            "upper_bound": 1000000000000.0
+          }
+        },
+        {
+          "name": "Xt",
+          "description": "",
+          "value": 1500000000.0,
+          "lower_bound": -1000000000000.0,
+          "upper_bound": 1000000000000.0,
+          "distribution": {
+            "name": "",
+            "mode": 0.0,
+            "lower": -1000000000000.0,
+            "upper": 1000000000000.0,
+            "sigma": 0.0,
+            "mu": 1.0,
+            "mean": 0.0,
+            "loc": 0.0,
+            "location": 0.0,
+            "shape": 1.0,
+            "scale": 1.0,
+            "rate": 1.0,
+            "lower_bound": -1000000000000.0,
+            "upper_bound": 1000000000000.0
+          }
+        },
+        {
+          "name": "Xc",
+          "description": "",
+          "value": 1200000000.0,
+          "lower_bound": -1000000000000.0,
+          "upper_bound": 1000000000000.0,
+          "distribution": {
+            "name": "",
+            "mode": 0.0,
+            "lower": -1000000000000.0,
+            "upper": 1000000000000.0,
+            "sigma": 0.0,
+            "mu": 1.0,
+            "mean": 0.0,
+            "loc": 0.0,
+            "location": 0.0,
+            "shape": 1.0,
+            "scale": 1.0,
+            "rate": 1.0,
+            "lower_bound": -1000000000000.0,
+            "upper_bound": 1000000000000.0
+          }
+        },
+        {
+          "name": "Yt",
+          "description": "",
+          "value": 40000000.0,
+          "lower_bound": -1000000000000.0,
+          "upper_bound": 1000000000000.0,
+          "distribution": {
+            "name": "",
+            "mode": 0.0,
+            "lower": -1000000000000.0,
+            "upper": 1000000000000.0,
+            "sigma": 0.0,
+            "mu": 1.0,
+            "mean": 0.0,
+            "loc": 0.0,
+            "location": 0.0,
+            "shape": 1.0,
+            "scale": 1.0,
+            "rate": 1.0,
+            "lower_bound": -1000000000000.0,
+            "upper_bound": 1000000000000.0
+          }
+        },
+        {
+          "name": "Yc",
+          "description": "",
+          "value": 120000000.0,
+          "lower_bound": -1000000000000.0,
+          "upper_bound": 1000000000000.0,
+          "distribution": {
+            "name": "",
+            "mode": 0.0,
+            "lower": -1000000000000.0,
+            "upper": 1000000000000.0,
+            "sigma": 0.0,
+            "mu": 1.0,
+            "mean": 0.0,
+            "loc": 0.0,
+            "location": 0.0,
+            "shape": 1.0,
+            "scale": 1.0,
+            "rate": 1.0,
+            "lower_bound": -1000000000000.0,
+            "upper_bound": 1000000000000.0
+          }
+        },
+        {
+          "name": "S12",
+          "description": "",
+          "value": 50000000.0,
+          "lower_bound": -1000000000000.0,
+          "upper_bound": 1000000000000.0,
+          "distribution": {
+            "name": "",
+            "mode": 0.0,
+            "lower": -1000000000000.0,
+            "upper": 1000000000000.0,
+            "sigma": 0.0,
+            "mu": 1.0,
+            "mean": 0.0,
+            "loc": 0.0,
+            "location": 0.0,
+            "shape": 1.0,
+            "scale": 1.0,
+            "rate": 1.0,
+            "lower_bound": -1000000000000.0,
+            "upper_bound": 1000000000000.0
+          }
+        }
+      ]
+    }
+  ]
+}

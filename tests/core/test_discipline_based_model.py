@@ -25,8 +25,8 @@ def test_discipline_based_model(tmp_wd):
     model = create_model("MockCurves", "Dummy")
     model.EXTRA_INPUT_GRAMMAR_CHECK = True
     output_data = model.execute()
-    assert output_data["x"][0] == 1.0
-    assert output_data["x_1"][0] == 1.0
+    assert output_data["x"][0] == 1.0  # noqa: RUF069
+    assert output_data["x_1"][0] == 1.0  # noqa: RUF069
     for name in ["y_axis", "y"]:
         assert (
             len(output_data[name])
@@ -45,4 +45,4 @@ def test_discipline_isolation(tmp_wd):
     model.EXTRA_INPUT_GRAMMAR_CHECK = True
     model_bis.default_input_data.update({"x": atleast_1d(2.0)})
 
-    assert model.default_input_data["x"][0] == 1.0
+    assert model.default_input_data["x"][0] == 1.0  # noqa: RUF069

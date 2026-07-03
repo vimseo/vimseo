@@ -21,6 +21,7 @@ https://emmo-repo.github.io/versions/1.0.0-beta/emmo.html
 
 from __future__ import annotations
 
+from operator import call
 from typing import TYPE_CHECKING
 
 from pydantic import Field
@@ -38,7 +39,7 @@ class MaterialRelation(BaseJsonIO):
     tag: str = ""
     name: str
     metadata: MaterialMetadata = Field(default_factory=lambda: MaterialMetadata())
-    properties: list[MaterialProperty]
+    properties: list[MaterialProperty] = Field(default_factory=list)
 
     def get_values_as_dict(self):
         return {prop.name: prop.value for prop in self.properties}
@@ -46,3 +47,7 @@ class MaterialRelation(BaseJsonIO):
     def get_card(self) -> str:
         """Return a card for a mechanical solver."""
         return ""
+
+    def get_relation(self) -> callable:
+        """Return the type of the material relation."""
+        return call

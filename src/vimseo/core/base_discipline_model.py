@@ -30,7 +30,14 @@ if TYPE_CHECKING:
 
 
 class BaseDisciplineModel(IntegratedModel):
+<<<<<<< HEAD
     """An :class:`~.IntegratedModel` wrapping a single GEMSEO discipline."""
+=======
+    """A model wrapping a single GEMSEO :class:`~gemseo.core.discipline.Discipline`.
+
+    The wrapped discipline is provided through the ``_DISCIPLINE`` class attribute.
+    """
+>>>>>>> 427bac72 (rebase)
 
     _DISCIPLINE: ClassVar[Discipline | None] = None
     _EXPECTED_LOAD_CASE: ClassVar[str] = ""

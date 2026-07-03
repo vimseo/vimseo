@@ -15,18 +15,27 @@
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from dataclasses import field
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Sequence
 
 from meshio import CellBlock
 from meshio import read
+from numpy import array
+from numpy import full
+from numpy import linalg
+from numpy import nan
+from numpy import searchsorted
+from numpy import unique
 
 if TYPE_CHECKING:
     from pathlib import Path
 
     from meshio import Mesh
     from numpy import ndarray
+
+LOGGER = logging.getLogger(__name__)
 
 
 @dataclass(eq=False)
@@ -94,3 +103,150 @@ class MeshField:
             The field.
         """
         return cls.from_mesh(read(path), path)
+
+    def to_structured_grid(self, name: str) -> tuple[ndarray, ndarray, ndarray]:
+        """Reshape a point-data component onto the structured grid it lies on.
+
+        Assumes the mesh nodes form an axis-aligned structured grid in the x-y
+        plane (they need not be sorted, and the grid may be rectangular). Nodes
+        that are missing from the grid -- for instance blanked cells inside a hole
+        -- are filled with ``nan``.
+
+        Args:
+            name: The name of the point-data component to reshape.
+
+        Returns:
+            The sorted unique ``x`` and ``y`` coordinates and the field values as a
+            2D array ``z`` of shape ``(len(x), len(y))``.
+        """
+        points = self.mesh_points
+        x = unique(points[:, 0])
+        y = unique(points[:, 1])
+        z = full((len(x), len(y)), nan)
+        i_x = searchsorted(x, points[:, 0])
+        i_y = searchsorted(y, points[:, 1])
+        z[i_x, i_y] = self.point_data[name]
+        return x, y, z
+
+    def probe(self, name: str, point_x: float, point_y: float) -> float:
+        """Bilinearly interpolate a point-data component at ``(point_x, point_y)``.
+
+        Relies on :meth:`to_structured_grid`. Returns ``nan`` for a point outside
+        the grid or surrounded by blanked (``nan``) nodes.
+
+        Args:
+            name: The name of the point-data component to interpolate.
+            point_x: The x coordinate of the probe point.
+            point_y: The y coordinate of the probe point.
+
+        Returns:
+            The interpolated value at the probe point.
+        """
+        from scipy.interpolate import RegularGridInterpolator
+
+        x, y, z = self.to_structured_grid(name)
+        interpolator = RegularGridInterpolator(
+            (x, y), z, bounds_error=False, fill_value=nan
+        )
+        return float(interpolator([[point_x, point_y]])[0])
+
+
+def extract_line(
+    vtu_file: str | Path,
+    point_a: tuple[float] = (),
+    point_b: tuple[float] = (),
+    n_points: int = 200,
+    fields: list[str] | None = None,
+) -> dict:
+    """
+    Extract values from a vtu file along a line defined by two points.
+
+    Args:
+        vtu_file: The path to a vtu file.
+        point_a: The starting point of the extraction line.
+        point_b: The ending point of the extraction line.
+        n_points: The number of equidistant points along the extraction line.
+        fields: The names of the variables to extract.
+
+    Returns:
+        A dictionary mapping variable names to arrays containing the extracted
+        values. The following keys are always present:
+
+        - ``coords``: coordinates of the line points.
+        - ``dist``: distance of the line points to the line start.
+    """
+    mesh = pv.read(vtu_file)
+
+    pa = (
+        array(point_a, dtype=float) if point_a else mesh.bounds[::2]
+    )  # Use x_min, y_min, z_min if not provided
+    pb = (
+        array(point_b, dtype=float) if point_b else mesh.bounds[1::2]
+    )  # Use x_max, y_max, z_max if not provided
+
+    line = mesh.sample_over_line(tuple(pa), tuple(pb), resolution=n_points)
+
+    coords = line.points
+    dist = linalg.norm(coords - pa, axis=1)
+
+    available = list(line.point_data.keys())
+    if fields is None:
+        fields = available
+    else:
+        missing = [f for f in fields if f not in available]
+        fields = [f for f in fields if f in available]
+        if missing:
+            LOGGER.warning(
+                f"Variables are not found in {vtu_file} : {missing}. "
+                f"Available fields are: {available}"
+            )
+
+    result = {
+        "coords": coords,
+        "dist": dist,
+    }
+    for field in fields:
+        result[field] = line.point_data[field]
+
+    return result
+
+
+def vtu_to_png(
+    files: Sequence[str],
+    scalar_name: str,
+    output_folder: str,
+    clim: tuple[float, float] | None = None,
+):
+    """Convert a sequence of .vtu files to .png images using PyVista."""
+
+    # TODO voir comment extraire une composante d'un champ vectoriel (ex: Velocity) pour faire une image de cette composante uniquement
+
+    # --- Boucle de rendu ---
+    plotter = pv.Plotter(off_screen=True)  # Fenêtre invisible
+
+    for i, filepath in enumerate(files):
+        mesh = pv.read(filepath)
+
+        # On vide le plotter à chaque itération pour ne pas superposer
+        plotter.clear()
+
+        # Ajout du maillage avec configuration de la colorbar
+        plotter.add_mesh(
+            mesh, scalars=scalar_name, cmap="viridis", clim=clim, show_scalar_bar=True
+        )
+
+        # Optionnel : Ajouter un titre ou le nom du fichier sur l'image
+        plotter.add_text(f"Step: {i}", font_size=10, color="black")
+
+        # Ajuster la caméra (automatique au premier fichier, puis fixe)
+        if i == 0:
+            plotter.view_xy()
+
+        # Sauvegarde
+        filename = Path(filepath).name.replace(".vtu", f"_{scalar_name}.png")
+        save_path = Path(output_folder) / filename
+        plotter.screenshot(save_path)
+
+        LOGGER.info(f"Saved image: {filename}")
+
+    plotter.close()

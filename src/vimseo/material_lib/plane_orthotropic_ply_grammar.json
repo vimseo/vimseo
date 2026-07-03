@@ -1,0 +1,107 @@
+{
+  "properties": {
+    "E1": {
+      "description": "",
+      "items": {
+        "maximum": 1000000000000.0,
+        "minimum": -1000000000000.0,
+        "type": "number"
+      },
+      "title": "E1",
+      "type": "array"
+    },
+    "E2": {
+      "description": "",
+      "items": {
+        "maximum": 1000000000000.0,
+        "minimum": -1000000000000.0,
+        "type": "number"
+      },
+      "title": "E2",
+      "type": "array"
+    },
+    "G12": {
+      "description": "",
+      "items": {
+        "maximum": 1000000000000.0,
+        "minimum": -1000000000000.0,
+        "type": "number"
+      },
+      "title": "G12",
+      "type": "array"
+    },
+    "nu12": {
+      "description": "",
+      "items": {
+        "maximum": 1000000000000.0,
+        "minimum": -1000000000000.0,
+        "type": "number"
+      },
+      "title": "Nu12",
+      "type": "array"
+    },
+    "Xt": {
+      "description": "",
+      "items": {
+        "maximum": 1000000000000.0,
+        "minimum": -1000000000000.0,
+        "type": "number"
+      },
+      "title": "Xt",
+      "type": "array"
+    },
+    "Xc": {
+      "description": "",
+      "items": {
+        "maximum": 1000000000000.0,
+        "minimum": -1000000000000.0,
+        "type": "number"
+      },
+      "title": "Xc",
+      "type": "array"
+    },
+    "Yt": {
+      "description": "",
+      "items": {
+        "maximum": 1000000000000.0,
+        "minimum": -1000000000000.0,
+        "type": "number"
+      },
+      "title": "Yt",
+      "type": "array"
+    },
+    "Yc": {
+      "description": "",
+      "items": {
+        "maximum": 1000000000000.0,
+        "minimum": -1000000000000.0,
+        "type": "number"
+      },
+      "title": "Yc",
+      "type": "array"
+    },
+    "S12": {
+      "description": "",
+      "items": {
+        "maximum": 1000000000000.0,
+        "minimum": -1000000000000.0,
+        "type": "number"
+      },
+      "title": "S12",
+      "type": "array"
+    }
+  },
+  "required": [
+    "E1",
+    "E2",
+    "G12",
+    "nu12",
+    "Xt",
+    "Xc",
+    "Yt",
+    "Yc",
+    "S12"
+  ],
+  "title": "plane_orthotropic_plyLegacy",
+  "type": "object"
+}
