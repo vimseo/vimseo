@@ -1,3 +1,18 @@
+# Copyright 2021 IRT Saint Exupery, https://www.irt-saintexupery.com
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Lesser General Public
+# License version 3 as published by the Free Software Foundation.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with this program; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
 # Copyright 2021 IRT Saint Exupéry, https://www.irt-saintexupery.com
 #
 # This program is free software; you can redistribute it and/or
@@ -62,8 +77,8 @@ def plot_curves(
         range(4 * nb_color_period - 1), colors, linestyles, curves[:-1], strict=False
     ):
         curve.plot(
-            save=False,
-            show=False,
+            save=save,
+            show=show,
             fig=fig,
             color=color,
             linestyle=linestyle,
@@ -95,3 +110,13 @@ def get_formatted_value(value, precision: int = FLOAT_PRECISION):
     if is_float:
         return str(round(value, precision))
     return array_str(atleast_1d(value), precision=precision)
+
+
+def plotly_save_and_show(fig: Figure, save: bool, show: bool, file_path: str):
+    if save and not file_path:
+        msg = "A file path must be passed since save is True."
+        raise ValueError(msg)
+    if save:
+        fig.write_html(file_path)
+    if show:
+        fig.show()

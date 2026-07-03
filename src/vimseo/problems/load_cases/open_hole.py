@@ -28,41 +28,13 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-"""A material relation.
-
-The use ontology is based on
-https://emmo-repo.github.io/versions/1.0.0-beta/emmo.html
-"""
-
 from __future__ import annotations
 
-from operator import call
-from typing import TYPE_CHECKING
+from dataclasses import dataclass
 
-from pydantic import Field
-
-from vimseo.material.metadata import MaterialMetadata
-from vimseo.utilities.json_grammar_utils import BaseJsonIO
-
-if TYPE_CHECKING:
-    from vimseo.material.material_property import MaterialProperty
+from vimseo.core.load_case import LoadCase
 
 
-class MaterialRelation(BaseJsonIO):
-    """A material relation."""
-
-    tag: str = ""
-    name: str
-    metadata: MaterialMetadata = Field(default_factory=lambda: MaterialMetadata())
-    properties: list[MaterialProperty] = Field(default_factory=list)
-
-    def get_values_as_dict(self):
-        return {prop.name: prop.value for prop in self.properties}
-
-    def get_card(self) -> str:
-        """Return a card for a mechanical solver."""
-        return ""
-
-    def get_relation(self) -> callable:
-        """Return the type of the material relation."""
-        return call
+@dataclass
+class Tension(LoadCase):
+    """An Tension load case."""

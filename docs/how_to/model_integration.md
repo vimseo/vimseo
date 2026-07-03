@@ -27,13 +27,13 @@ To learn more about the advantages of this approach, you can refer to
 
 ## Integration of a pure Python model as a single component model
 
-Here, model ``MockModelFields`` defines the variable ``FIELDS_FROM_FILE``,
-which means that files corresponding to this pattern are expected to be written
-by the model in the scrtch directory.
-
 ```python
 --8<-- "src/vimseo/problems/mock/mock_fields/mock_fields.py"
 ```
+
+Here, model ``MockModelFields`` defines the variable ``FIELDS_FROM_FILE``,
+which means that files corresponding to this pattern are expected to be written
+by the model in the scratch directory.
 
 ## Integration of a pure Python model as a pre-run-post component model
 
