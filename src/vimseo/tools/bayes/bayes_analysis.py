@@ -1,3 +1,18 @@
+# Copyright 2021 IRT Saint Exupery, https://www.irt-saintexupery.com
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Lesser General Public
+# License version 3 as published by the Free Software Foundation.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with this program; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
 # Copyright 2021 IRT Saint Exupéry, https://www.irt-saintexupery.com
 #
 # This program is free software; you can redistribute it and/or
@@ -36,6 +51,7 @@ from numpy import isnan
 from numpy import linspace
 from numpy import log
 from numpy import mean
+from numpy import ndarray
 from numpy import ones
 from numpy import random
 from numpy import std
@@ -44,6 +60,7 @@ from numpy import vstack
 from numpy import zeros
 from openturns import ComposedDistribution
 from openturns import DeconditionedDistribution
+from openturns import DistributionImplementation
 from openturns import Normal
 from openturns import RandomGenerator
 from openturns import Sample
@@ -67,7 +84,6 @@ if TYPE_CHECKING:
 
     from matplotlib.pyplot import Axes
     from matplotlib.pyplot import Figure
-    from openturns import Distribution
 
 random.seed(1)  # noqa: NPY002
 RandomGenerator.SetSeed(0)  # noqa: NPY002
@@ -104,7 +120,7 @@ class BayesSettings(BaseSettings):
         "<http://openturns.github.io/openturns/latest/user_manual/"
         "probabilistic_modelling.html>`_.",
     )
-    prior_dist: ComposedDistribution | list[dist] = Field(
+    prior_dist: ComposedDistribution | list[DistributionImplementation] = Field(
         default=[],
         description="The prior distribution. Either a list of openturns distribution.",
     )
@@ -117,11 +133,12 @@ class BayesSettings(BaseSettings):
 class BayesInputs(BaseInputs):
     """The inputs of a Bayes analysis."""
 
-    data: array = Field(
-        default=empty, description="The data from which the inference is carried out."
+    data: ndarray = Field(
+        default=empty(0),
+        description="The data from which the inference is carried out.",
     )
-    x0s: array = Field(
-        default=empty,
+    x0s: ndarray = Field(
+        default=empty(0),
         description="The starting points of the algorithm. "
         "In practice a 1-D array of size the number "
         "of parameters of the model.",
@@ -140,16 +157,16 @@ class BayesTool(BaseAnalysisTool):
 
     _INPUTS = BayesInputs
 
-    _x0s: array
+    _x0s: ndarray
     """The starting points of the MCMC algorithm."""
 
     _frozen_options: dict
     """The options to set values if necessary."""
 
-    _dist_model: Distribution
+    _dist_model: DistributionImplementation
     """The probabilistic model to calibrate."""
 
-    _dist_prior: Distribution
+    _dist_prior: DistributionImplementation
     """The prior distribution on the model parameters."""
 
     _scaler: MinMaxScaler
@@ -230,7 +247,7 @@ class BayesTool(BaseAnalysisTool):
 
     def log_posterior(
         self,
-        x: array,
+        x: ndarray,
         func_prior: Callable,
         func_likelihood: Callable,
     ):
@@ -260,7 +277,7 @@ class BayesTool(BaseAnalysisTool):
     def sampling(
         self,
         n_mcmc: int,
-        data: array,
+        data: ndarray,
     ):
         """Return the raw MCMC posterior samples .
 
@@ -310,7 +327,7 @@ class BayesTool(BaseAnalysisTool):
 
             raise ValueError(msg)
 
-        if options["data"] is empty:
+        if len(options["data"]) == 0:
             msg = "There is no data to calibrate the model."
 
             raise ValueError(msg)
@@ -372,7 +389,7 @@ class BayesTool(BaseAnalysisTool):
 
         self._x0s = (
             0.5 * ones(dim) + 1e-4 * random.randn(options["n_walkers"], dim)  # noqa: NPY002
-            if options["x0s"] is empty
+            if len(options["x0s"]) == 0
             else options["x0s"] * (1 + 1e-4 * random.randn(options["n_walkers"], dim))  # noqa: NPY002
         )
 

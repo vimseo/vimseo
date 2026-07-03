@@ -83,6 +83,7 @@ select = [
 #    "FBT",
     "FLY",
     "FURB",
+    "F401",
     "G",
     "I",
     "ISC",
@@ -159,6 +160,7 @@ runtime-evaluated-base-classes = [
     "vimseo.tools.doe.custom_doe.CustomDOESettings",
     "vimseo.tools.verification.verification_result.VerificationResult",
     "vimseo.tools.verification.verification_result.SolutionVerificationResult",
+    "vimseo.material.material_property.MaterialProperty",
 ]
 
 [lint.isort]
@@ -169,7 +171,7 @@ force-single-line = true
 convention = "google"
 
 [lint.per-file-ignores]
-"*.ipynb" = ["RET504"]
+"*.ipynb" = ["RET504", "PTH"]
 "tests/*.py" = ["D", "PT009", "PT011", "PT027", "PTH"]
 "docs/*.py" = [
   "T",

@@ -28,27 +28,29 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+"""The user job options for all job executors."""
+
 from __future__ import annotations
 
-from vimseo.api import get_available_load_cases
-from vimseo.api import get_available_models
+from pydantic import Field
+
+from vimseo.job_executor.base_user_job_options import BaseUserJobSettings
 
 
-def test_available_load_cases(tmp_wd):
-    """Check the load cases available for a model."""
-    assert get_available_load_cases("MockModel") == ["LC1", "LC2"]
-    assert get_available_load_cases("BendingTestAnalytical") == [
-        "Cantilever",
-        "ThreePoints",
-    ]
+class InteractiveAbaqusUserJobSettings(BaseUserJobSettings):
+    """The user options for an Abaqus interactive job."""
+
+    is_implicit: bool = True
+    subroutine_names: list[str] = Field(default_factory=lambda: [""])
+    abaqus_script: str = ""
 
 
-def test_available_models(tmp_wd):
-    """Check that the models associated with a given load case are correctly found."""
-    assert set(get_available_models("LC1")) == {
-        "MockModel",
-        "MockModelFields",
-        "MockModelPersistent",
-        "MockModelWithMaterial",
-        "MockExternalSoftware",
-    }
+class SlurmAbaqusUserJobSettings(BaseUserJobSettings):
+    """The user options for an Abaqus job submitted through Slurm."""
+
+    max_wall_clock_time: int = Field(
+        default=1, description="The maximum wall clock time in hours."
+    )
+    job_type: str = Field(
+        default="mono", description="The job type, among 'mono', 'noeud', 'mesca'."
+    )
