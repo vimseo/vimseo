@@ -37,7 +37,7 @@ from typing import TYPE_CHECKING
 
 from vimseo.core.components.base_component import BaseComponent
 from vimseo.core.model_metadata import MetaDataNames
-from vimseo.job_executor.base_executor import BaseJobExecutor
+from vimseo.job_executor.base_executor import JobExecutor
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -63,7 +63,7 @@ class ExternalSoftwareComponent(BaseComponent):
     _job_executor: JobExecutor
     """A job executor."""
 
-    _ERROR_CODE_NAME = MetaDataNames.ERROR_CODE
+    _ERROR_CODE_NAME = MetaDataNames.error_code.value
     """The name of the error code in the output grammar."""
 
     def __init__(
@@ -78,7 +78,7 @@ class ExternalSoftwareComponent(BaseComponent):
         self.output_grammar.update_from_data({self._ERROR_CODE_NAME: 0})
         self.output_grammar.required_names.add(self._ERROR_CODE_NAME)
 
-        self._job_executor = BaseJobExecutor("")
+        self._job_executor = JobExecutor("")
         self._attached_files = []
 
     @property
@@ -136,7 +136,7 @@ class ExternalSoftwareComponent(BaseComponent):
 
         return output_data
 
-    def set_job_executor(self, job_executor: BaseJobExecutor):
+    def set_job_executor(self, job_executor: JobExecutor):
         """Set the job executor.
 
         Args:
