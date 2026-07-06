@@ -162,7 +162,7 @@ class SurrogateTool(BaseAnalysisTool):
             **options,
         )
         self.result = SurrogateResult()
-        self.__load_case = None
+        self._load_case = None
         self._selector = None
 
     def add_candidate(self, candidate: CandidateType) -> None:
@@ -190,10 +190,10 @@ class SurrogateTool(BaseAnalysisTool):
         #  dimension of outputs (from model or dataset?) and adding a transformer.
         algo = options["algo"]
         model = options["model"]
-        self.__load_case = model.load_case.name
+        self._load_case = model.load_case.name
 
         if algo:  # no selection
-            self.result.model_name = f"{model.name}.{self.__load_case}.{algo}"
+            self.result.model_name = f"{model.name}.{self._load_case}.{algo}"
             LOGGER.info(f"Creating surrogate model: {self.result.model_name}")
 
             self.result.model = create_surrogate(
@@ -207,7 +207,7 @@ class SurrogateTool(BaseAnalysisTool):
         else:  # selection
             LOGGER.info(
                 f"Selecting best surrogate model for {model.name} and load case "
-                f"{self.__load_case}"
+                f"{self._load_case}"
             )
             eval_method = options["quality_for_selection"][1]
             self._selector = MLAlgoSelection(
@@ -223,7 +223,7 @@ class SurrogateTool(BaseAnalysisTool):
 
             best_algo = self._selector.select()
             self.result.model_name = (
-                f"{model.name}.{self.__load_case}.{best_algo.__class__.__name__}"
+                f"{model.name}.{self._load_case}.{best_algo.__class__.__name__}"
             )
             self.result.model = SurrogateDiscipline(
                 best_algo,

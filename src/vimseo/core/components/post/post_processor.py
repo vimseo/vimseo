@@ -1,3 +1,18 @@
+# Copyright 2021 IRT Saint Exupery, https://www.irt-saintexupery.com
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Lesser General Public
+# License version 3 as published by the Free Software Foundation.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with this program; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
 # Copyright 2021 IRT Saint Exupéry, https://www.irt-saintexupery.com
 #
 # This program is free software; you can redistribute it and/or
@@ -16,7 +31,6 @@
 from __future__ import annotations
 
 import logging
-from copy import deepcopy
 from pathlib import Path
 from typing import TYPE_CHECKING
 from typing import ClassVar
@@ -39,6 +53,9 @@ if TYPE_CHECKING:
 
     from numpy import ndarray
 
+    from vimseo.core.load_case import LoadCase
+    from vimseo.material.material import Material
+
 LOGGER = logging.getLogger(__name__)
 
 
@@ -60,17 +77,23 @@ class PostProcessor(ExternalSoftwareComponent):
     _RESAMPLING_OUTPUT_SIZE = 100
     """Number of points to have on resampled curves."""
 
-    def __init__(self, **options):
-        load_case = options.pop("load_case") if "load_case" in options else None
-        super().__init__(**options)
+    def __init__(
+        self,
+        load_case: LoadCase | None = None,
+        material_grammar_file: Path | str = "",
+        material: Material | None = None,
+        check_subprocess: bool = False,
+    ) -> None:
+        super().__init__(load_case, material_grammar_file, material, check_subprocess)
 
-        self._output_physical_var_names = deepcopy(self.output_grammar.names)
+        self._output_physical_var_names = set(self.output_grammar.names) - {
+            self._ERROR_CODE_NAME
+        }
         self.output_grammar.update_from_data({
             MetaDataNames.error_code.name: atleast_1d(
                 IntegratedModel._ERROR_CODE_DEFAULT
             )
         })
-        self._load_case = load_case
 
     def _run(self, input_data):
         raise NotImplementedError

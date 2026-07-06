@@ -109,7 +109,7 @@ class BaseJobSchedulerExecutor(JobExecutor):
 
     @abstractmethod
     def _set_job_scheduler_job_directory(self, job_directory: Path):
-        """Get the path of the Slurm job directory.
+        """Set the path of the Slurm job directory.
 
         Args:
             job_directory: The path to the Abaqus wrapper job directory,

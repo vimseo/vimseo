@@ -43,7 +43,8 @@ def to_snake_case(camel_case: str) -> str:
 plugin_names = BaseConfigurationFactory().class_names
 plugin_names.remove("BaseConfiguration")
 plugin_names.remove("VimseoSettings")
-print("Detected plugins:", plugin_names)
+if len(plugin_names) > 0:
+    LOGGER.info(f"Detected plugins: {plugin_names}")
 
 plugin_settings = {}
 plugin_config_classes = [VimseoSettings]

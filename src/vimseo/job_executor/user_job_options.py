@@ -28,38 +28,29 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+"""The user job options for all job executors."""
+
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from pydantic import Field
 
-from vimseo.core.components.external_software_component import ExternalSoftwareComponent
-from vimseo.job_executor.base_executor import JobExecutor
 from vimseo.job_executor.base_user_job_options import BaseUserJobSettings
 
-if TYPE_CHECKING:
-    from vimseo.core.components.subroutines.subroutine_wrapper import SubroutineWrapper
+
+class InteractiveAbaqusUserJobSettings(BaseUserJobSettings):
+    """The user options for an Abaqus interactive job."""
+
+    is_implicit: bool = True
+    subroutine_names: list[str] = Field(default_factory=lambda: [""])
+    abaqus_script: str = ""
 
 
-class RunProcessor(ExternalSoftwareComponent):
-    """Class defining library of components dedicated to running models.
+class SlurmAbaqusUserJobSettings(BaseUserJobSettings):
+    """The user options for an Abaqus job submitted through Slurm."""
 
-    _run method to be overloaded.
-    """
-
-    subroutine_list: list[SubroutineWrapper]
-    """A list of subroutines."""
-
-    def __init__(self, **options):
-        """
-        Args:
-            material: The material.
-        """
-        super().__init__(**options)
-        self.subroutine_list = []
-        self._job_executor = JobExecutor("")
-        self._user_job_options = BaseUserJobSettings()
-
-    @property
-    def n_cpus(self):
-        """The number of CPUs used to run the external software."""
-        return self._job_executor.options["n_cpus"]
+    max_wall_clock_time: int = Field(
+        default=1, description="The maximum wall clock time in hours."
+    )
+    job_type: str = Field(
+        default="mono", description="The job type, among 'mono', 'noeud', 'mesca'."
+    )

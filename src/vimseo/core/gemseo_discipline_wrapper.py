@@ -28,6 +28,13 @@ if TYPE_CHECKING:
 
 
 class GemseoDisciplineWrapper(Discipline):
+    """A wrapper around a Gemseo Discipline.
+
+    It adds some practical public methods, and allows to check if extra names
+    are present in the input data. It is useful to prevent users from making typos
+    in the input data.
+    """
+
     EXTRA_INPUT_GRAMMAR_CHECK: ClassVar[bool] = False
 
     def _get_input_data(self) -> dict[str, Any]:
@@ -46,13 +53,12 @@ class GemseoDisciplineWrapper(Discipline):
 
         if self.EXTRA_INPUT_GRAMMAR_CHECK:
             from vimseo.core.base_integrated_model import IntegratedModel
-            from vimseo.core.components.pre.pre_processor import PreProcessor
 
             all_input_names = list(input_data.keys()) + list(
                 self.default_input_data.keys()
             )
 
-            if (isinstance(self, (IntegratedModel, PreProcessor))) and not set(
+            if (isinstance(self, (IntegratedModel))) and not set(
                 all_input_names
             ).issubset(set(self.input_grammar.names)):
                 extra_inputs = list(

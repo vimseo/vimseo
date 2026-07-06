@@ -16,7 +16,7 @@ components:
 
 In VIMSEO, models derived from
 `vimseo.core.base_integrated_model.PreRunPostModel`{.interpreted-text role="class"} are linking
-components deriving from a generic class `vimseo.core.base_component.BaseComponent`{.interpreted-text role="class"}.
+components deriving from a generic class `vimseo.core.components.base_component.BaseComponent`{.interpreted-text role="class"}.
 Three kinds of components are already specialised to play
 the role of model pre-processor, run and post-processor, respectively
 classes `vimseo.core.components.pre.PreProcessor`{.interpreted-text role="class"},

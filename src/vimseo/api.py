@@ -49,8 +49,8 @@ def activate_logger(level: int | None = None):
 
 
 def create_model(
-    model_name,
-    load_case_name,
+    model_name: str,
+    load_case_name: str = "Dummy",
     model_options: IntegratedModelSettings | None = None,
     **options,
 ) -> IntegratedModel:
