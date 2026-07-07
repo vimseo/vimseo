@@ -64,6 +64,8 @@ ignore = [
     "PYI063",
     # "module should only contain docstrings and re-exports"
     "RUF067",
+    # "Avoid using `autouse=True` in `pytest.fixture` decorators"
+    "RUF076",
 ]
 
 select = [

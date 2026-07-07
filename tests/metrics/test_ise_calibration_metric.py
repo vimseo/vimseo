@@ -1,4 +1,4 @@
-# Copyright 2021 IRT Saint Exupéry, https://www.irt-saintexupery.com
+# Copyright 2021 IRT Saint Exupery, https://www.irt-saintexupery.com
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -128,13 +128,13 @@ def test_ise(
     result = metric._evaluate_measure(model_dataset.to_dict_of_arrays(False))
 
     common_support = min(x_right - x_left, X_RIGHT - X_LEFT)
-    if weight_left == 0.0 and weight_right == 0.0:
+    if weight_left == 0.0 and weight_right == 0.0:  # noqa: RUF069
         assert result == pytest.approx(common_support * DELTA_Y**2)
-    elif weight_left == 0.0 and weight_right == 1.0:
+    elif weight_left == 0.0 and weight_right == 1.0:  # noqa: RUF069
         assert result == pytest.approx(
             0.5 * common_support * DELTA_Y**2 + 0.5 * (x_right - X_RIGHT) ** 2
         )
-    elif weight_left == 1.0 and weight_right == 0.0:
+    elif weight_left == 1.0 and weight_right == 0.0:  # noqa: RUF069
         assert result == pytest.approx(
             0.5 * common_support * DELTA_Y**2 + 0.5 * (X_LEFT - x_left) ** 2
         )
