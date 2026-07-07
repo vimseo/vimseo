@@ -128,8 +128,6 @@ class PreRunPostModel(IntegratedModel):
 
         super().__init__(load_case_name, components, **options)
 
-        # TODO automatically add material grammar to run component input grammar.
-
         self._pre_processor = self._chain.disciplines[0]
         self._run_processor = self._chain.disciplines[1]
         self._post_processor = self._chain.disciplines[2]
@@ -141,17 +139,14 @@ class PreRunPostModel(IntegratedModel):
             self.run.job_executor._user_job_options.update({"n_cpus": self.N_CPUS})
 
     @property
-<<<<<<< HEAD
     def run(self) -> BaseComponent:
         """The component running the external software."""
         return self._run_processor
 
     @property
-=======
->>>>>>> bcb60f3c (Normalize license headers to non-accented "Exupery")
     def n_cpus(self):
         """The number of CPUs to run this model."""
-        return self.run.n_cpus
+        return self._run_processor.n_cpus
 
     def set_n_cpus(self, n_cpus: int):
         LOGGER.warning(
