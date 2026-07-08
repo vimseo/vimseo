@@ -38,7 +38,11 @@ from typing import TYPE_CHECKING
 import pyvista as pv
 from meshio import read
 from numpy import array
+from numpy import full
 from numpy import linalg
+from numpy import nan
+from numpy import searchsorted
+from numpy import unique
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -77,6 +81,52 @@ class Field:
             mesh_points=field.points,
             mesh_cells=field.cells,
         )
+
+    def to_structured_grid(self, name: str) -> tuple[ndarray, ndarray, ndarray]:
+        """Reshape a point-data component onto the structured grid it lies on.
+
+        Assumes the mesh nodes form an axis-aligned structured grid in the x-y
+        plane (they need not be sorted, and the grid may be rectangular). Nodes
+        that are missing from the grid -- for instance blanked cells inside a hole
+        -- are filled with ``nan``.
+
+        Args:
+            name: The name of the point-data component to reshape.
+
+        Returns:
+            The sorted unique ``x`` and ``y`` coordinates and the field values as a
+            2D array ``z`` of shape ``(len(x), len(y))``.
+        """
+        points = self.mesh_points
+        x = unique(points[:, 0])
+        y = unique(points[:, 1])
+        z = full((len(x), len(y)), nan)
+        i_x = searchsorted(x, points[:, 0])
+        i_y = searchsorted(y, points[:, 1])
+        z[i_x, i_y] = self.point_data[name]
+        return x, y, z
+
+    def probe(self, name: str, point_x: float, point_y: float) -> float:
+        """Bilinearly interpolate a point-data component at ``(point_x, point_y)``.
+
+        Relies on :meth:`to_structured_grid`. Returns ``nan`` for a point outside
+        the grid or surrounded by blanked (``nan``) nodes.
+
+        Args:
+            name: The name of the point-data component to interpolate.
+            point_x: The x coordinate of the probe point.
+            point_y: The y coordinate of the probe point.
+
+        Returns:
+            The interpolated value at the probe point.
+        """
+        from scipy.interpolate import RegularGridInterpolator
+
+        x, y, z = self.to_structured_grid(name)
+        interpolator = RegularGridInterpolator(
+            (x, y), z, bounds_error=False, fill_value=nan
+        )
+        return float(interpolator([[point_x, point_y]])[0])
 
 
 def extract_line(

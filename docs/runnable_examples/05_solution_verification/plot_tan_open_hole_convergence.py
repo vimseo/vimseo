@@ -60,7 +60,6 @@ from gemseo.utils.directory_creator import DirectoryNamingMethod
 from numpy import atleast_1d
 from pandas import DataFrame
 from plotly.subplots import make_subplots
-from scipy.interpolate import RegularGridInterpolator
 
 from vimseo import EXAMPLE_RUNS_DIR
 from vimseo.api import activate_logger
@@ -102,28 +101,10 @@ coarsening_factors = [4.0, 3.0, 2.0, 1.5, 1.0, 0.5]
 
 # %%
 # The model writes the stress field to a VTK file. Converting the raw
-# ``output_data`` into a :class:`ModelResult` exposes it as a ``Field`` through
-# the ``fields`` attribute. The two helpers below reshape a nodal field back to
-# the structured grid it was computed on, and sample it at an arbitrary point:
-def field_to_grid(field, name):
-    """Return the ``(x, y, z)`` structured grid of a nodal field component."""
-    points = field.mesh_points
-    n = round(len(points) ** 0.5)  # the grid is square (n x n)
-    x = np.linspace(0.0, points[:, 0].max(), n)
-    y = np.linspace(0.0, points[:, 1].max(), n)
-    z = field.point_data[name].reshape(n, n)
-    return x, y, z
-
-
-def probe_field(field, name, point_x, point_y):
-    """Bilinearly interpolate a nodal field component at ``(point_x, point_y)``."""
-    x, y, z = field_to_grid(field, name)
-    interpolator = RegularGridInterpolator(
-        (x, y), z, bounds_error=False, fill_value=np.nan
-    )
-    return float(interpolator([[point_x, point_y]])[0])
-
-
+# ``output_data`` into a :class:`ModelResult` exposes it as a
+# :class:`~vimseo.utilities.fields.Field` through the ``fields`` attribute. That
+# class provides ``to_structured_grid`` (reshape a nodal field back to its grid)
+# and ``probe`` (bilinearly sample it at an arbitrary point), used below.
 def side_by_side(fig_left, fig_right, left_title, right_title, y_title):
     """Place the traces of two plotly figures in a single 1x2 subplot figure."""
     combined = make_subplots(rows=1, cols=2, subplot_titles=(left_title, right_title))
@@ -160,7 +141,7 @@ for coarsening_factor in coarsening_factors:
         load_fields=True,
     )
     field = result.fields["flux"][0]
-    probe_stresses.append(probe_field(field, "sigma_xx", probe_x, probe_y))
+    probe_stresses.append(field.probe("sigma_xx", probe_x, probe_y))
     peak_stresses.append(float(np.nanmax(field.point_data["sigma_xx"])))
     model_results[coarsening_factor] = result
 
@@ -334,8 +315,8 @@ side_by_side(
 # the finer grid resolves the stress concentration around the hole far better:
 coarse = model_results[coarsening_factors[0]].fields["flux"][0]
 fine = model_results[coarsening_factors[-1]].fields["flux"][0]
-x_coarse, y_coarse, z_coarse = field_to_grid(coarse, "sigma_xx")
-x_fine, y_fine, z_fine = field_to_grid(fine, "sigma_xx")
+x_coarse, y_coarse, z_coarse = coarse.to_structured_grid("sigma_xx")
+x_fine, y_fine, z_fine = fine.to_structured_grid("sigma_xx")
 
 color_min = float(np.nanmin([np.nanmin(z_coarse), np.nanmin(z_fine)]))
 color_max = float(np.nanmax([np.nanmax(z_coarse), np.nanmax(z_fine)]))
