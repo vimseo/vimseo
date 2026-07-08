@@ -20,6 +20,8 @@ from gemseo.datasets.io_dataset import IODataset
 from gemseo.post.dataset.scatter_plot_matrix import ScatterMatrix
 from matplotlib import pyplot as plt
 
+from vimseo.utilities.datasets import COMPONENT_SEPARATORS
+from vimseo.utilities.datasets import GROUP_SEPARATORS
 from vimseo.utilities.datasets import dataframe_to_dataset
 from vimseo.utilities.plotting_utils import plot_curves
 
@@ -45,11 +47,13 @@ def visualize_scalars(visualized_names, selected_rows, df, input_names):
     df_to_visualize = df.iloc[selected_rows]
     df_to_visualize = df_to_visualize.loc[:, visualized_names]
     names_to_suffixed_names = {}
+    group_open, group_close = GROUP_SEPARATORS
+    component_open, component_close = COMPONENT_SEPARATORS
     for name in visualized_names:
-        if name in input_names:
-            names_to_suffixed_names[name] = f"{name}[{IODataset.INPUT_GROUP}][0]"
-        else:
-            names_to_suffixed_names[name] = f"{name}[{IODataset.OUTPUT_GROUP}][0]"
+        group = IODataset.INPUT_GROUP if name in input_names else IODataset.OUTPUT_GROUP
+        names_to_suffixed_names[name] = (
+            f"{name}{group_open}{group}{group_close}{component_open}0{component_close}"
+        )
     df_to_visualize.rename(columns=names_to_suffixed_names, inplace=True)
     ds = dataframe_to_dataset(df_to_visualize)
 

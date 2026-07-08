@@ -353,12 +353,15 @@ def dataframe_to_dataset(df: DataFrame) -> Dataset:
 
     reordered_unique_names = []
     for name in df.columns.values:
+        if get_component(name) != "0":
+            continue
+        variable_name = get_variable_name(name)
+        group_name = get_group_name(name)
         reordered_unique_names.extend(
             unique_name
             for unique_name in unique_names
-            if unique_name.startswith(get_variable_name(name))
-            and unique_name.split("__group__")[1].startswith(get_group_name(name))
-            and get_component(name) == "0"
+            if unique_name.split("__group__")[0] == variable_name
+            and unique_name.split("__group__")[1] == group_name
         )
 
     dataset = Dataset.from_array(
