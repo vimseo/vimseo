@@ -20,6 +20,7 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 from numpy import absolute
+from scipy.optimize import curve_fit
 from scipy.optimize import fsolve
 
 if TYPE_CHECKING:
@@ -116,6 +117,113 @@ def beta_func(beta, e_q_1, e_q_2, gamma_1, gamma_2, gamma_3):
     return e_q_1 / (-(gamma_2**beta) + gamma_1**beta) - e_q_2 / (
         -(gamma_3**beta) + gamma_2**beta
     )
+
+
+def fit_power_law(
+    h: ndarray, q: ndarray, order_bounds: tuple[float, float] = (0.1, 4.0)
+) -> tuple[float, float, float, float]:
+    r"""Least-squares power-law fit of the convergence, as a robust alternative to
+    Richardson.
+
+    The model :math:`q(h) = q_\infty + C\,h^p` is fitted over **all** grids by
+    least squares, with the convergence order :math:`p` treated as a *fitted*
+    parameter (it is not assumed). Compared with :func:`compute_richardson`, which
+    solves an exact three-point equation and returns ``nan`` as soon as one triplet
+    is not power-law convergent, this fit:
+
+    - uses every grid, so isolated noise does not destroy the estimate;
+    - never raises: if the optimisation does not converge (for instance on
+      strongly non-monotone "sawtooth" data) it returns ``nan`` values instead;
+    - reports a residual, which quantifies how power-law the convergence actually
+      is (a large residual flags an unreliable extrapolation).
+
+    Args:
+        h: The element sizes.
+        q: The model solutions for each element size.
+        order_bounds: The lower and upper bounds constraining the search for the
+            convergence order ``p``. These bound the optimisation only; they do not
+            assume a particular order.
+
+    Returns:
+        The converged value :math:`q_\infty`, the fitted order :math:`p`, the
+        coefficient :math:`C` and the RMS residual of the fit. All ``nan`` if the
+        fit does not converge.
+    """
+    h = np.asarray(h, dtype=float)
+    q = np.asarray(q, dtype=float)
+
+    def power_law(element_size, q_converged, coefficient, order):
+        return q_converged + coefficient * element_size**order
+
+    # Initial guess: the finest-grid value as the asymptote, an order of 2, and a
+    # coefficient matching the observed coarse-to-fine variation.
+    q_converged_0 = float(q[np.argmin(h)])
+    coefficient_0 = (float(q[np.argmax(h)]) - q_converged_0) / (h.max() ** 2.0)
+    try:
+        parameters, _ = curve_fit(
+            power_law,
+            h,
+            q,
+            p0=(q_converged_0, coefficient_0, 2.0),
+            bounds=(
+                (-np.inf, -np.inf, order_bounds[0]),
+                (np.inf, np.inf, order_bounds[1]),
+            ),
+            maxfev=10000,
+        )
+    except (RuntimeError, ValueError):
+        return np.nan, np.nan, np.nan, np.nan
+
+    q_converged, coefficient, order = parameters
+    rmse = float(np.sqrt(np.mean((q - power_law(h, *parameters)) ** 2)))
+    return float(q_converged), float(order), float(coefficient), rmse
+
+
+def robust_converged_value(q: ndarray, n_finest: int = 3) -> tuple[float, float]:
+    """Model-free estimate of the converged value from the finest grids.
+
+    The converged value is taken as the median of the ``n_finest`` finest-grid
+    outputs and its uncertainty as their scaled median absolute deviation (MAD).
+    This estimate assumes no convergence order at all, never fails, and is well
+    suited to non-monotone ("sawtooth") convergence: the true value then lies near
+    the centre of the oscillation envelope, which the median captures while the
+    spread reports the residual mesh sensitivity.
+
+    Args:
+        q: The model solutions, ordered from the coarsest to the finest grid (the
+            finest grids are the last entries, following the tool convention).
+        n_finest: The number of finest grids used for the estimate.
+
+    Returns:
+        The converged value and its uncertainty band (``1.4826 * MAD``).
+    """
+    q = np.asarray(q, dtype=float)
+    finest = q[-min(n_finest, len(q)) :]
+    q_converged = float(np.median(finest))
+    band = float(1.4826 * np.median(np.absolute(finest - q_converged)))
+    return q_converged, band
+
+
+def cross_validated_mad(values: ndarray) -> tuple[float, float]:
+    """Median and scaled MAD of a set of cross-validation fold estimates.
+
+    Non-finite fold estimates (e.g. folds where a palliative could not be
+    computed) are ignored. Returns ``(nan, nan)`` if no finite value is left.
+
+    Args:
+        values: The per-fold estimates of a converged value.
+
+    Returns:
+        The median across folds and the associated uncertainty band
+        (``1.4826 * MAD``).
+    """
+    values = np.asarray(values, dtype=float)
+    finite = values[np.isfinite(values)]
+    if finite.size == 0:
+        return np.nan, np.nan
+    center = float(np.median(finite))
+    band = float(1.4826 * np.median(np.absolute(finite - center)))
+    return center, band
 
 
 def compute_gci(fs, h, q, beta, starting_mesh_id):

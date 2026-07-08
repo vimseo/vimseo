@@ -73,6 +73,13 @@ def test_convergence(tmp_wd, convergence_verificator):
     assert result.extrapolation["beta_mad"] == pytest.approx(0.0)
     assert result.extrapolation["q_extrap"] == pytest.approx(1.0)
     assert result.extrapolation["q_extrap_mad"] == pytest.approx(0.0)
+    # Richardson succeeds here, so it is the selected converged value and its
+    # cross-validation band is the Richardson MAD (the palliative CV is skipped).
+    assert result.extrapolation["q_converged_method"] == "richardson"
+    assert result.extrapolation["q_converged"] == pytest.approx(1.0)
+    assert result.extrapolation["q_converged_cv_mad"] == pytest.approx(
+        result.extrapolation["q_extrap_mad"]
+    )
     q = (
         convergence_verificator.result.simulation_and_reference
         .get_view(variable_names="a_h")
@@ -139,6 +146,7 @@ def test_plot(tmp_wd, convergence_verificator):
         show=False,
     )
     assert Path("convergence_a_h_versus_h.html").is_file()
+    assert Path("convergence_fit_a_h.html").is_file()
     assert Path("a_h_error_versus_h.html").is_file()
     assert Path("a_h_error_versus_cpu_time.html").is_file()
     assert Path("a_h_error_versus_element_size.html").is_file()
@@ -212,3 +220,116 @@ def test_serialization(tmp_wd, convergence_verificator):
     result.to_hdf5("result.hdf5")
     serialized_result = SolutionVerificationResult.from_hdf5("result.hdf5")
     assert_results_equal(result, serialized_result)
+
+
+# --- Richardson-independent converged-value estimators -----------------------
+# These estimators (see ``solution_verification_indicators``) keep the tool usable
+# when the three-point Richardson extrapolation returns ``nan`` (e.g. sawtooth
+# convergence). The order is fitted, never assumed.
+
+# A monotone, power-law convergent sequence q(h) = 1.0 + 0.5 * h**2, coarse->fine.
+_MONOTONE_H = array([0.4, 0.2, 0.1, 0.05])
+_MONOTONE_Q = 1.0 + 0.5 * _MONOTONE_H**2
+
+# A sawtooth (non-monotone) sequence: Richardson cannot fit an order on it.
+_SAWTOOTH_H = array([0.4, 0.2, 0.1, 0.05])
+_SAWTOOTH_Q = array([1.80, 2.05, 1.90, 2.02])
+
+
+def test_fit_power_law_recovers_converged_value():
+    """The power-law fit recovers the asymptote and order of clean data."""
+    from vimseo.tools.verification.solution_verification_indicators import fit_power_law
+
+    q_converged, order, _coefficient, rmse = fit_power_law(_MONOTONE_H, _MONOTONE_Q)
+    assert q_converged == pytest.approx(1.0, abs=1e-3)
+    assert order == pytest.approx(2.0, abs=1e-2)
+    assert rmse == pytest.approx(0.0, abs=1e-6)
+
+
+def test_cross_validated_mad_ignores_non_finite():
+    """The cross-validation spread uses only the finite fold estimates."""
+    from numpy import isnan
+    from numpy import nan
+
+    from vimseo.tools.verification.solution_verification_indicators import (
+        cross_validated_mad,
+    )
+
+    center, band = cross_validated_mad([2.0, 2.0, 2.0, nan])
+    assert center == pytest.approx(2.0)
+    assert band == pytest.approx(0.0)
+
+    center, band = cross_validated_mad([nan, nan])
+    assert isnan(center)
+    assert isnan(band)
+
+
+def test_estimators_survive_sawtooth():
+    """Both estimators stay finite on sawtooth data, where Richardson fails."""
+    from numpy import isfinite
+    from numpy import isnan
+
+    from vimseo.tools.verification.solution_verification_indicators import (
+        compute_richardson,
+    )
+    from vimseo.tools.verification.solution_verification_indicators import fit_power_law
+    from vimseo.tools.verification.solution_verification_indicators import (
+        robust_converged_value,
+    )
+
+    # Richardson cannot fit a positive order on the sawtooth triplet.
+    beta, q_extrap = compute_richardson(_SAWTOOTH_H[:3], _SAWTOOTH_Q[:3])
+    assert isnan(beta)
+    assert isnan(q_extrap)
+
+    # The power-law fit never raises and returns a finite value with a large
+    # residual that flags the unreliability.
+    q_fit, _order, _coefficient, rmse = fit_power_law(_SAWTOOTH_H, _SAWTOOTH_Q)
+    assert isfinite(q_fit)
+    assert rmse > 0.0
+
+    # The model-free median of the finest grids is finite with a non-zero band.
+    q_robust, band = robust_converged_value(_SAWTOOTH_Q)
+    assert isfinite(q_robust)
+    assert band > 0.0
+
+
+def test_converged_estimates_populated_when_richardson_fails(tmp_wd):
+    """The tool exposes the converged-value estimates even when Richardson is nan."""
+    from numpy import isfinite
+    from numpy import isnan
+
+    df = DataFrame.from_dict({
+        ("inputs", "h", 0): _SAWTOOTH_H,
+        ("outputs", "a_h", 0): _SAWTOOTH_Q,
+    })
+    verificator = DiscretizationSolutionVerification(
+        directory_naming_method=DirectoryNamingMethod.NUMBERED,
+    )
+    verificator.execute(
+        element_size_variable_name="h",
+        output_name="a_h",
+        simulated_data=df,
+    )
+    result = verificator.result
+    extrapolation = result.extrapolation
+    # Richardson collapses to nan on sawtooth data ...
+    assert isnan(extrapolation["q_extrap"])
+    # ... but the Richardson-independent estimates remain available.
+    assert isfinite(extrapolation["q_converged_robust"])
+    assert isfinite(extrapolation["q_converged_fit"])
+    # The tool falls back to a palliative and flags it explicitly.
+    assert isfinite(extrapolation["q_converged"])
+    assert extrapolation["q_converged_method"] != "richardson"
+    assert "palliative" in extrapolation["q_converged_method"]
+    # The palliatives are cross-validated when Richardson fails: each fold carries
+    # a palliative estimate and a cross-validation band is available.
+    assert isfinite(extrapolation["q_converged_cv_mad"])
+    for fold in result.cross_validation.values():
+        assert "q_converged_fit" in fold
+        assert "q_converged_robust" in fold
+    # And the Richardson-free plot can still be produced.
+    verificator.plot_results(
+        verificator.result, directory_path=Path.cwd(), save=True, show=False
+    )
+    assert Path("convergence_fit_a_h.html").is_file()
