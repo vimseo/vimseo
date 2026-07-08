@@ -31,13 +31,15 @@ points per direction, so a larger ``coarsening_factor`` gives a coarser grid.
 
 Because the solution is analytic, the values stored at the grid nodes are exact.
 What a coarse grid degrades is any quantity read from the discrete field. We look
-at two of them:
+at two of them, plus the model's own native scalar outputs as a baseline:
 
 - ``sigma_xx_probe``: ``sigma_xx`` bilinearly interpolated at a fixed point just
   outside the hole. It converges smoothly as the grid is refined.
 - ``sigma_xx_peak``: the maximum of ``sigma_xx`` over the grid nodes. Because the
   node that happens to fall closest to the stress concentration jumps around as
   the grid changes, this quantity is *non-monotone* -- a sawtooth.
+- ``sigma_xx_r`` and ``sigma_xx_d0``: the native hole-edge stresses, evaluated
+  directly on the analytic solution and therefore exactly mesh-independent.
 
 The three-point Richardson extrapolation is fragile: its cross-validation returns
 ``nan`` as soon as one grid triplet is not cleanly power-law convergent, which
@@ -120,8 +122,10 @@ def side_by_side(fig_left, fig_right, left_title, right_title, y_title):
 
 
 # %%
-# We run the model for each coarsening factor and collect two field-derived
-# quantities: the smooth probe stress and the sawtooth peak stress.
+# The two field-derived quantities are not model outputs, so we compute them
+# ourselves: we run the model for each coarsening factor and collect the smooth
+# probe stress and the sawtooth peak stress from the stress field. (The model's
+# own native outputs, verified further down, will not need this manual loop.)
 model.execute({"coarsening_factor": atleast_1d(coarsening_factors[0])})
 input_data = model.get_input_data()
 length = float(input_data["length"][0])
@@ -306,6 +310,75 @@ side_by_side(
 # cross-validation band or a non-monotone relative error is the signal to refine
 # the mesh further (or to pick a smoother quantity of interest) before trusting
 # the extrapolation.
+
+# %%
+# Native analytic outputs: a mesh-independent baseline
+# ----------------------------------------------------
+# The model's native scalar outputs ``sigma_xx_r`` and ``sigma_xx_d0`` are the
+# hole-edge stresses evaluated directly on the analytic Tan solution (at the hole
+# radius, and one stress-point distance ``d0`` beyond it). They do not read the
+# discretised field at all, so they are *exactly* mesh-independent. Being genuine
+# model outputs, they need no manual loop: we pass the ``model`` straight to the
+# tool, which runs it over the coarsening factors and reads each output itself.
+# Verifying them is a useful sanity check and a third reference behaviour, next to
+# the smooth and sawtooth field quantities.
+#
+# The model-driven path of the tool uses four meshes, so we pass four coarsening
+# factors here (as opposed to the six used above for the field-derived study).
+native_coarsening_factors = [4.0, 2.0, 1.0, 0.5]
+native_verificators = {}
+for native_output in ("sigma_xx_r", "sigma_xx_d0"):
+    verificator_native = DiscretizationSolutionVerification(
+        directory_naming_method=DirectoryNamingMethod.NUMBERED,
+        working_directory=f"DiscretizationSolutionVerification_{native_output}",
+    )
+    verificator_native.execute(
+        model=model,
+        element_size_variable_name="coarsening_factor",
+        element_size_values=native_coarsening_factors,
+        output_name=native_output,
+    )
+    native_verificators[native_output] = verificator_native
+    native_extrapolation = verificator_native.result.extrapolation
+    print(
+        f"{native_output}: converged={native_extrapolation['q_converged']:.4f} "
+        f"(method: {native_extrapolation['q_converged_method']})"
+    )
+
+# %%
+# Because the values are constant, Richardson succeeds trivially and returns the
+# constant as the converged value (no palliative needed). The convergence-fit
+# plots are flat, side by side (``sigma_xx_r`` on the left, ``sigma_xx_d0`` on the
+# right):
+native_figures = {
+    name: verificator.plot_results(
+        verificator.result,
+        save=False,
+        show=True,
+        directory_path=verificator.working_directory,
+    )
+    for name, verificator in native_verificators.items()
+}
+side_by_side(
+    native_figures["sigma_xx_r"]["convergence_fit"],
+    native_figures["sigma_xx_d0"]["convergence_fit"],
+    "sigma_xx_r (hole edge)",
+    "sigma_xx_d0 (stress point)",
+    "sigma_xx",
+)
+
+# %%
+# The relative-error plots sit at zero: these outputs carry no discretization
+# error, in contrast with the field-sampled quantities above. This is exactly the
+# behaviour expected of an analytical model output, and a reassuring baseline for
+# the solution-verification workflow.
+side_by_side(
+    native_figures["sigma_xx_r"]["relative_error_versus_element_size"],
+    native_figures["sigma_xx_d0"]["relative_error_versus_element_size"],
+    "sigma_xx_r (hole edge)",
+    "sigma_xx_d0 (stress point)",
+    "relative error",
+)
 
 # %%
 # Comparison of the fields
