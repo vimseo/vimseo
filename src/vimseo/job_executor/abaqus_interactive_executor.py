@@ -21,7 +21,7 @@
 #        :author: XXXXXXXXXXX
 #    OTHER AUTHORS   - MACROSCOPIC CHANGES
 
-# Copyright 2021 IRT Saint Exupéry, https://www.irt-saintexupery.com
+# Copyright 2021 IRT Saint Exupery, https://www.irt-saintexupery.com
 
 """An interactive job executor."""
 

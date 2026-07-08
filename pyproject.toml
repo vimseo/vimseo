@@ -21,10 +21,10 @@ classifiers = [
 dynamic = ["version"]
 requires-python = ">=3.10, <3.13"
 dependencies = [
+    "gemseo-vimseo[all] >= 6, < 7",
     "plotly >= 5.15.0, <= 5.24.0",
     "nbformat>=4.2.0, <= 5.10.4",
     "future >= 1.0.0, <= 1.0.0",
-    "gemseo-vimseo[all] >= 6, < 7",
     "PyYAML >= 6.0.2, <= 6.0.3",
     "streamlit >= 1.44.0, <= 1.50.0",
     "streamlit-pydantic-sebastienbocquet == 0.6.1.dev1",
@@ -38,6 +38,16 @@ dependencies = [
     "emcee >= 3.1.6, <= 3.1.6",
     "openturns >=1.24, <= 1.24",
     "pydantic-settings",
+    "pyvista",
+    "composipy",
+]
+
+[project.optional-dependencies]
+# Differentiable JAX port of the Tan kernel (vimseo.lib_vimseo.tan_lib_jax).
+# Pinned < 0.5 to stay compatible with the numpy 1.26 baseline.
+jax = [
+    "jax >=0.4,<0.5",
+    "jaxlib >=0.4,<0.5",
 ]
 
 [dependency-groups]

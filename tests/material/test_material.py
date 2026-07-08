@@ -1,4 +1,4 @@
-# Copyright 2021 IRT Saint Exupéry, https://www.irt-saintexupery.com
+# Copyright 2021 IRT Saint Exupery, https://www.irt-saintexupery.com
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -159,10 +159,10 @@ def test_update_deterministic_material():
     """Check that a deterministic values of a material can updated."""
     material = Material.from_json(MATERIAL_LIB_DIR / "Mock.json")
     print(material)
-    assert material.get_values_as_dict()["E1"] == 1.5e5
+    assert material.get_values_as_dict()["E1"] == 1.5e5  # noqa: RUF069
     new_e1 = 1.4e5
     material.update_from_dict({"E1": new_e1})
-    assert material.get_values_as_dict()["E1"] == new_e1
+    assert material.get_values_as_dict()["E1"] == new_e1  # noqa: RUF069
 
 
 def test_update_stochastic_material():

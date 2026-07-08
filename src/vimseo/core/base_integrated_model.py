@@ -13,7 +13,7 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-# Copyright 2021 IRT Saint Exupéry, https://www.irt-saintexupery.com
+# Copyright 2021 IRT Saint Exupery, https://www.irt-saintexupery.com
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -616,15 +616,17 @@ class IntegratedModel(GemseoDisciplineWrapper):
 
         Returns:
         """
-        directory_path = (
-            self.archive_manager.job_directory
-            if directory_path == ""
-            else Path(directory_path)
-        )
-        if not directory_path.exists():
-            directory_path.mkdir(parents=True)
-
-        LOGGER.info(f"Saving plots to {directory_path.absolute()}")
+        if save:
+            directory_path = (
+                self.archive_manager.job_directory
+                if self.archive_manager.job_directory != ""
+                else (Path(directory_path) if directory_path != "" else Path.cwd())
+            )
+            if not directory_path.exists():
+                directory_path.mkdir(parents=True)
+            LOGGER.info(f"Saving plots to {directory_path.absolute()}")
+        else:
+            directory_path = ""
 
         from vimseo.core.model_result import ModelResult
 

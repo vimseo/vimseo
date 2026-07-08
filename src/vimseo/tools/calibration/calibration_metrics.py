@@ -1,4 +1,4 @@
-# Copyright 2021 IRT Saint Exupéry, https://www.irt-saintexupery.com
+# Copyright 2021 IRT Saint Exupery, https://www.irt-saintexupery.com
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -149,9 +149,9 @@ class SBPISE(IntegratedMeasure):
                 mse.set_reference_data({name: atleast_1d(0.0)})
                 metric = mse._evaluate_measure({name: atleast_1d(value)})
                 if name == "x_left":
-                                exceeding_start_metrics.append(metric)
+                    exceeding_start_metrics.append(metric)
                 else:
-                                exceeding_end_metrics.append(metric)
+                    exceeding_end_metrics.append(metric)
 
             # Align x-axes: add x_i points inside x_ref range, interpolate y_ref on them
             x_i_in_x_ref = x_i[(x_i >= x_ref[0]) & (x_i <= x_ref[-1])]

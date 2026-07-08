@@ -1,4 +1,4 @@
-# Copyright 2021 IRT Saint Exupéry, https://www.irt-saintexupery.com
+# Copyright 2021 IRT Saint Exupery, https://www.irt-saintexupery.com
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -113,6 +113,18 @@ class SolutionVerificationResult(VerificationResult):
 
         text = MultiLineString()
         text.add(super().__str__())
+        method = self.extrapolation.get("q_converged_method")
+        if method is not None:
+            text.add(
+                f"Converged value: {self.extrapolation.get('q_converged')} "
+                f"(method: {method})"
+            )
+            if method != "richardson":
+                text.add(
+                    "  WARNING: Richardson extrapolation failed (nan); a palliative "
+                    "was used instead of the reference method."
+                )
+            text.add("")
         text.add("Richardson extrapolation:")
         text.add(repr(self.extrapolation))
         text.add("")

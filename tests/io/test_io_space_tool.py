@@ -1,4 +1,4 @@
-# Copyright 2021 IRT Saint Exupéry, https://www.irt-saintexupery.com
+# Copyright 2021 IRT Saint Exupery, https://www.irt-saintexupery.com
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -82,9 +82,9 @@ def test_write(tmp_wd):
         settings_dict = json.load(f)["parameter_space"]["x"]
         distribution_parameters = DistributionParameters(**settings_dict)
         assert distribution_parameters.name == "Triangular"
-        assert distribution_parameters.mode == 0.5
-        assert distribution_parameters.lower == 0.475
-        assert distribution_parameters.upper == 0.525
+        assert distribution_parameters.mode == 0.5  # noqa: RUF069
+        assert distribution_parameters.lower == 0.475  # noqa: RUF069
+        assert distribution_parameters.upper == 0.525  # noqa: RUF069
 
 
 def test_write_for_interfaced_distribution(tmp_wd):
@@ -106,5 +106,5 @@ def test_write_for_interfaced_distribution(tmp_wd):
     )
     marginal = read_parameter_space.distributions["x"].marginals[0]
     assert marginal.settings["name"] == "Normal"
-    assert marginal.mean == 1.0
-    assert marginal.standard_deviation == 0.05
+    assert marginal.mean == 1.0  # noqa: RUF069
+    assert marginal.standard_deviation == 0.05  # noqa: RUF069

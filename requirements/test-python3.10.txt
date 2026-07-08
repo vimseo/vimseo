@@ -8,10 +8,11 @@ annotated-doc==0.0.4
     # via fastapi
 annotated-types==0.7.0
     # via pydantic
-anyio==4.13.0
+anyio==4.14.0
     # via starlette
 attrs==26.1.0
     # via
+    #   cyclopts
     #   jsonschema
     #   referencing
 blinker==1.9.0
@@ -23,13 +24,13 @@ cachetools==6.2.6
     #   mlflow-skinny
     #   mlflow-tracing
     #   streamlit
-certifi==2026.4.22
+certifi==2026.5.20
     # via requests
 cffi==2.0.0
     # via cryptography
 charset-normalizer==3.4.7
     # via requests
-click==8.3.3
+click==8.4.1
     # via
     #   flask
     #   mlflow-skinny
@@ -37,11 +38,13 @@ click==8.3.3
     #   uvicorn
 cloudpickle==3.1.2
     # via mlflow-skinny
+composipy==1.6.0
+    # via vimseo (pyproject.toml)
 contourpy==1.3.2
     # via matplotlib
 covdefaults==2.3.0
     # via vimseo (pyproject.toml:dev)
-coverage==7.14.0
+coverage==7.14.1
     # via
     #   covdefaults
     #   pytest-cov
@@ -51,7 +54,9 @@ cryptography==46.0.7
     #   mlflow
 cycler==0.12.1
     # via matplotlib
-databricks-sdk==0.106.0
+cyclopts==4.18.0
+    # via pyvista
+databricks-sdk==0.117.0
     # via
     #   mlflow-skinny
     #   mlflow-tracing
@@ -63,6 +68,8 @@ docker==7.1.0
     # via mlflow
 docstring-inheritance==2.2.1
     # via gemseo-vimseo
+docstring-parser==0.18.0
+    # via cyclopts
 email-validator==2.3.0
     # via pydantic
 emcee==3.1.6
@@ -77,7 +84,7 @@ exceptiongroup==1.3.1
     #   pytest
 execnet==2.1.2
     # via pytest-xdist
-fastapi==0.136.1
+fastapi==0.137.1
     # via mlflow-skinny
 fastjsonschema==2.20.0
     # via
@@ -87,9 +94,9 @@ flask==3.1.3
     # via
     #   flask-cors
     #   mlflow
-flask-cors==6.0.2
+flask-cors==6.0.5
     # via mlflow
-fonttools==4.62.1
+fonttools==4.63.0
     # via matplotlib
 future==1.0.0
     # via vimseo (pyproject.toml)
@@ -107,11 +114,11 @@ gitpython==3.1.50
     # via
     #   mlflow-skinny
     #   streamlit
-google-auth==2.52.0
+google-auth==2.55.0
     # via databricks-sdk
 graphene==3.4.3
     # via mlflow
-graphql-core==3.2.8
+graphql-core==3.2.11
     # via
     #   graphene
     #   graphql-relay
@@ -119,7 +126,7 @@ graphql-relay==3.2.0
     # via graphene
 graphviz==0.20.3
     # via gemseo-vimseo
-greenlet==3.5.0
+greenlet==3.5.1
     # via sqlalchemy
 gunicorn==23.0.0
     # via mlflow
@@ -127,15 +134,13 @@ h11==0.16.0
     # via uvicorn
 h5py==3.11.0
     # via gemseo-vimseo
-idna==3.14
+idna==3.18
     # via
     #   anyio
     #   email-validator
     #   requests
-importlib-metadata==8.7.1
-    # via
-    #   mlflow-skinny
-    #   opentelemetry-api
+importlib-metadata==8.9.0
+    # via mlflow-skinny
 iniconfig==2.3.0
     # via pytest
 itsdangerous==2.2.0
@@ -170,10 +175,13 @@ markupsafe==3.0.3
     #   werkzeug
 matplotlib==3.9.2
     # via
+    #   composipy
     #   gemseo-calibration-vimseo
     #   gemseo-vimseo
     #   mlflow
+    #   pyvista
     #   seaborn
+    #   vtk
 mdurl==0.1.2
     # via markdown-it-py
 meshio==5.3.5
@@ -186,7 +194,7 @@ mlflow-tracing==3.5.1
     # via mlflow
 mpmath==1.3.0
     # via sympy
-narwhals==2.21.0
+narwhals==2.22.1
     # via altair
 nbformat==5.10.4
     # via vimseo (pyproject.toml)
@@ -196,6 +204,7 @@ nlopt==2.7.1
     # via gemseo-vimseo
 numpy==1.26.4
     # via
+    #   composipy
     #   contourpy
     #   emcee
     #   gemseo-calibration-vimseo
@@ -209,6 +218,7 @@ numpy==1.26.4
     #   patsy
     #   pydeck
     #   pydoe3
+    #   pyvista
     #   pyxdsm
     #   scikit-learn
     #   scipy
@@ -217,21 +227,21 @@ numpy==1.26.4
     #   streamlit
 openpyxl==3.1.5
     # via gemseo-vimseo
-opentelemetry-api==1.41.1
+opentelemetry-api==1.42.1
     # via
     #   mlflow-skinny
     #   mlflow-tracing
     #   opentelemetry-sdk
     #   opentelemetry-semantic-conventions
-opentelemetry-proto==1.41.1
+opentelemetry-proto==1.42.1
     # via
     #   mlflow-skinny
     #   mlflow-tracing
-opentelemetry-sdk==1.41.1
+opentelemetry-sdk==1.42.1
     # via
     #   mlflow-skinny
     #   mlflow-tracing
-opentelemetry-semantic-conventions==0.62b1
+opentelemetry-semantic-conventions==0.63b1
     # via opentelemetry-sdk
 openturns==1.24
     # via
@@ -246,11 +256,13 @@ packaging==24.1
     #   mlflow-skinny
     #   mlflow-tracing
     #   plotly
+    #   pooch
     #   pytest
     #   statsmodels
     #   streamlit
 pandas==2.2.2
     # via
+    #   composipy
     #   gemseo-vimseo
     #   mlflow
     #   seaborn
@@ -262,9 +274,12 @@ pillow==10.4.0
     # via
     #   gemseo-vimseo
     #   matplotlib
+    #   pyvista
     #   streamlit
-platformdirs==4.9.6
-    # via jupyter-core
+platformdirs==4.10.0
+    # via
+    #   jupyter-core
+    #   pooch
 plotly==5.24.0
     # via
     #   vimseo (pyproject.toml)
@@ -273,6 +288,8 @@ pluggy==1.6.0
     # via
     #   pytest
     #   pytest-cov
+pooch==1.9.0
+    # via pyvista
 protobuf==6.33.6
     # via
     #   databricks-sdk
@@ -317,6 +334,7 @@ pygments==2.20.0
     # via
     #   pytest
     #   rich
+    #   rich-rst
 pyparsing==3.3.2
     # via matplotlib
 pytest==8.4.2
@@ -342,6 +360,8 @@ python-dotenv==1.2.2
     #   pydantic-settings
 pytz==2026.2
     # via pandas
+pyvista==0.48.4
+    # via vimseo (pyproject.toml)
 pyxdsm==2.3.0
     # via gemseo-vimseo
 pyyaml==6.0.3
@@ -352,15 +372,21 @@ referencing==0.37.0
     # via
     #   jsonschema
     #   jsonschema-specifications
-requests==2.33.1
+requests==2.34.2
     # via
     #   databricks-sdk
     #   docker
     #   gemseo-vimseo
     #   mlflow-skinny
+    #   pooch
     #   streamlit
 rich==15.0.0
-    # via meshio
+    # via
+    #   cyclopts
+    #   meshio
+    #   rich-rst
+rich-rst==2.0.1
+    # via cyclopts
 rpds-py==0.30.0
     # via
     #   jsonschema
@@ -371,11 +397,14 @@ scikit-learn==1.5.2
     #   mlflow
 scipy==1.14.1
     # via
+    #   composipy
     #   gemseo-vimseo
     #   mlflow
     #   pydoe3
     #   scikit-learn
     #   statsmodels
+scooby==0.11.2
+    # via pyvista
 seaborn==0.13.2
     # via vimseo (pyproject.toml)
 six==1.17.0
@@ -384,13 +413,13 @@ six==1.17.0
     #   python-dateutil
 smmap==5.0.3
     # via gitdb
-sqlalchemy==2.0.49
+sqlalchemy==2.0.51
     # via
     #   alembic
     #   mlflow
 sqlparse==0.5.5
     # via mlflow-skinny
-starlette==1.0.0
+starlette==1.3.1
     # via fastapi
 statsmodels==0.14.5
     # via vimseo (pyproject.toml)
@@ -416,12 +445,13 @@ tomli==2.4.1
     # via
     #   alembic
     #   coverage
+    #   cyclopts
     #   pytest
-tornado==6.5.5
+tornado==6.5.7
     # via streamlit
 tqdm==4.66.5
     # via gemseo-vimseo
-traitlets==5.15.0
+traitlets==5.15.1
     # via
     #   jupyter-core
     #   nbformat
@@ -431,8 +461,10 @@ typing-extensions==4.15.0
     #   altair
     #   anyio
     #   cryptography
+    #   cyclopts
     #   exceptiongroup
     #   fastapi
+    #   flask-cors
     #   gemseo-vimseo
     #   graphene
     #   mlflow-skinny
@@ -442,6 +474,7 @@ typing-extensions==4.15.0
     #   pydantic
     #   pydantic-core
     #   pydantic-extra-types
+    #   pyvista
     #   referencing
     #   sqlalchemy
     #   starlette
@@ -456,10 +489,13 @@ tzdata==2026.2
     # via pandas
 urllib3==2.7.0
     # via
+    #   databricks-sdk
     #   docker
     #   requests
-uvicorn==0.46.0
+uvicorn==0.49.0
     # via mlflow-skinny
+vtk==9.6.2
+    # via pyvista
 watchdog==6.0.0
     # via streamlit
 werkzeug==3.1.8
@@ -470,5 +506,5 @@ xdsmjs==2.0.0
     # via gemseo-vimseo
 xxhash==3.5.0
     # via gemseo-vimseo
-zipp==3.23.1
+zipp==4.1.0
     # via importlib-metadata

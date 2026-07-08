@@ -1,4 +1,4 @@
-# Copyright 2021 IRT Saint Exupéry, https://www.irt-saintexupery.com
+# Copyright 2021 IRT Saint Exupery, https://www.irt-saintexupery.com
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -30,6 +30,11 @@ if TYPE_CHECKING:
 
 
 class BaseDisciplineModel(IntegratedModel):
+    """A model wrapping a single GEMSEO :class:`~gemseo.core.discipline.Discipline`.
+
+    The wrapped discipline is provided through the ``_DISCIPLINE`` class attribute.
+    """
+
     _DISCIPLINE: ClassVar[Discipline | None] = None
     _EXPECTED_LOAD_CASE: ClassVar[str] = ""
 
