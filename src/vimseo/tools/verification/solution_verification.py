@@ -468,11 +468,14 @@ class DiscretizationSolutionVerification(BaseVerification):
                 output_name,
             )
 
-        # Create a ref dataset containing q_extrap
+        # Create a ref dataset containing the selected converged value. Using
+        # ``q_converged`` (Richardson when available, otherwise a palliative)
+        # instead of ``q_extrap_final`` keeps the error metrics and the error /
+        # relative-error plots populated even when Richardson returns nan.
         reference_data = Dataset.from_array(
             data=vstack([
                 element_size_values,
-                full((nb_meshes), q_extrap_final),
+                full((nb_meshes), q_converged),
             ]).T,
             variable_names=[
                 abscissa_name,

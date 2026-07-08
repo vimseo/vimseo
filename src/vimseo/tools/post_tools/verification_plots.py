@@ -346,7 +346,10 @@ class ErrorVersusElementSize(Plotter):
         df.columns = result.element_wise_metrics.get_columns()
         nb_meshes = df.shape[0]
         df["median_absolute_deviation"] = full(
-            (nb_meshes), result.extrapolation["q_extrap_mad"]
+            (nb_meshes),
+            result.extrapolation.get(
+                "q_converged_cv_mad", result.extrapolation["q_extrap_mad"]
+            ),
         )
         if result.metadata.misc["element_size_variable_name"] == "degrees_of_freedom":
             element_size_variable_name = _DOF_ABSCISSA_NAME
@@ -418,9 +421,12 @@ class RelativeErrorVersusCpuTime(Plotter):
         df = result.simulation_and_reference.copy()
         df.columns = result.simulation_and_reference.get_columns()
         output_name = result.metadata.settings["output_name"]
-        df["relative_error"] = (
-            df[output_name] - result.extrapolation["q_extrap"]
-        ) / result.extrapolation["q_extrap"]
+        # Use the selected converged value (Richardson, or a palliative when
+        # Richardson is nan) so the relative error stays finite and plottable.
+        q_converged = result.extrapolation.get(
+            "q_converged", result.extrapolation["q_extrap"]
+        )
+        df["relative_error"] = (df[output_name] - q_converged) / q_converged
 
         fig = Figure()
         fig.add_traces(
@@ -465,9 +471,12 @@ class RelativeErrorVersusElementSize(Plotter):
         df = result.simulation_and_reference.copy()
         df.columns = result.simulation_and_reference.get_columns()
         output_name = result.metadata.settings["output_name"]
-        df["relative_error"] = (
-            df[output_name] - result.extrapolation["q_extrap"]
-        ) / result.extrapolation["q_extrap"]
+        # Use the selected converged value (Richardson, or a palliative when
+        # Richardson is nan) so the relative error stays finite and plottable.
+        q_converged = result.extrapolation.get(
+            "q_converged", result.extrapolation["q_extrap"]
+        )
+        df["relative_error"] = (df[output_name] - q_converged) / q_converged
         element_size_variable_name = result.metadata.misc["element_size_variable_name"]
 
         fig = Figure()

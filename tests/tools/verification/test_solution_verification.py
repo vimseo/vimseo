@@ -328,6 +328,11 @@ def test_converged_estimates_populated_when_richardson_fails(tmp_wd):
     for fold in result.cross_validation.values():
         assert "q_converged_fit" in fold
         assert "q_converged_robust" in fold
+    # The error metrics are computed against the selected converged value, so they
+    # stay finite (and the error / relative-error plots non-empty) despite the nan
+    # Richardson extrapolation.
+    errors = result.element_wise_metrics.get_view(variable_names="a_h").to_numpy()
+    assert isfinite(errors).all()
     # And the Richardson-free plot can still be produced.
     verificator.plot_results(
         verificator.result, directory_path=Path.cwd(), save=True, show=False
