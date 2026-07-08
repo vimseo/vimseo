@@ -124,6 +124,20 @@ def probe_field(field, name, point_x, point_y):
     return float(interpolator([[point_x, point_y]])[0])
 
 
+def side_by_side(fig_left, fig_right, left_title, right_title, y_title):
+    """Place the traces of two plotly figures in a single 1x2 subplot figure."""
+    combined = make_subplots(rows=1, cols=2, subplot_titles=(left_title, right_title))
+    for trace in fig_left.data:
+        combined.add_trace(trace, row=1, col=1)
+    for trace in fig_right.data:
+        # Avoid duplicating the shared legend entries in the right-hand panel.
+        trace.showlegend = False
+        combined.add_trace(trace, row=1, col=2)
+    combined.update_xaxes(title_text="coarsening_factor")
+    combined.update_yaxes(title_text=y_title, row=1, col=1)
+    return combined
+
+
 # %%
 # We run the model for each coarsening factor and collect two field-derived
 # quantities: the smooth probe stress and the sawtooth peak stress.
@@ -268,11 +282,49 @@ figures_peak = verificator_peak.plot_results(
 figures_peak["convergence_fit"]
 
 # %%
-# The cross-validation plot superposes the leave-one-grid-out folds. Since
-# Richardson failed, each fold is extrapolated with the palliative power-law fit,
-# and the converged value at a null element size carries the cross-validation
-# band computed from the fold estimates:
-figures_peak["convergence_cross_validation"]
+# Discussion: smooth versus sawtooth
+# ----------------------------------
+# Putting the two diagnostics side by side for the two outputs tells a consistent
+# story about whether the mesh is in the asymptotic (converged) regime.
+#
+# **Cross-validation plot** (smooth probe on the left, sawtooth peak on the right).
+# For the smooth probe stress the leave-one-grid-out folds almost overlap and all
+# extrapolate to nearly the same value, so the cross-validation band is tight:
+# dropping any grid barely moves the estimate, a sign that the converged value is
+# trustworthy. For the sawtooth peak stress the folds scatter and extrapolate to
+# markedly different values, giving a wide band: the estimate depends heavily on
+# which grids are used.
+side_by_side(
+    figures["convergence_cross_validation"],
+    figures_peak["convergence_cross_validation"],
+    "smooth probe (sigma_xx_probe)",
+    "sawtooth peak (sigma_xx_peak)",
+    "sigma_xx",
+)
+
+# %%
+# **Relative-error plot** (smooth probe on the left, sawtooth peak on the right).
+# For the probe the relative error with respect to the converged value decreases
+# monotonically as the element size shrinks -- the expected asymptotic behaviour.
+# For the peak it oscillates and does not settle, showing that the quantity never
+# enters the asymptotic regime, so no meaningful discretization order (and hence
+# no reliable Richardson extrapolation) exists.
+side_by_side(
+    figures["relative_error_versus_element_size"],
+    figures_peak["relative_error_versus_element_size"],
+    "smooth probe (sigma_xx_probe)",
+    "sawtooth peak (sigma_xx_peak)",
+    "relative error",
+)
+
+# %%
+# The two diagnostics agree, and they agree with the fit residual and the robust
+# band reported earlier: the probe stress is converged and its palliative value
+# is reliable, whereas the peak stress is dominated by mesh sampling noise and its
+# "converged value" should be treated with caution. In practice, a wide
+# cross-validation band or a non-monotone relative error is the signal to refine
+# the mesh further (or to pick a smoother quantity of interest) before trusting
+# the extrapolation.
 
 # %%
 # Comparison of the fields
