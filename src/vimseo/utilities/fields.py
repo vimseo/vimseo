@@ -24,6 +24,7 @@ if TYPE_CHECKING:
     from collections.abc import Iterable
     from pathlib import Path
 
+    from meshio import Mesh
     from numpy import ndarray
 
 
@@ -46,12 +47,32 @@ class Field:
         return list(self.point_data.keys())
 
     @classmethod
-    def load(cls, path: Path | str):
-        field = read(path)
+    def from_mesh(cls, path: Path | str, mesh: Mesh) -> Field:
+        """Build a field from an already-read mesh.
+
+        Args:
+            path: The path the mesh was read from.
+            mesh: The mesh to build the field from.
+
+        Returns:
+            The field.
+        """
         return cls(
             path=path,
-            point_data=field.point_data,
-            cell_data=field.cell_data,
-            mesh_points=field.points,
-            mesh_cells=field.cells,
+            point_data=mesh.point_data,
+            cell_data=mesh.cell_data,
+            mesh_points=mesh.points,
+            mesh_cells=mesh.cells,
         )
+
+    @classmethod
+    def load(cls, path: Path | str) -> Field:
+        """Load a field from a mesh file.
+
+        Args:
+            path: The path to the mesh file.
+
+        Returns:
+            The field.
+        """
+        return cls.from_mesh(path, read(path))
