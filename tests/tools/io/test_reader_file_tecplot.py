@@ -38,6 +38,7 @@ ZONE T="patch", N=4, E=1, ET=QUADRILATERAL, F=FEBLOCK
 
 
 def test_reader_file_tecplot(tmp_wd):
+    """Check that the reader can read a Tecplot ASCII file."""
     file_name = "surface.dat"
     Path(file_name).write_text(_TECPLOT_CONTENT)
 
@@ -63,6 +64,7 @@ def test_reader_file_tecplot(tmp_wd):
 
 
 def test_reader_file_tecplot_wrong_extension(tmp_wd):
+    """Check the behavior when reading a file with a wrong extension."""
     file_name = "surface.txt"
     Path(file_name).write_text(_TECPLOT_CONTENT)
 
