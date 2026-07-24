@@ -30,6 +30,8 @@ if TYPE_CHECKING:
 
 
 class BaseDisciplineModel(IntegratedModel):
+    """An :class:`~.IntegratedModel` wrapping a single GEMSEO discipline."""
+
     _DISCIPLINE: ClassVar[Discipline | None] = None
     _EXPECTED_LOAD_CASE: ClassVar[str] = ""
 

@@ -51,6 +51,7 @@ doc = [
     "black",
     "griffe-fieldz",
     "griffe-inherited-docstrings",
+    "ipython",
     "markdown-exec[ansi]",
     "mike",
     "mkdocs-bibtex",

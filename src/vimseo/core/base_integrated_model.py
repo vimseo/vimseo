@@ -617,7 +617,7 @@ class IntegratedModel(GemseoDisciplineWrapper):
         Returns:
         """
         directory_path = (
-            self.archive_manager.job_directory
+            Path(self.archive_manager.job_directory)
             if directory_path == ""
             else Path(directory_path)
         )
