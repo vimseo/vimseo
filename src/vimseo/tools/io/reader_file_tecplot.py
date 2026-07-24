@@ -66,6 +66,12 @@ def _rename_header_variables(
     for i, line in enumerate(lines):
         if line.strip().upper().startswith("VARIABLES"):
             for i_coord in range(3):
+                if provided_coordinate_names[i_coord] not in line:
+                    msg = (
+                        f"Coordinate name {provided_coordinate_names[i_coord]}"
+                        "not in file."
+                    )
+                    raise ValueError(msg)
                 line = line.replace(
                     f'"{provided_coordinate_names[i_coord]}"',
                     f'"{expected_coordinate_names[i_coord]}"',
@@ -143,13 +149,11 @@ class ReaderFileTecplot(BaseReaderFile):
 
         coordinate_names = options["coordinate_names"]
         variable_name_aliases = options["variable_name_aliases"]
-        if variable_name_aliases:
-            text = Path(file_path).read_text()
-            text = _rename_header_variables(
-                text, coordinate_names, variable_name_aliases, ["X", "Y", "Z"]
-            )
-            mesh = read(StringIO(text), file_format=_FORMAT)
-        else:
-            mesh = read(file_path, file_format=_FORMAT)
+        text = Path(file_path).read_text()
+        text = _rename_header_variables(
+            text, coordinate_names, variable_name_aliases, ["X", "Y", "Z"]
+        )
+        print(text)
+        mesh = read(StringIO(text), file_format=_FORMAT)
 
         self.result.field = MeshField.from_mesh(file_path, mesh)

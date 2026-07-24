@@ -37,20 +37,24 @@ ZONE T="patch", N=4, E=1, ET=QUADRILATERAL, F=FEBLOCK
 """
 
 
-def test_reader_file_tecplot(tmp_wd):
+@pytest.mark.parametrize(
+    "pressure_alias", [False, True], ids=["No alias", "With alias"]
+)
+def test_reader_file_tecplot(tmp_wd, pressure_alias):
     """Check that the reader can read a Tecplot ASCII file."""
     file_name = "surface.dat"
     Path(file_name).write_text(_TECPLOT_CONTENT)
 
+    variable_aliases = {"Pressure": "P"} if pressure_alias else {}
+
     reader = ReaderFileTecplot()
     result = reader.execute(
         file_name=file_name,
-        variable_name_aliases={
-            "CoordinateX": "X",
-            "CoordinateY": "Y",
-            "CoordinateZ": "Z",
-        },
+        coordinate_names=("CoordinateX", "CoordinateY", "CoordinateZ"),
+        variable_name_aliases=variable_aliases,
     )
+
+    pressure_name = "P" if pressure_alias else "Pressure"
 
     assert isinstance(result, FieldResult)
     field = result.field
@@ -59,8 +63,8 @@ def test_reader_file_tecplot(tmp_wd):
     assert len(field.mesh_cells) == 1
     assert field.mesh_cells[0].type == "quad"
     assert field.mesh_cells[0].data.shape == (1, 4)
-    assert field.point_variable_names == ["Pressure"]
-    assert_allclose(field.point_data["Pressure"], [10.0, 20.0, 30.0, 40.0])
+    assert field.point_variable_names == [pressure_name]
+    assert_allclose(field.point_data[pressure_name], [10.0, 20.0, 30.0, 40.0])
 
 
 def test_reader_file_tecplot_wrong_extension(tmp_wd):
