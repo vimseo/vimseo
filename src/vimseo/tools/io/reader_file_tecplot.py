@@ -21,6 +21,7 @@ from typing import TYPE_CHECKING
 
 from meshio import read
 from pydantic import Field
+from pydantic import field_validator
 
 from vimseo.tools.base_tool import BaseTool
 from vimseo.tools.io.base_reader_file import BaseReaderFile
@@ -34,17 +35,29 @@ if TYPE_CHECKING:
 _FORMAT = "tecplot"
 
 
-def _rename_header_variables(text: str, variable_name_aliases: Mapping[str, str]) -> str:
+def _rename_header_variables(
+    text: str,
+    provided_coordinate_names: tuple[str, str, str],
+    variable_name_aliases: Mapping[str, str],
+    expected_coordinate_names: tuple[str, str, str] = ("X", "Y", "Z"),
+) -> str:
     """Rename the variables declared in a Tecplot ``VARIABLES`` header line.
 
     meshio only recognizes coordinate variables named ``X``/``Y``/``Z``, while some
     CFD tools export Tecplot files with other names (e.g. ``CoordinateX``). This
     renames the declared variables so that meshio's Tecplot reader can be reused as is.
 
+    This also renames the other variables according to user defined aliases, if any is
+    provided.
+
     Args:
         text: The content of the Tecplot file.
+        provided_coordinate_names: The names of the spatial coordinates as defined in
+            the file header.
         variable_name_aliases: The mapping from the variable names declared in the file
-            to the names expected by meshio.
+            to the user defined aliases.
+        expected_coordinate_names: The names of the spatial coordinate
+            expected by meshio.
 
     Returns:
         The content of the Tecplot file with the ``VARIABLES`` header renamed.
@@ -52,6 +65,11 @@ def _rename_header_variables(text: str, variable_name_aliases: Mapping[str, str]
     lines = text.splitlines(keepends=True)
     for i, line in enumerate(lines):
         if line.strip().upper().startswith("VARIABLES"):
+            for i_coord in range(3):
+                line = line.replace(
+                    f'"{provided_coordinate_names[i_coord]}"',
+                    f'"{expected_coordinate_names[i_coord]}"',
+                )
             for source_name, target_name in variable_name_aliases.items():
                 line = line.replace(f'"{source_name}"', f'"{target_name}"')
             lines[i] = line
@@ -62,14 +80,35 @@ def _rename_header_variables(text: str, variable_name_aliases: Mapping[str, str]
 class ReaderFileTecplotSettings(BaseFileReaderSettings):
     """Settings of a Tecplot ASCII file reader."""
 
+    coordinate_names: tuple[str, str, str] = Field(
+        default=("X", "Y", "Z"),
+        description="The names of the VARIABLES corresponding to spatial coordinates "
+        "as defined in the header of the file.\n"
+        'e.g. ``("CoordinateX", "CoordinateY", "CoordinateZ")``. ',
+    )
+
     variable_name_aliases: dict[str, str] = Field(
         default={},
-        description="The mapping from the variable names declared in the file's "
-        "VARIABLES header to the names expected by meshio's Tecplot reader "
-        '(``"X"``, ``"Y"``, ``"Z"`` for the coordinates), '
-        'e.g. ``{"CoordinateX": "X", "CoordinateY": "Y", "CoordinateZ": "Z"}``. '
-        "Left empty when the file already uses these names.",
+        description="User define aliases for the variables defined in the header."
+        'In the form ``{"name in the file": "user defined alias"}``'
+        'e.g. ``{"rho": "density", "mu": "dynamic viscosity"}``. '
+        "DO NOT intend to rename the coordinate variables.",
     )
+
+    @field_validator("variable_name_aliases", mode="after")
+    @classmethod
+    def remove_coordinate_aliases(cls, alias_dict: dict[str, str]) -> dict[str, str]:
+        """Remove the coordinates from the alias dictionnary if present.
+
+        Args:
+            alias_dict (dict[str, str]): The dictionnary containing the aliases.
+
+        Returns:
+            dict[str, str]: The alias dictionnary minus the coordinate names.
+        """
+        for coord in ["X", "Y", "Z"]:
+            alias_dict.pop(coord, None)
+        return alias_dict
 
 
 class ReaderFileTecplot(BaseReaderFile):
@@ -102,10 +141,13 @@ class ReaderFileTecplot(BaseReaderFile):
             file_name if directory_path == "" else Path(directory_path) / file_name
         )
 
+        coordinate_names = options["coordinate_names"]
         variable_name_aliases = options["variable_name_aliases"]
         if variable_name_aliases:
             text = Path(file_path).read_text()
-            text = _rename_header_variables(text, variable_name_aliases)
+            text = _rename_header_variables(
+                text, coordinate_names, variable_name_aliases, ["X", "Y", "Z"]
+            )
             mesh = read(StringIO(text), file_format=_FORMAT)
         else:
             mesh = read(file_path, file_format=_FORMAT)
