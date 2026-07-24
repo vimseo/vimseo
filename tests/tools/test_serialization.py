@@ -60,7 +60,7 @@ def roundtrip(result: BaseResult, tmp_hdf5: str) -> BaseResult:
 class TestPrimitivesAndNone:
     def test_none_field_roundtrip(self, tmp_hdf5):
         result = BayesAnalysisResult(thin_number=None)
-        rt = roundtrip(result, "result.hdf5")
+        rt = roundtrip(result, tmp_hdf5)
         assert rt.thin_number is None
 
     def test_int_field_roundtrip(self, tmp_hdf5):
