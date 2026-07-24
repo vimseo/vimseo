@@ -138,14 +138,11 @@ class ReaderFileTecplot(BaseReaderFile):
         settings: ReaderFileTecplotSettings | None = None,
         **options,
     ) -> FieldResult:
-        file_name = options["file_name"]
-        directory_path = options["directory_path"]
-        if Path(file_name).suffix != self._EXTENSION:
+        directory_path = Path(options["directory_path"])
+        file_path = directory_path / options["file_name"]
+        if Path(file_path).suffix != self._EXTENSION:
             msg = f"{self.__class__.__name__} requires the file suffix to be {self._EXTENSION}."
             raise ValueError(msg)
-        file_path = (
-            file_name if directory_path == "" else Path(directory_path) / file_name
-        )
 
         coordinate_names = options["coordinate_names"]
         variable_name_aliases = options["variable_name_aliases"]
