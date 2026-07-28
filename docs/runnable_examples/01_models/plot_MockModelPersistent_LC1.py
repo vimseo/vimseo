@@ -14,15 +14,12 @@
 # NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION
 # WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-
 """
-Overview of the MockModelPersistent for load case LC1
-========================================================================================
+# Overview of the MockModelPersistent for load case LC1
 
  A toy model for testing purpose of persistent data - mono-component version
 """
 
-# %%
 from __future__ import annotations
 
 from vimseo import EXAMPLE_RUNS_DIR
@@ -65,3 +62,9 @@ model.execute()
 # And the results are visualised with the pre-defined plots:
 
 figures = model.plot_results(show=True)
+
+
+# %%
+# Plot of y5_vs_x3
+
+figures["y5_vs_x3"]
