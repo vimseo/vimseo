@@ -109,7 +109,7 @@ class MockModelPersistent(IntegratedModel):
         " A toy model for testing purpose of persistent data - mono-component version"
     )
 
-    CURVES: ClassVar[Sequence[tuple[str, str]]] = [("x3", "y5")]
+    PLOTS: ClassVar[Sequence[tuple[str, ...]]] = [("x3", "y5")]
 
     def __init__(self, load_case_name: str, **options):
         options = IntegratedModelSettings(**options).model_dump()

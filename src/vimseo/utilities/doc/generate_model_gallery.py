@@ -67,10 +67,7 @@ def generate_model_examples(
 
             model = create_model(model_name, load_case)
             LOGGER.info(f"Created {model_name} with load case {load_case}")
-            figure_keys = [
-                f"{curve[1]}_vs_{curve[0]}"
-                for curve in model.CURVES + model.load_case.plot_parameters.curves
-            ]
+            figure_keys = [plot.get_name() for plot in model.plots]
 
             content = template.render(
                 model_name=model_name,

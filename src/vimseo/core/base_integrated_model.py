@@ -60,8 +60,10 @@ from vimseo.core.model_settings import IntegratedModelSettings
 from vimseo.material.material import Material
 from vimseo.storage_management import NAME_TO_ARCHIVE_CLASS
 from vimseo.storage_management.scratch_storage import DirectoryScratch
+from vimseo.tools.post_tools.plot_parameters import Plot
+from vimseo.tools.post_tools.plot_parameters import create_plot
 from vimseo.utilities.json_grammar_utils import load_input_bounds
-from vimseo.utilities.plotting_utils import plot_curves
+from vimseo.utilities.plotting_utils import superpose_curves
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -95,8 +97,8 @@ class IntegratedModel(GemseoDisciplineWrapper):
     All input data are considered required. So the required field in the input JSON
     grammar files does not need to be filled.
 
-    The curves that are plotted through :meth:`plot_results` are defined in class
-    attribute ``CURVES``.
+    The figures that are plotted through :meth:`plot_results` are defined in class
+    attribute ``PLOTS``.
 
     A model is executed by calling method :meth:`~IntegratedModel.execute`,
     to which can be possibly passed a dictionary to specify inputs.
@@ -181,14 +183,37 @@ class IntegratedModel(GemseoDisciplineWrapper):
     MATERIAL_FILE: ClassVar[Path | str] = ""
     """The path to the json file defining the material values."""
 
-    CURVES: ClassVar[Sequence[tuple[str, str]]] = []
-    """The output data to plot as curves. Define a tuple for each curve. It can be load
-    case independent or dependent. Only the first two elements of the list of variables
-    are considered.The first variable is the abscissa variable and the second value is
-    the ordinate.
+    PLOTS: ClassVar[Sequence[Plot | tuple[str, ...]]] = []
+    """The figures to plot from the model data. It can be load case independent or
+    dependent.
 
-    Example:
-        >>> CURVES = [('strain_history', 'stress_history')]
+    A figure is defined either by a tuple of variable names, the first one being the
+    abscissa and the following ones the ordinates, or by a :class:`.Plot` when the
+    lines shall be styled, drawn against a secondary ordinate axis or completed with
+    horizontal reference lines.
+
+    Examples:
+        >>> # A single line, and two lines sharing an abscissa.
+        >>> PLOTS = [
+        ...     ("strain_history", "stress_history"),
+        ...     ("time", "energy_strain_history", "energy_damage_history"),
+        ... ]
+
+        >>> # A styled figure with a secondary ordinate axis.
+        >>> PLOTS = [
+        ...     Plot(
+        ...         x="displacement_history",
+        ...         traces=[
+        ...             Trace("force_history", style=LineStyle(color="blue")),
+        ...             Trace(
+        ...                 "crack_position_history",
+        ...                 secondary_y=True,
+        ...                 style=LineStyle(color="red", marker="."),
+        ...             ),
+        ...         ],
+        ...         title="Crack propagation",
+        ...     )
+        ... ]
     """
 
     FIELDS_FROM_FILE: ClassVar[Mapping[str, str]] = {}
@@ -222,6 +247,22 @@ class IntegratedModel(GemseoDisciplineWrapper):
     auto_detect_grammar_files = False
     default_cache_type = Discipline.CacheType.HDF5
     default_grammar_type = Discipline.GrammarType.JSON
+
+    def __init_subclass__(cls, **kwargs):
+        """Reject the models still declaring the removed ``CURVES`` attribute.
+
+        Raises:
+            AttributeError: When the model declares ``CURVES``.
+        """
+        super().__init_subclass__(**kwargs)
+        if "CURVES" in cls.__dict__:
+            msg = (
+                f"The class attribute CURVES of {cls.__name__} has been replaced by "
+                f"PLOTS: rename it. A tuple of variable names remains a valid plot "
+                f"definition, and can now hold more than one ordinate name, e.g. "
+                f'PLOTS = [("time", "energy", "work")].'
+            )
+            raise AttributeError(msg)
 
     def __init__(
         self,
@@ -375,7 +416,7 @@ class IntegratedModel(GemseoDisciplineWrapper):
             self.load_case,
             self.get_dataflow(),
             default_inputs_by_group,
-            copy(self.curves),
+            copy(self.plots),
         )
 
     @property
@@ -567,17 +608,23 @@ class IntegratedModel(GemseoDisciplineWrapper):
         return self.__material
 
     @property
-    def curves(self) -> Iterable[tuple[str]]:
-        return self._load_case.plot_parameters.curves + self.CURVES
+    def plots(self) -> list[Plot]:
+        """The definitions of the figures, from the load case and from the model.
+
+        The figures declared as tuples of variable names are normalised to
+        :class:`.Plot` objects.
+        """
+        return [
+            create_plot(plot)
+            for plot in list(self._load_case.plot_parameters.plots) + list(self.PLOTS)
+        ]
 
     def _plot_curves(self, figures, result, directory_path, save, show):
-        for variables in self.curves:
-            file_name = (
-                f"{self.name}_{self._load_case.name}_"
-                f"{variables[1]}_vs_{variables[0]}.html"
-            )
-            figures[f"{variables[1]}_vs_{variables[0]}"] = plot_curves(
-                result.get_curve(variables),
+        for curve_set in result.plots:
+            spec = curve_set.spec
+            file_name = f"{self.name}_{self._load_case.name}_{spec.get_file_name()}"
+            figures[spec.get_name()] = superpose_curves(
+                curve_set,
                 directory_path=directory_path,
                 file_name=file_name,
                 save=save,
@@ -592,9 +639,9 @@ class IntegratedModel(GemseoDisciplineWrapper):
         save: bool = True,
         show: bool = False,
         scalar_names: Iterable[str] = (),
-        data: str = "CURVES",
+        data: str = "PLOTS",
     ) -> Mapping[str, Figure]:
-        """Plots the results as curves, from definition of curves in CURVES variable.
+        """Plots the results, from the definition of the figures in the PLOTS variable.
 
         Args:
             directory_path: A path where to save the plots. Default is current working
@@ -602,8 +649,11 @@ class IntegratedModel(GemseoDisciplineWrapper):
             save: Whether to save the plot.
             show: Whether to show the plot.
             scalar_names: The scalars to plot in a scatter matrix. Show all scalars by default.
+            data: Either ``"PLOTS"`` to draw the figures defined in ``PLOTS``,
+                or ``"SCALARS"`` to draw a scatter matrix of the scalar outputs.
 
         Returns:
+            The figures, indexed by their name.
         """
         directory_path = (
             Path(self.archive_manager.job_directory)
@@ -622,7 +672,7 @@ class IntegratedModel(GemseoDisciplineWrapper):
             model=self,
         )
         figures = {}
-        if data == "CURVES":
+        if data == "PLOTS":
             figures = self._plot_curves(figures, result, directory_path, save, show)
         elif data == "SCALARS":
             plot = ScatterMatrix(

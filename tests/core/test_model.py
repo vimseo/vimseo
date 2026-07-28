@@ -235,7 +235,7 @@ def test_model_description(tmp_wd):
     assert description.name == model.name
     assert id(description.load_case) == id(model.load_case)
     assert description.summary == model.SUMMARY
-    assert description.curves == model.CURVES
+    assert description.plots == model.plots
 
     for component_name in [
         "model_inputs",
