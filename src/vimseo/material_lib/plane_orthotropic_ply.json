@@ -1,5 +1,5 @@
 {
-  "name": "composite",
+  "name": "plane_orthotropic_ply",
   "description": "Orthotropic composite ply used by the Tan open-hole model (SI units, Pa).",
   "material_relations": [
     {

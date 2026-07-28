@@ -79,7 +79,7 @@ def test_tan_oh(tmp_wd, stacking, expected_sigma_xx_d0):
     """Run the Tension Tan model for a given laminate and check its outputs."""
     # c_strat is now derived from the stacking, so only the stacking is passed.
     model = create_model("TanOpenHole", "Tension")
-    output_data = model.execute({"stacking_sequence": stacking})
+    output_data = model.execute({"layup": stacking})
     input_data = model.get_input_data()
     thickness = input_data["thickness"][0]
     model_result = ModelResult.from_data(
@@ -152,7 +152,7 @@ def test_tan_oh_jacobian(tmp_wd):
     laminate with non-stationary ply angles (so ``d/d(angle) != 0``), made the
     model default so gemseo's finite differences perturb around it for the
     non-differentiated inputs. ``c_strat`` is derived from the stacking and the
-    ply elastic constants, so ``stacking_sequence`` and ``E1/E2/G12/nu12`` are
+    ply elastic constants, so ``layup`` and ``E1/E2/G12/nu12`` are
     genuine differentiated inputs (CLT chain). A per-input step scaled to the
     input magnitude is used because the inputs span very different scales.
     """
@@ -161,7 +161,7 @@ def test_tan_oh_jacobian(tmp_wd):
     stacking = np.array([30.0, -30.0, 60.0, 15.0, 15.0, 60.0, -30.0, 30.0])
 
     model = create_model("TanOpenHole", "Tension")
-    model.default_input_data.update({"stacking_sequence": stacking})
+    model.default_input_data.update({"layup": stacking})
     model.execute()
     model.cache = None  # force finite differences to actually re-execute
 
@@ -171,7 +171,7 @@ def test_tan_oh_jacobian(tmp_wd):
         "radius",
         "width",
         "d0",
-        "stacking_sequence",
+        "layup",
         "E1",
         "E2",
         "G12",

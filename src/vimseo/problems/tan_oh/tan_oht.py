@@ -83,7 +83,7 @@ DEFAULT_INPUT_DATA = {
     "coarsening_factor": atleast_1d(1.0),
     # Ply angles in degrees, as floats so they are continuous (differentiable)
     # variables -- the stacking drives c_strat (see ``compute_c_strat``).
-    "stacking_sequence": array([0.0, 45.0, -45.0, 90.0, 90.0, -45.0, 45.0, 0.0]),
+    "layup": array([0.0, 45.0, -45.0, 90.0, 90.0, -45.0, 45.0, 0.0]),
 }
 
 PLY_THICKNESS = 0.125e-3
@@ -91,29 +91,29 @@ PLY_THICKNESS = 0.125e-3
 # The ply material (E1, E2, G12, nu12, strengths) lives in a JSON next to its
 # grammar; the grammar makes the properties model inputs (see the components),
 # and the material provides their default values.
-MATERIAL_FILE = MATERIAL_LIB_DIR / "composite.json"
-MATERIAL_GRAMMAR_FILE = MATERIAL_LIB_DIR / "composite_grammar.json"
+MATERIAL_FILE = MATERIAL_LIB_DIR / "plane_orthotropic_ply.json"
+MATERIAL_GRAMMAR_FILE = MATERIAL_LIB_DIR / "plane_orthotropic_ply_grammar.json"
 material = Material.from_json(MATERIAL_FILE)
 
 # Material property names driving the (elastic) membrane stiffness c_strat.
 STIFFNESS_PROPERTY_NAMES = ("E1", "E2", "G12", "nu12")
 
-total_thickness = len(DEFAULT_INPUT_DATA["stacking_sequence"]) * PLY_THICKNESS
+total_thickness = len(DEFAULT_INPUT_DATA["layup"]) * PLY_THICKNESS
 DEFAULT_INPUT_DATA["thickness"] = atleast_1d(total_thickness)
 
 
-def compute_c_strat(stacking_sequence, e1, e2, g12, nu12):
+def compute_c_strat(layup, e1, e2, g12, nu12):
     """Effective membrane stiffness ``A / total_thickness`` from ply angles + material.
 
     Classical lamination theory (via composipy). ``c_strat`` is therefore a
-    *derived* quantity of ``stacking_sequence`` and the ply elastic constants,
+    *derived* quantity of ``layup`` and the ply elastic constants,
     not a free input -- this removes the ambiguity of passing an inconsistent
-    ``(c_strat, stacking_sequence)`` pair. The differentiable JAX counterpart is
+    ``(c_strat, layup)`` pair. The differentiable JAX counterpart is
     :func:`vimseo.lib_vimseo.tan_lib_jax.c_strat_from_layup`.
     """
     ply = OrthotropicMaterial(e1=e1, e2=e2, v12=nu12, g12=g12, thickness=PLY_THICKNESS)
-    laminate = LaminateProperty(stacking_sequence, ply)
-    return array(laminate.A) / (len(stacking_sequence) * PLY_THICKNESS)
+    laminate = LaminateProperty(layup, ply)
+    return array(laminate.A) / (len(layup) * PLY_THICKNESS)
 
 
 class TanRun_Tension(BaseComponent):
@@ -154,7 +154,7 @@ class TanRun_Tension(BaseComponent):
         load = array([input_data["load"][0], 0.0, 0.0]) / thickness
 
         c_strat = compute_c_strat(
-            input_data["stacking_sequence"],
+            input_data["layup"],
             *(input_data[name][0] for name in STIFFNESS_PROPERTY_NAMES),
         )
 
@@ -262,10 +262,8 @@ class PostFieldExtraction(BaseComponent):
         })
         # The stacking drives c_strat (computed here), needed to evaluate the
         # stress directly at the hole edge (see ``_run``).
-        self.input_grammar.update_from_data({
-            "stacking_sequence": DEFAULT_INPUT_DATA["stacking_sequence"]
-        })
-        input_names.append("stacking_sequence")
+        self.input_grammar.update_from_data({"layup": DEFAULT_INPUT_DATA["layup"]})
+        input_names.append("layup")
 
         for name in input_names:
             self.input_grammar.required_names.add(name)
@@ -284,7 +282,7 @@ class PostFieldExtraction(BaseComponent):
         d0 = input_data["d0"][0]
         thickness = input_data["thickness"][0]
         c_strat = compute_c_strat(
-            input_data["stacking_sequence"],
+            input_data["layup"],
             *(input_data[name][0] for name in STIFFNESS_PROPERTY_NAMES),
         )
         load = array([input_data["load"][0], 0.0, 0.0]) / thickness
@@ -369,14 +367,14 @@ class TanOpenHole(IntegratedModel):
 
         Fills ``self.jac[output][input]`` for ``sigma_xx_r`` / ``sigma_xx_d0``
         with respect to ``load``, ``radius``, ``width``, ``d0``, ``thickness``,
-        ``stacking_sequence`` and the ply elastic constants (``E1``, ``E2``,
+        ``layup`` and the ply elastic constants (``E1``, ``E2``,
         ``G12``, ``nu12``), using the differentiable
         :mod:`~vimseo.lib_vimseo.tan_lib_jax` (requires the ``jax`` extra). The
         outputs are evaluated directly on the Tan solution, consistently with
         ``PostFieldExtraction``.
 
         ``c_strat`` is a derived quantity (classical lamination theory from
-        ``stacking_sequence`` and the material constants), so the ply-angle and
+        ``layup`` and the material constants), so the ply-angle and
         material Jacobians go through the full chain ``(stacking, material) ->
         c_strat -> sigma`` and are genuine derivatives of the discipline output
         (validated by finite differences).
@@ -390,7 +388,7 @@ class TanOpenHole(IntegratedModel):
         radius = float(data["radius"][0])
         width = float(data["width"][0])
         d0 = float(data["d0"][0])
-        angles = array(data["stacking_sequence"], dtype=float)
+        angles = array(data["layup"], dtype=float)
         stiffness = tuple(float(data[name][0]) for name in STIFFNESS_PROPERTY_NAMES)
 
         c_strat = array(compute_c_strat(angles, *stiffness), dtype=float)
@@ -409,7 +407,7 @@ class TanOpenHole(IntegratedModel):
 
         # d(sigma)/d(stacking, E1, E2, G12, nu12) through the CLT chain
         # (stacking, material) -> c_strat -> sigma.
-        layup_inputs = ("stacking_sequence", *STIFFNESS_PROPERTY_NAMES)
+        layup_inputs = ("layup", *STIFFNESS_PROPERTY_NAMES)
         if any(
             name in self.jac.get(output_name, {})
             for output_name in self._JACOBIAN_OUTPUTS
