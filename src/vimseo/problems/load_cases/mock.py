@@ -18,6 +18,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from vimseo.core.load_case import LoadCase
+from vimseo.tools.post_tools.plot_parameters import Plot
 from vimseo.tools.post_tools.plot_parameters import PlotParameters
 
 
@@ -31,7 +32,7 @@ class LC2(LoadCase):
     """A second mock load case."""
 
     def get_plot_parameters(self):
-        return PlotParameters(curves=[("y1", "y1_2")])
+        return PlotParameters(plots=[Plot.from_variable_names(("y1", "y1_2"))])
 
 
 @dataclass

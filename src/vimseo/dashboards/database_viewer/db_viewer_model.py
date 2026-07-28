@@ -23,7 +23,7 @@ from matplotlib import pyplot as plt
 from vimseo.utilities.datasets import COMPONENT_SEPARATORS
 from vimseo.utilities.datasets import GROUP_SEPARATORS
 from vimseo.utilities.datasets import dataframe_to_dataset
-from vimseo.utilities.plotting_utils import plot_curves
+from vimseo.utilities.plotting_utils import superpose_curves
 
 
 def initialize(session_state):
@@ -79,7 +79,7 @@ def visualize_curves(selected_rows, _curves, id_, _aranged_result_0):
         curves_selected = [
             c[i] for name, c in _curves.items() if name in id_[selected_rows].values
         ]
-        fig = plot_curves(
+        fig = superpose_curves(
             curves_selected,
             show=False,
             save=False,

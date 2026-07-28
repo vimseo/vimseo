@@ -14,15 +14,12 @@
 # NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION
 # WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-
 """
-Overview of the BendingTestAnalytical for load case ThreePoints
-========================================================================================
+# Overview of the BendingTestAnalytical for load case ThreePoints
 
  An analytical model for the bending of a parallelepipedic beam
 """
 
-# %%
 from __future__ import annotations
 
 from vimseo import EXAMPLE_RUNS_DIR

@@ -56,7 +56,7 @@ class BendingTestAnalytical(PreRunPostModel):
     RUN_FAMILY = "RunBendingTestAnalytical"
     POST_PROC_FAMILY = "PostBendingTestAnalytical"
     MATERIAL_FILE = MATERIAL_LIB_DIR / "Ta6v.json"
-    CURVES: ClassVar[Sequence[tuple[str, str]]] = [
+    PLOTS: ClassVar[Sequence[tuple[str, ...]]] = [
         ("dplt_grid", "dplt"),
         ("moment_grid", "moment"),
     ]

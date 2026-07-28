@@ -16,6 +16,7 @@
 from __future__ import annotations
 
 from vimseo.core.load_case_factory import LoadCaseFactory
+from vimseo.tools.post_tools.plot_parameters import Plot
 from vimseo.tools.post_tools.plot_parameters import PlotParameters
 
 
@@ -25,7 +26,7 @@ def test_load_case():
     assert lc.name == "LC2"
     assert lc.summary == "A second mock load case."
     assert isinstance(lc.plot_parameters, PlotParameters)
-    assert lc.plot_parameters.curves == [("y1", "y1_2")]
+    assert lc.plot_parameters.plots == [Plot.from_variable_names(("y1", "y1_2"))]
     assert lc.image_path is None
 
 

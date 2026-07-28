@@ -15,9 +15,9 @@
 # WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 """
-# Overview of the BendingTestAnalytical for load case Cantilever
+# Overview of the MockMultiCurves for load case Dummy
 
- An analytical model for the bending of a parallelepipedic beam
+A toy model whose outputs illustrate the definition of figures holding several lines, styled lines, a secondary ordinate axis and horizontal reference lines.
 """
 
 from __future__ import annotations
@@ -29,8 +29,8 @@ from vimseo.core.model_settings import IntegratedModelSettings
 # %%
 # First, let's instantiate the model for a given load case:
 
-model_name = "BendingTestAnalytical"
-load_case = "Cantilever"
+model_name = "MockMultiCurves"
+load_case = "Dummy"
 model = create_model(
     model_name,
     load_case,
@@ -65,11 +65,11 @@ figures = model.plot_results(show=True)
 
 
 # %%
-# Plot of dplt_vs_dplt_grid
+# Plot of energy_strain_history_and_2_more_vs_displacement_history
 
-figures["dplt_vs_dplt_grid"]
+figures["energy_strain_history_and_2_more_vs_displacement_history"]
 
 # %%
-# Plot of moment_vs_moment_grid
+# Plot of crack_propagation
 
-figures["moment_vs_moment_grid"]
+figures["crack_propagation"]

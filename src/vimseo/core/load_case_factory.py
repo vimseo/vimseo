@@ -23,6 +23,7 @@ from gemseo.core.base_factory import BaseFactory
 
 from vimseo.core.load_case import LoadCase
 from vimseo.tools.post_tools.plot_parameters import PlotParameters
+from vimseo.tools.post_tools.plot_parameters import create_plot
 
 LOGGER = logging.getLogger(__name__)
 
@@ -56,11 +57,18 @@ class LoadCaseFactory(BaseFactory):
                 lc_options = json.load(f)
 
             if "plot_parameters" in lc_options:
+                plot_parameters = lc_options["plot_parameters"]
+                if "curves" in plot_parameters:
+                    msg = (
+                        f"The plot_parameters entry curves of the JSON file of load "
+                        f"case {load_case_name} has been replaced by plots: rename "
+                        f"it. A list of variable names remains a valid plot "
+                        f"definition, and can now hold more than one ordinate name."
+                    )
+                    raise ValueError(msg)
                 lc_options["plot_parameters"] = PlotParameters(
-                    curves=[
-                        tuple(curve)
-                        for curve in lc_options["plot_parameters"]["curves"]
-                        if isinstance(curve, list)
+                    plots=[
+                        create_plot(plot) for plot in plot_parameters.get("plots", [])
                     ]
                 )
         lc_options["name"] = load_case_name

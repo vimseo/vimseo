@@ -48,7 +48,7 @@ from vimseo.api import create_model
 from vimseo.core.model_result import ModelResult
 from vimseo.core.model_settings import IntegratedModelSettings
 from vimseo.storage_management.base_storage_manager import PersistencyPolicy
-from vimseo.utilities.plotting_utils import plot_curves
+from vimseo.utilities.plotting_utils import superpose_curves
 
 activate_logger(level=logging.INFO)
 
@@ -76,12 +76,53 @@ activate_logger(level=logging.INFO)
 #
 # The persistency policy of the scratch and the archive can be specified independently.
 #
-# By default, the storage generates unique directories at each new model execution.
-# For a ``DirectoryArchive``, the argument ``job_name`` allows to store the result in a specific directory
-# without creating unique directories.
+# For a ``DirectoryArchive``, the path of a result is built from two independent segments:
+#
+# .. code-block:: text
+#
+#     {directory_archive_root} / {experiment name} / {job name or auto-numbered}
+#
+# The **experiment name** is the intermediate segment, which *groups* the runs. It
+# defaults to ``{model_name}/{load_case_name}`` and is changed with
+# ``archive_manager.set_experiment()``. It is also the key used to query the archive
+# back, through the ``experiment_names`` argument.
+#
+# The **job name** replaces the leaf segment. Without it, a new numbered directory is
+# created at each execution, so that no run ever overwrites another one. With it, the
+# leaf is fixed, hence a second execution targets the very same directory:
+#
+# .. list-table::
+#    :header-rows: 1
+#    :widths: 40 30 30
+#
+#    * - settings
+#      - first execution
+#      - second execution
+#    * - default
+#      - ``MockModelPersistent/LC1/1``
+#      - ``MockModelPersistent/LC1/2``
+#    * - ``set_experiment("my_experiment")``
+#      - ``my_experiment/1``
+#      - ``my_experiment/2``
+#    * - ``job_name="my_job"``
+#      - ``MockModelPersistent/LC1/my_job``
+#      - ``FileExistsError``
+#    * - ``job_name="my_job"`` and overwrite accepted
+#      - ``MockModelPersistent/LC1/my_job``
+#      - ``MockModelPersistent/LC1/my_job``
+#    * - both
+#      - ``my_experiment/my_job``
+#      - same as the two rows above
+#
+# The last column explains why ``_accept_overwrite_job_dir`` only matters together with
+# ``job_name``: it feeds the ``exist_ok`` argument of the directory creation, and a fixed
+# leaf is the only case where that directory can already exist. It defaults to ``False``
+# for an archive, which is meant to be preserved, and to ``True`` for a scratch, which is
+# disposable.
 #
 # Here, a model is created with the default ``DirectoryArchive`` manager, and a specific job directory is used to
-# store the archive result. The ``_accept_overwrite_job_dir`` attribute must be explicitly set to ``True``.
+# store the archive result. Since the example is meant to be run repeatedly, the
+# ``_accept_overwrite_job_dir`` attribute is explicitly set to ``True``.
 # The ``MockModelPersistent`` model has the specificity of requiring to store some generated files to the archive.
 # The archive manager automatically handles the copy of these files from the scratch to the archive.
 # Here, the scratch directories are kept such that the user can look into them:
@@ -96,6 +137,7 @@ model = create_model(
         directory_scratch_root=EXAMPLE_RUNS_DIR / "scratch/visualize_model_result",
         cache_file_path=EXAMPLE_RUNS_DIR
         / f"caches/visualize_model_result/{model_name}_{load_case}_cache.hdf",
+        job_name="my_experiment",
     ),
 )
 model.archive_manager._accept_overwrite_job_dir = True
@@ -225,7 +267,7 @@ print(cache_from_archive)
 
 # %%
 # The displacement curves of both results can be compared.They are identical for this displacement-imposed loading:
-plot_curves(
+superpose_curves(
     [
         result.get_curve(("dplt_grid", "dplt")),
         result_1.get_curve(("dplt_grid", "dplt")),

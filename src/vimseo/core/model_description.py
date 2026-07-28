@@ -22,6 +22,7 @@ from gemseo.utils.string_tools import MultiLineString
 from numpy import ndarray
 
 from vimseo.core.load_case import LoadCase
+from vimseo.tools.post_tools.plot_parameters import Plot
 
 
 class BaseDescription:
@@ -47,7 +48,8 @@ class ModelDescription(BaseDescription):
     default_inputs: dict[str, ndarray] = field(default_factory=dict)
     """The model default inputs."""
 
-    curves: list[tuple[str]] = ()
+    plots: list[Plot] = ()
+    """The definitions of the figures plotted from the model data."""
 
     verbose: bool = False
 
@@ -93,9 +95,9 @@ class ModelDescription(BaseDescription):
             text.indent()
             text.add(dumps(dataflow, sort_keys=True, indent=4))
             text.dedent()
-            text.add("Curves:")
+            text.add("Plots:")
             text.indent()
-            text.add(str(self.curves))
+            text.add(str(self.plots))
             text.dedent()
 
         return text

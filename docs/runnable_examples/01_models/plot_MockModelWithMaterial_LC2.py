@@ -14,15 +14,12 @@
 # NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION
 # WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-
 """
-Overview of the MockModelWithMaterial for load case LC2
-========================================================================================
+# Overview of the MockModelWithMaterial for load case LC2
 
 A toy model loading a material
 """
 
-# %%
 from __future__ import annotations
 
 from vimseo import EXAMPLE_RUNS_DIR

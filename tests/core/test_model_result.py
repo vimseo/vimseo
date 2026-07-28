@@ -31,7 +31,7 @@ from vimseo.core.model_result import ModelResult
 from vimseo.core.model_settings import IntegratedModelSettings
 from vimseo.storage_management.base_storage_manager import PersistencyPolicy
 from vimseo.utilities.curves import Curve
-from vimseo.utilities.plotting_utils import plot_curves
+from vimseo.utilities.plotting_utils import superpose_curves
 
 
 def test_from_scalars_and_vectors(tmp_wd):
@@ -63,15 +63,16 @@ def test_from_scalars_and_vectors(tmp_wd):
             assert (value == model.get_output_data()[name]).all()
 
 
-def test_plot_curves(tmp_wd):
-    """Check that a model result can plot curves."""
+def test_superpose_curves(tmp_wd):
+    """Check that the same curve coming from several results can be superposed."""
     xc = linspace(0, 1, 10)
     curves = [Curve({"xc": xc, "yc": alpha * xc}) for alpha in linspace(0.0, 1.0, 10)]
     result = ModelResult(
         curves=curves,
     )
-    plot_curves(result.curves, show=False, save=True)
+    fig = superpose_curves(result.curves, show=False, save=True)
     assert Path("curves.html").exists()
+    assert len(fig.data) == 10
 
     curves.append(Curve({"xd": xc, "yc": xc}))
     msg = (
@@ -79,7 +80,16 @@ def test_plot_curves(tmp_wd):
         "['xc', 'xc', 'xc', 'xc', 'xc', 'xc', 'xc', 'xc', 'xc', 'xc', 'xd']"
     )
     with pytest.raises(ValueError, match=re.escape(msg)):
-        plot_curves(result.curves, show=False, save=True)
+        superpose_curves(result.curves, show=False, save=True)
+
+
+def test_superpose_curves_labels(tmp_wd):
+    """The labels identify the sources, and the colours distinguish them."""
+    xc = linspace(0, 1, 10)
+    curves = [Curve({"xc": xc, "yc": alpha * xc}) for alpha in (0.5, 1.0)]
+    fig = superpose_curves(curves, labels=["run 1", "run 2"], show=False, save=False)
+    assert [trace.name for trace in fig.data] == ["run 1 - yc", "run 2 - yc"]
+    assert fig.data[0].line.color != fig.data[1].line.color
 
 
 def test_scalars_to_dataframe():

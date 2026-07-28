@@ -23,4 +23,3 @@ __version__ = version("vimseo")
 EXAMPLE_RUNS_DIR = (
     Path(__file__).parent.parent.parent / "docs" / "runnable_examples" / "model_runs"
 )
-EXAMPLE_RUNS_DIR_NAME = "model_runs"
