@@ -55,4 +55,4 @@ class ModelComposition(IntegratedModel):
         )
 
         self._LOAD_CASE_DOMAIN = model._LOAD_CASE_DOMAIN
-        self.CURVES = model.CURVES
+        self.PLOTS = model.PLOTS

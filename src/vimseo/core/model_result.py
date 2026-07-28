@@ -34,7 +34,12 @@ from vimseo.storage_management.base_storage_manager import PersistencyPolicy
 from vimseo.storage_management.directory_storage import DirectoryArchive
 from vimseo.tools.base_result import BaseResult
 from vimseo.utilities.curves import Curve
+<<<<<<< HEAD
 from vimseo.utilities.fields import MeshField
+=======
+from vimseo.utilities.curves import CurveSet
+from vimseo.utilities.fields import Field
+>>>>>>> cb3f9c6c (feat(plots): declare model figures with PLOTS, allowing several lines)
 
 if TYPE_CHECKING:
     from vimseo.core.base_integrated_model import IntegratedModel
@@ -55,6 +60,21 @@ class ModelResult(BaseResult):
     scalars: ScalarDataType = field(default_factory=dict)
     vectors: Mapping[str, ndarray] = field(default_factory=dict)
     curves: Iterable[Curve] = field(default_factory=list)
+    """All the curves, flattened over the figures.
+
+    Use it to reach a curve regardless of the figure it belongs to, typically to
+    compute a curve measure on it.
+    """
+
+    plots: Iterable[CurveSet] = field(default_factory=list)
+    """The curves grouped by figure.
+
+    Each item is a :class:`.CurveSet` holding the curves of one figure and the
+    :class:`.Plot` declaring how to draw them: abscissa, line styles, ordinate axes,
+    reference lines and title. A figure can therefore be redrawn from the result
+    alone, without the model that produced it.
+    """
+
     fields: Mapping[str, Iterable[MeshField | Path | str]] = field(default_factory=dict)
     snapshots: Iterable[Path | str] = field(default_factory=list)
 
@@ -89,16 +109,14 @@ class ModelResult(BaseResult):
         for name in MetaDataNames:
             result.metadata.report[name] = archive_result["metadata"][name]
         data = dict(archive_result["inputs"], **archive_result["outputs"])
-        for variables in model.curves:
-            curve = Curve({
-                variables[0]: data[variables[0]],
-                variables[1]: data[variables[1]],
-            })
-            result.curves.append(curve)
+        plotted_names = []
+        for spec in model.plots:
+            curve_set = CurveSet.from_data(spec, data)
+            result.plots.append(curve_set)
+            result.curves.extend(curve_set.curves)
+            plotted_names.extend(spec.variable_names)
         for variable_names in data:
-            if variable_names not in [
-                name for curve_names in model.curves for name in curve_names
-            ] + list(MetaDataNames):
+            if variable_names not in plotted_names + list(MetaDataNames):
                 if isinstance(data[variable_names], ndarray):
                     result.vectors[variable_names] = data[variable_names]
                 else:
