@@ -14,15 +14,12 @@
 # NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION
 # WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-
 """
-Overview of the MockModelFields for load case LC1
-========================================================================================
+# Overview of the MockModelFields for load case LC1
 
 
 """
 
-# %%
 from __future__ import annotations
 
 from vimseo import EXAMPLE_RUNS_DIR

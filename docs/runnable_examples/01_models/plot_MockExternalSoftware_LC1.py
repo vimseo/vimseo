@@ -15,9 +15,9 @@
 # WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 """
-# Overview of the BendingTestAnalytical for load case Cantilever
+# Overview of the MockExternalSoftware for load case LC1
 
- An analytical model for the bending of a parallelepipedic beam
+
 """
 
 from __future__ import annotations
@@ -29,8 +29,8 @@ from vimseo.core.model_settings import IntegratedModelSettings
 # %%
 # First, let's instantiate the model for a given load case:
 
-model_name = "BendingTestAnalytical"
-load_case = "Cantilever"
+model_name = "MockExternalSoftware"
+load_case = "LC1"
 model = create_model(
     model_name,
     load_case,
@@ -62,14 +62,3 @@ model.execute()
 # And the results are visualised with the pre-defined plots:
 
 figures = model.plot_results(show=True)
-
-
-# %%
-# Plot of dplt_vs_dplt_grid
-
-figures["dplt_vs_dplt_grid"]
-
-# %%
-# Plot of moment_vs_moment_grid
-
-figures["moment_vs_moment_grid"]
