@@ -46,7 +46,7 @@ from vimseo.api import activate_logger
 from vimseo.api import create_model
 from vimseo.core.model_result import ModelResult
 from vimseo.core.model_settings import IntegratedModelSettings
-from vimseo.utilities.plotting_utils import plot_curves
+from vimseo.utilities.plotting_utils import superpose_curves
 
 activate_logger(level=logging.INFO)
 
@@ -66,7 +66,6 @@ model = create_model(
     ),
 )
 model.cache = None
-model.archive_manager._accept_overwrite_job_dir = True
 model.execute()
 result = ModelResult.from_data({
     "inputs": model.get_input_data(),
@@ -137,7 +136,7 @@ fig
 
 # %%
 # The curves can also be compared:
-plot_curves(
+superpose_curves(
     [
         result.get_curve(("dplt_grid", "dplt")),
         result_1.get_curve(("dplt_grid", "dplt")),
@@ -187,3 +186,101 @@ fig = plot.execute(
     show=True,
 )
 fig
+
+# %%
+# Figures holding several lines
+# -----------------------------
+# The figures of a model are declared in its ``PLOTS`` class attribute, either as a
+# tuple of variable names whose first one is the abscissa, or as a ``Plot`` object
+# when the lines shall be styled, drawn against a secondary ordinate axis or
+# completed with horizontal reference lines.
+# The ``MockMultiCurves`` model declares one figure of each kind:
+multi_curve_model = create_model(
+    "MockMultiCurves",
+    "Dummy",
+    model_options=IntegratedModelSettings(
+        directory_archive_root=EXAMPLE_RUNS_DIR / "archive/visualize_model_result",
+        directory_scratch_root=EXAMPLE_RUNS_DIR / "scratch/visualize_model_result",
+    ),
+)
+multi_curve_model.cache = None
+
+for spec in multi_curve_model.plots:
+    print(f"{spec.get_name()}: {[trace.get_label() for trace in spec.traces]}")
+
+# %%
+# Comparing variables within a result
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Several ordinates sharing an abscissa are drawn on a single figure. Here the
+# three energies are declared as the plain tuple
+# ``("displacement_history", "energy_strain_history", ...)``, and the colours are
+# taken from the default palette. Since the axis holds several lines, it is
+# labelled with the variable names and drawn in black:
+multi_curve_model.execute()
+multi_figs = multi_curve_model.plot_results(show=True, save=False)
+multi_figs["energy_strain_history_and_2_more_vs_displacement_history"]
+
+# %%
+# When the quantities have different magnitudes, a line can be drawn against a
+# secondary ordinate axis. This second figure is declared as a ``Plot`` object: the
+# force keeps the left axis, the crack position moves to the right one, and a
+# horizontal reference line shows the critical energy prescribed as a model input.
+# Each axis takes the colour of its line when it holds a single one:
+multi_figs["crack_propagation"]
+
+# %%
+# A subset of the lines can be drawn, by passing the ordinate names to keep.
+# The figures of a result are available as ``ModelResult.plots``, which groups the
+# curves per figure, while ``ModelResult.curves`` remains the flat list of all of
+# them:
+multi_result = ModelResult.from_data(
+    {
+        "inputs": multi_curve_model.get_input_data(),
+        "outputs": multi_curve_model.get_output_data(),
+    },
+    model=multi_curve_model,
+)
+superpose_curves(
+    multi_result.plots[0],
+    variable_names=["energy_strain_history", "energy_damage_history"],
+    show=True,
+    save=False,
+)
+
+# %%
+# Comparing a variable across results
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# A second result is generated with a larger imposed displacement:
+multi_curve_model.execute({"max_displacement": atleast_1d(15.0)})
+multi_result_1 = ModelResult.from_data(
+    {
+        "inputs": multi_curve_model.get_input_data(),
+        "outputs": multi_curve_model.get_output_data(),
+    },
+    model=multi_curve_model,
+)
+
+# %%
+# The same curve coming from both results is superposed, each one identified by
+# its label:
+curve_name = ("displacement_history", "force_history")
+superpose_curves(
+    [
+        multi_result.get_curve(curve_name),
+        multi_result_1.get_curve(curve_name),
+    ],
+    labels=["result", "result 1"],
+    show=True,
+    save=False,
+)
+
+# %%
+# Whole figures can be superposed as well. In that case the colour identifies the
+# result and the dash pattern identifies the variable, so that a given energy
+# stays comparable from one result to the other:
+superpose_curves(
+    [multi_result.plots[0], multi_result_1.plots[0]],
+    labels=["result", "result 1"],
+    show=True,
+    save=False,
+)
