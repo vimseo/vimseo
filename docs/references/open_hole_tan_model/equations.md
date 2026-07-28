@@ -27,7 +27,7 @@ The rotation angle is:
 $$
 \alpha =
 \begin{cases}
-\frac{1}{2}\arctan\left(\frac{N_{xy}}{N_{xx}-N_{yy}}\right) & N_{xx}\neq N_{yy} \\
+\frac{1}{2}\arctan\left(\frac{N_{xy}}{N_{xx}-N_{yy}}\right) & if N_{xx}\neq N_{yy} \\
 \frac{\pi}{4} & \text{otherwise}
 \end{cases}
 $$
@@ -40,13 +40,13 @@ $$
 p = T_\alpha N
 $$
 
-where \(T_\alpha\) is the rotation matrix.
+where $T_\alpha$ is the rotation matrix.
 
 ## Stress field computation
 
 In this coordinate system, the membrane stress solution for an infinite anisotropic plate with a hole in
 its thickness is determined using a complex method. For each load component, p1 and p2,
-there corresponds a membrane stress field denoted respectively as $N1(x, y)$ and $N2(x, y)$. These are expressed
+there is a membrane stress field denoted respectively as $N1(x, y)$ and $N2(x, y)$. These are expressed
 as the combination of a uniform membrane stress and a stress resulting from the hole. For any point
 with coordinates (x, y) in the initial coordinate system, the solution fields are expressed as follows.
 
