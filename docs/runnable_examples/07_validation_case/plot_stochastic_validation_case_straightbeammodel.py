@@ -41,7 +41,7 @@ import logging
 
 from gemseo.datasets.io_dataset import IODataset
 
-from vimseo import EXAMPLE_RUNS_DIR_NAME
+from vimseo import EXAMPLE_RUNS_DIR
 from vimseo.api import activate_logger
 from vimseo.api import create_model
 from vimseo.core.model_settings import IntegratedModelSettings
@@ -107,9 +107,10 @@ model = create_model(
     model_name,
     load_case,
     model_options=IntegratedModelSettings(
-        directory_archive_root=f"../../../{EXAMPLE_RUNS_DIR_NAME}/archive/stochastic_validation_case",
-        directory_scratch_root=f"../../../{EXAMPLE_RUNS_DIR_NAME}/scratch/stochastic_validation_case",
-        cache_file_path=f"../../../{EXAMPLE_RUNS_DIR_NAME}/caches/stochastic_validation_case/{model_name}_{load_case}.hdf",
+        directory_archive_root=EXAMPLE_RUNS_DIR / "archive/stochastic_validation_case",
+        directory_scratch_root=EXAMPLE_RUNS_DIR / "scratch/stochastic_validation_case",
+        cache_file_path=EXAMPLE_RUNS_DIR
+        / f"caches/stochastic_validation_case/{model_name}_{load_case}.hdf",
     ),
 )
 
