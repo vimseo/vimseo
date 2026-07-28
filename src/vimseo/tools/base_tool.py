@@ -1,4 +1,4 @@
-# Copyright 2021 IRT Saint Exupéry, https://www.irt-saintexupery.com
+# Copyright 2021 IRT Saint Exupery, https://www.irt-saintexupery.com
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -348,7 +348,7 @@ class BaseTool(metaclass=GoogleDocstringInheritanceMeta):
                     msg = (
                         "You define keyword argument ``settings``. "
                         "If you want to define inputs, it must be done through "
-                        "the keyword argument ``inputs``."
+                        "the keyword argument ``inputs`` instead of passing `**kwargs`."
                     )
                     raise ValueError(msg)
                 if not isinstance(options["settings"], self._SETTINGS):
@@ -464,10 +464,10 @@ class BaseTool(metaclass=GoogleDocstringInheritanceMeta):
 
     def save_results(self, prefix: str = "", file_format="hdf5") -> None:
         """Save the results of the tool on disk. The file path is
-       `BaseTool.working_directory` / ``{filename}_result.{file_format}``.
+        `BaseTool.working_directory` / ``{filename}_result.{file_format}``.
 
-        Args:
-            prefix: The prefix of the filename result.
+         Args:
+             prefix: The prefix of the filename result.
         """
         prefix_separator = ""
         if prefix != "":

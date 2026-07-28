@@ -1,4 +1,4 @@
-# Copyright 2021 IRT Saint Exupéry, https://www.irt-saintexupery.com
+# Copyright 2021 IRT Saint Exupery, https://www.irt-saintexupery.com
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -56,7 +56,7 @@ class BendingTestAnalytical(PreRunPostModel):
     RUN_FAMILY = "RunBendingTestAnalytical"
     POST_PROC_FAMILY = "PostBendingTestAnalytical"
     MATERIAL_FILE = MATERIAL_LIB_DIR / "Ta6v.json"
-    CURVES: ClassVar[Sequence[tuple[str]]] = [
+    CURVES: ClassVar[Sequence[tuple[str, str]]] = [
         ("dplt_grid", "dplt"),
         ("moment_grid", "moment"),
     ]

@@ -1,4 +1,4 @@
-# Copyright 2021 IRT Saint Exupéry, https://www.irt-saintexupery.com
+# Copyright 2021 IRT Saint Exupery, https://www.irt-saintexupery.com
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -108,6 +108,8 @@ class MockModelPersistent(IntegratedModel):
     SUMMARY = (
         " A toy model for testing purpose of persistent data - mono-component version"
     )
+
+    CURVES: ClassVar[Sequence[tuple[str, str]]] = [("x3", "y5")]
 
     def __init__(self, load_case_name: str, **options):
         options = IntegratedModelSettings(**options).model_dump()

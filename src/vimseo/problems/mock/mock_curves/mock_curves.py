@@ -1,4 +1,4 @@
-# Copyright 2021 IRT Saint Exupéry, https://www.irt-saintexupery.com
+# Copyright 2021 IRT Saint Exupery, https://www.irt-saintexupery.com
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -63,7 +63,7 @@ class MockCurvesDiscipline(Discipline):
 
 
 class MockCurves(BaseDisciplineModel):
-    CURVES: ClassVar[Sequence[tuple[str]]] = [("y_axis", "y")]
+    CURVES: ClassVar[Sequence[tuple[str, str]]] = [("y_axis", "y")]
 
     _DISCIPLINE: ClassVar[Discipline] = MockCurvesDiscipline()
 
@@ -110,7 +110,7 @@ class MockCurvesXRangeDiscipline(Discipline):
 
 
 class MockCurvesXRange(BaseDisciplineModel):
-    CURVES: ClassVar[Sequence[tuple[str]]] = [("y_axis", "y")]
+    CURVES: ClassVar[Sequence[tuple[str, str]]] = [("y_axis", "y")]
 
     _DISCIPLINE = MockCurvesXRangeDiscipline()
     _EXPECTED_LOAD_CASE = "Dummy"

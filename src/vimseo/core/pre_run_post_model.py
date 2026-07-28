@@ -13,21 +13,6 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-# Copyright 2021 IRT Saint Exupéry, https://www.irt-saintexupery.com
-#
-# This program is free software; you can redistribute it and/or
-# modify it under the terms of the GNU Lesser General Public
-# License version 3 as published by the Free Software Foundation.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-# Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program; if not, write to the Free Software Foundation,
-# Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-
 from __future__ import annotations
 
 import logging
@@ -91,6 +76,9 @@ class PreRunPostModel(IntegratedModel):
     SUBROUTINES_NAMES: ClassVar[Sequence[str]] = []
     """The names of the subroutines."""
 
+    _RUN_COMPONENT_INDEX: ClassVar[int] = 1
+    """The run-processor is the second component of the pre/run/post chain."""
+
     N_CPUS = 1
     """The default number of cpus used to run the model."""
 
@@ -140,8 +128,6 @@ class PreRunPostModel(IntegratedModel):
 
         super().__init__(load_case_name, components, **options)
 
-        # TODO automatically add material grammar to run component input grammar.
-
         self._pre_processor = self._chain.disciplines[0]
         self._run_processor = self._chain.disciplines[1]
         self._post_processor = self._chain.disciplines[2]
@@ -160,7 +146,7 @@ class PreRunPostModel(IntegratedModel):
     @property
     def n_cpus(self):
         """The number of CPUs to run this model."""
-        return self.run.n_cpus
+        return self._run_processor.n_cpus
 
     def set_n_cpus(self, n_cpus: int):
         LOGGER.warning(

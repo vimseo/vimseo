@@ -13,21 +13,6 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-# Copyright 2021 IRT Saint Exupéry, https://www.irt-saintexupery.com
-#
-# This program is free software; you can redistribute it and/or
-# modify it under the terms of the GNU Lesser General Public
-# License version 3 as published by the Free Software Foundation.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-# Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program; if not, write to the Free Software Foundation,
-# Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-
 from __future__ import annotations
 
 import re
@@ -357,3 +342,16 @@ def test_input_grammar_extras(tmp_wd):
     with pytest.raises(KeyError, match=re.escape(msg)):
         model.execute({"foo": atleast_1d(0.0)})
     model.EXTRA_INPUT_GRAMMAR_CHECK = False
+
+
+def test_run_property_returns_first_component(tmp_wd):
+    """The base ``run`` property returns the single component of the chain."""
+    model = create_model("MockModelPersistent", "LC1")
+    assert model.run is model._chain.disciplines[0]
+
+
+def test_auto_get_file_not_found_raises(tmp_wd):
+    """Searching for a non-existing file suffix raises."""
+    model = create_model("MockModel", "LC1")
+    with pytest.raises(FileNotFoundError, match="No files with suffix"):
+        model.auto_get_file(".nonexistent_suffix")

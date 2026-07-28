@@ -13,21 +13,6 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-# Copyright 2021 IRT Saint Exupéry, https://www.irt-saintexupery.com
-#
-# This program is free software; you can redistribute it and/or
-# modify it under the terms of the GNU Lesser General Public
-# License version 3 as published by the Free Software Foundation.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-# Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program; if not, write to the Free Software Foundation,
-# Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-
 from __future__ import annotations
 
 import getpass
@@ -189,10 +174,14 @@ class IntegratedModel(GemseoDisciplineWrapper):
     _ERROR_CODE_DEFAULT = -1
     """Default value of error_code."""
 
+    _RUN_COMPONENT_INDEX: ClassVar[int] = 0
+    """The index, in the component chain, of the component running the external
+    software (returned by the :attr:`run` property). Defaults to the first component."""
+
     MATERIAL_FILE: ClassVar[Path | str] = ""
     """The path to the json file defining the material values."""
 
-    CURVES: ClassVar[Sequence[tuple[str]]] = []
+    CURVES: ClassVar[Sequence[tuple[str, str]]] = []
     """The output data to plot as curves. Define a tuple for each curve. It can be load
     case independent or dependent. Only the first two elements of the list of variables
     are considered.The first variable is the abscissa variable and the second value is
@@ -648,8 +637,8 @@ class IntegratedModel(GemseoDisciplineWrapper):
             figures["scalars"] = plot.execute(
                 directory_path=directory_path,
                 file_name="scalars.html",
-                save=False,
-                show=True,
+                save=save,
+                show=show,
             )
         else:
             msg = f"Unknown data type {data} for plotting."
@@ -721,7 +710,7 @@ class IntegratedModel(GemseoDisciplineWrapper):
     @property
     def run(self) -> BaseComponent:
         """The component running the external software."""
-        return self._chain.disciplines[0]
+        return self._chain.disciplines[self._RUN_COMPONENT_INDEX]
 
     def _classify_variables(self, data):
         """Split a dictionary of variables according to the variable groups:

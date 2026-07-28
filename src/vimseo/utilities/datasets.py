@@ -1,4 +1,4 @@
-# Copyright 2021 IRT Saint Exupéry, https://www.irt-saintexupery.com
+# Copyright 2021 IRT Saint Exupery, https://www.irt-saintexupery.com
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -353,12 +353,15 @@ def dataframe_to_dataset(df: DataFrame) -> Dataset:
 
     reordered_unique_names = []
     for name in df.columns.values:
+        if get_component(name) != "0":
+            continue
+        variable_name = get_variable_name(name)
+        group_name = get_group_name(name)
         reordered_unique_names.extend(
             unique_name
             for unique_name in unique_names
-            if unique_name.startswith(get_variable_name(name))
-            and unique_name.split("__group__")[1].startswith(get_group_name(name))
-            and get_component(name) == "0"
+            if unique_name.split("__group__")[0] == variable_name
+            and unique_name.split("__group__")[1] == group_name
         )
 
     dataset = Dataset.from_array(
@@ -374,27 +377,6 @@ def dataframe_to_dataset(df: DataFrame) -> Dataset:
             dataset.rename_variable(unique_name, name, group_name)
 
     return dataset.astype({col: df.dtypes[i] for i, col in enumerate(dataset.columns)})
-
-
-def get_values(df: DataFrame, variable_name: str, group_name: str = ""):
-    """Return the values from a suffixed DataFrame based ont he name of a variable (not
-    suffixed) and an optional group name."""
-    if group_name == "":
-        candidate_variable_names = [
-            name_and_group
-            for name_and_group in df.columns.values
-            if name_and_group.split("[")[0] == variable_name
-        ]
-        if len(candidate_variable_names) > 1:
-            msg = (
-                f"Variable name {variable_name} is ambiguous since it is suffixed "
-                f"by more than one group."
-            )
-            raise ValueError(msg)
-        return df[candidate_variable_names[0]].to_numpy()
-    return df[
-        f"{variable_name}{GROUP_SEPARATORS[0]}{group_name}{GROUP_SEPARATORS[1]}"
-    ].to_numpy()
 
 
 def decode_vector(vector_as_str: str, separator="_") -> ndarray:
