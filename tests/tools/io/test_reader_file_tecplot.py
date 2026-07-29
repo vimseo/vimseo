@@ -82,6 +82,24 @@ def test_reader_file_tecplot(tmp_wd, pressure_alias):
     assert_allclose(field.point_data[pressure_name], [10.0, 20.0, 30.0, 40.0])
 
 
+def test_wrong_coordinate_name(tmp_wd):
+    """Check the error raises correctly when an incorrect coordinate name is passed."""
+    file_name = "surface.dat"
+    Path(file_name).write_text(_TECPLOT_CONTENT)
+
+    reader = ReaderFileTecplot()
+
+    incorrect_coord_name = "CoordintaeX"
+    with pytest.raises(
+        ValueError,
+        match=rf"Coordinate name {incorrect_coord_name} not in file.",
+    ):
+        reader.execute(
+            file_name=file_name,
+            coordinate_names=(incorrect_coord_name, "CoordinateY", "CoordinateZ"),
+        )
+
+
 def test_reader_file_tecplot_wrong_extension(tmp_wd):
     """Check the behavior when reading a file with a wrong extension."""
     file_name = "surface.txt"

@@ -83,7 +83,7 @@ def _rename_header_variables(
             for i_coord in range(3):
                 if provided_coordinate_names[i_coord] not in line:
                     msg = (
-                        f"Coordinate name {provided_coordinate_names[i_coord]}"
+                        f"Coordinate name {provided_coordinate_names[i_coord]} "
                         "not in file."
                     )
                     raise ValueError(msg)
