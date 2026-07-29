@@ -26,7 +26,6 @@ from numpy import ndarray
 from pandas import DataFrame
 
 from vimseo.tools.base_tool import BaseResult
-from vimseo.tools.validation.validation_point_result import ValidationPointResult
 from vimseo.utilities.datasets import GROUP_SEPARATORS
 from vimseo.utilities.datasets import dataframe_to_dataset
 
@@ -38,6 +37,7 @@ if TYPE_CHECKING:
     from gemseo.datasets.dataset import Dataset
 
     from vimseo.tools.validation.validation_point_result import ValidationPointResult
+
 
 LOGGER = logging.getLogger(__name__)
 

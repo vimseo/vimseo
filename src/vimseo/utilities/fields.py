@@ -47,7 +47,7 @@ class Field:
         return list(self.point_data.keys())
 
     @classmethod
-    def from_mesh(cls, path: Path | str, mesh: Mesh) -> Field:
+    def from_mesh(cls, mesh: Mesh, path: Path | str = "") -> Field:
         """Build a field from an already-read mesh.
 
         Args:
@@ -75,4 +75,4 @@ class Field:
         Returns:
             The field.
         """
-        return cls.from_mesh(path, read(path))
+        return cls.from_mesh(read(path), path)
