@@ -28,6 +28,7 @@ def unit_square_mesh() -> Mesh:
         points=[[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]],
         cells=[("triangle", [[0, 1, 2], [0, 2, 3]])],
         point_data={"pressure": [0.0, 1.0, 2.0, 1.0]},
+        cell_data={"rms_velocity": [[0.0, 1.0]]},
     )
 
 
@@ -36,6 +37,7 @@ def test_from_mesh(unit_square_mesh):
     field = MeshField.from_mesh(unit_square_mesh, "source.dat")
     assert field.path == "source.dat"
     assert field.point_variable_names == ["pressure"]
+    assert field.cell_variable_names == ["rms_velocity"]
     assert_allclose(field.mesh_points, unit_square_mesh.points)
 
 
