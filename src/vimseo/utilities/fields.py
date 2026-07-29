@@ -16,38 +16,56 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from dataclasses import field
 from typing import TYPE_CHECKING
 
+from meshio import CellBlock
 from meshio import read
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable
     from pathlib import Path
 
     from meshio import Mesh
     from numpy import ndarray
 
 
-@dataclass
-class Field:
-    """A field."""
+@dataclass(eq=False)
+class MeshField:
+    """A field defined over a mesh.
 
-    path: str | Path = ""
-    point_data: ndarray | None = None
-    cell_data: ndarray | None = None
+    The field holds the mesh geometry together with the variables defined at its
+    points and cells, as read by ``meshio``.
+    """
+
     mesh_points: ndarray | None = None
-    mesh_cells: ndarray | None = None
+    """The coordinates of the mesh points, of shape ``(n_points, 3)``."""
+
+    mesh_cells: list[CellBlock] = field(default_factory=list)
+    """The mesh cells, one block per cell type."""
+
+    point_data: dict[str, ndarray] = field(default_factory=dict)
+    """The variables defined at the mesh points."""
+
+    cell_data: dict[str, list[ndarray]] = field(default_factory=dict)
+    """The variables defined at the cells, one array per cell block."""
+
+    path: str = ""
+    """The path of the file the field was read from, empty if none."""
+
+    def __post_init__(self) -> None:
+        """Cast the path to a string, so that a ``Path`` is also accepted."""
+        self.path = str(self.path)
 
     @property
-    def cell_variable_names(self) -> Iterable[str]:
+    def cell_variable_names(self) -> list[str]:
         return list(self.cell_data.keys())
 
     @property
-    def point_variable_names(self) -> Iterable[str]:
+    def point_variable_names(self) -> list[str]:
         return list(self.point_data.keys())
 
     @classmethod
-    def from_mesh(cls, mesh: Mesh, path: Path | str = "") -> Field:
+    def from_mesh(cls, mesh: Mesh, path: Path | str = "") -> MeshField:
         """Build a field from an already-read mesh.
 
         Args:
@@ -66,7 +84,7 @@ class Field:
         )
 
     @classmethod
-    def load(cls, path: Path | str) -> Field:
+    def load(cls, path: Path | str) -> MeshField:
         """Load a field from a mesh file.
 
         Args:

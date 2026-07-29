@@ -34,7 +34,7 @@ from vimseo.storage_management.base_storage_manager import PersistencyPolicy
 from vimseo.storage_management.directory_storage import DirectoryArchive
 from vimseo.tools.base_result import BaseResult
 from vimseo.utilities.curves import Curve
-from vimseo.utilities.fields import Field
+from vimseo.utilities.fields import MeshField
 
 if TYPE_CHECKING:
     from vimseo.core.base_integrated_model import IntegratedModel
@@ -55,7 +55,7 @@ class ModelResult(BaseResult):
     scalars: ScalarDataType = field(default_factory=dict)
     vectors: Mapping[str, ndarray] = field(default_factory=dict)
     curves: Iterable[Curve] = field(default_factory=list)
-    fields: Mapping[str, Iterable[Field | Path | str]] = field(default_factory=dict)
+    fields: Mapping[str, Iterable[MeshField | Path | str]] = field(default_factory=dict)
     snapshots: Iterable[Path | str] = field(default_factory=list)
 
     # TODO Add timestamp attr in Field, and fill this value based on a variable name
@@ -107,7 +107,7 @@ class ModelResult(BaseResult):
         for field_name in model.FIELDS_FROM_FILE:
             result.fields[field_name] = [
                 (
-                    Field.load(
+                    MeshField.load(
                         Path(
                             archive_result["metadata"][
                                 MetaDataNames.directory_archive_job

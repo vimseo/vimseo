@@ -42,7 +42,7 @@ from vimseo.tools.base_tool import BaseTool
 from vimseo.tools.io.base_reader_file import BaseReaderFile
 from vimseo.tools.io.base_reader_file_settings import BaseFileReaderSettings
 from vimseo.tools.io.field_result import FieldResult
-from vimseo.utilities.fields import Field as MeshField
+from vimseo.utilities.fields import MeshField as MeshField
 
 if TYPE_CHECKING:
     from collections.abc import Mapping

@@ -30,9 +30,11 @@
 
 from __future__ import annotations
 
+import dataclasses as dc
+
 from vimseo.tools.base_result import BaseResult
-from vimseo.utilities.fields import Field
+from vimseo.utilities.fields import MeshField
 
 
 class FieldResult(BaseResult):
-    field: Field | None = None
+    field: list[MeshField] = dc.field(default_factory=list)
