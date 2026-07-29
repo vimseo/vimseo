@@ -346,9 +346,8 @@ class BaseTool(metaclass=GoogleDocstringInheritanceMeta):
                     "inputs",
                 }):
                     msg = (
-                        "You define keyword argument ``settings``. "
-                        "If you want to define inputs, it must be done through "
-                        "the keyword argument ``inputs`` instead of passing `**kwargs`."
+                        "Either pass settings and inputs as a single `` **kwargs``, "
+                        "or use both ``inputs`` and ``settings`` args."
                     )
                     raise ValueError(msg)
                 if not isinstance(options["settings"], self._SETTINGS):

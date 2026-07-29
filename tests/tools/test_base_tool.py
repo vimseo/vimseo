@@ -82,9 +82,8 @@ def test_settings_and_inputs_as_pydantic(tmp_wd):
     with pytest.raises(
         ValueError,
         match=re.escape(
-            "You define keyword argument ``settings``. "
-            "If you want to define inputs, it must be done through the keyword argument "
-            "``inputs`` instead of passing `**kwargs`."
+            "Either pass settings and inputs as a single `` **kwargs``, "
+            "or use both ``inputs`` and ``settings`` args."
         ),
     ):
         tool.execute(settings=MySettings(foo="_"), bar="_")
