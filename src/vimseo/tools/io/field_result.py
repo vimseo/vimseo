@@ -31,10 +31,17 @@
 from __future__ import annotations
 
 import dataclasses as dc
+from dataclasses import dataclass
 
 from vimseo.tools.base_result import BaseResult
 from vimseo.utilities.fields import MeshField
 
 
+@dataclass
 class FieldResult(BaseResult):
-    field: list[MeshField] = dc.field(default_factory=list)
+    fields: list[MeshField] = dc.field(default_factory=list)
+
+    def __post_init__(self):
+        """Allow for an initialization with a single field."""
+        if isinstance(self.fields, MeshField):
+            self.fields = [self.fields]

@@ -42,7 +42,7 @@ from vimseo.tools.base_tool import BaseTool
 from vimseo.tools.io.base_reader_file import BaseReaderFile
 from vimseo.tools.io.base_reader_file_settings import BaseFileReaderSettings
 from vimseo.tools.io.field_result import FieldResult
-from vimseo.utilities.fields import MeshField as MeshField
+from vimseo.utilities.fields import MeshField
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
@@ -168,4 +168,4 @@ class ReaderFileTecplot(BaseReaderFile):
         print(text)
         mesh = read(StringIO(text), file_format=_FORMAT)
 
-        self.result.field = MeshField.from_mesh(mesh, file_path)
+        self.result.fields.append(MeshField.from_mesh(mesh, file_path))

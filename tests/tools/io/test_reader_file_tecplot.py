@@ -72,7 +72,7 @@ def test_reader_file_tecplot(tmp_wd, pressure_alias):
     pressure_name = "P" if pressure_alias else "Pressure"
 
     assert isinstance(result, FieldResult)
-    field = result.field
+    field = result.fields[0]
     assert field.mesh_points.shape == (4, 3)
     assert_allclose(field.mesh_points[:, 0], [0.0, 1.0, 1.0, 0.0])
     assert len(field.mesh_cells) == 1
