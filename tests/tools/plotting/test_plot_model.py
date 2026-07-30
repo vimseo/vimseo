@@ -54,7 +54,7 @@ def test_plot_model(tmp_wd, model, load_case):
         ).is_file()
 
 
-def test_plot_model_scalars():
+def test_plot_model_scalars(tmp_wd):
     """Check that the scalar outputs of a model can be plotted in a scatter matrix.
 
     A non-existing directory is passed to also check that it is created.
