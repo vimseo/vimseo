@@ -21,6 +21,7 @@ import logging
 import pickle
 from dataclasses import asdict
 from dataclasses import dataclass
+from dataclasses import field
 from dataclasses import fields
 from io import BytesIO
 from math import isnan
@@ -57,7 +58,7 @@ class BaseResult(metaclass=GoogleDocstringInheritanceMeta):
     (``json``).
     """
 
-    metadata: ToolResultMetadata | None = None
+    metadata: ToolResultMetadata = field(default_factory=ToolResultMetadata)
     """ToolResultMetadata attached to a result."""
 
     def to_pickle(self, file_path: str | Path):
@@ -122,9 +123,6 @@ class BaseResult(metaclass=GoogleDocstringInheritanceMeta):
         ) as f:
             json.dump(asdict(self.metadata), f, indent=4, ensure_ascii=True)
 
-    def __post_init__(self):
-        self.metadata = ToolResultMetadata()
-
 
 def assert_results_equal(r1, r2):
     """Recursively compare two dataclasses/dicts/arrays."""
@@ -164,6 +162,6 @@ def assert_results_equal(r1, r2):
         except (AssertionError, TypeError, ValueError) as e:
             # If comparison returns an error or a non-boolean, check the type and print
             # that the comparison has failed.
-            assert type(r1) is type(r2), (  # noqa: PT017
+            assert type(r1) is type(r2), (  # ruff: ignore[pytest-assert-in-except]
                 f"Objects of type {type(r1)} are not equal and not comparable: {e}"
             )

@@ -249,7 +249,7 @@ def test_load_results_unknown_format_raises(tmp_path):
         BaseTool.load_results(tmp_path / "result.txt")
 
 
-def test_load_options_from_metadata(tmp_path):
+def test_load_options_from_metadata(tmp_wd, tmp_path):
     """Options can be restored from a metadata file on disk."""
     tool = MyTool()
     tool.execute(foo="x")
