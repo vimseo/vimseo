@@ -38,6 +38,12 @@ if TYPE_CHECKING:
 
 FLOAT_PRECISION = 3
 
+LINE_WIDTH = 2
+"""The line width used when a trace does not prescribe one."""
+
+MARKER_SIZE = 4
+"""The marker size used when a trace does not prescribe one."""
+
 COLORS = ("blue", "red", "green", "black", "orange", "purple", "brown", "cyan")
 """The colours used when a trace does not prescribe one."""
 
@@ -128,9 +134,7 @@ def _make_scatter(
     x_values, y_values, label: str, style: LineStyle, color: str, dash: str
 ) -> Scatter:
     """Create a Plotly line from the values of a trace and its resolved style."""
-    line = {"color": color, "dash": dash}
-    if style.width is not None:
-        line["width"] = style.width
+    line = {"color": color, "dash": dash, "width": style.width or LINE_WIDTH}
     return Scatter(
         x=x_values,
         y=y_values,
@@ -140,6 +144,7 @@ def _make_scatter(
         marker={
             "symbol": MARKER_ALIASES.get(style.marker, style.marker),
             "color": color,
+            "size": MARKER_SIZE,
         },
     )
 
