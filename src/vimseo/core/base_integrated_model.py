@@ -505,13 +505,13 @@ class IntegratedModel(GemseoDisciplineWrapper):
             self._scratch_manager.create_job_directory()
             LOGGER.info(
                 f"Current root directory of scratch directory is "
-                f"{self._scratch_manager.root_directory}."
+                f"{self._scratch_manager._job_directory}."
             )
 
         self._archive_manager.create_job_directory()
         LOGGER.info(
             f"Current root directory of job directory is "
-            f"{self._archive_manager.root_directory}."
+            f"{self._archive_manager._job_directory}."
         )
 
         for discipline in self._chain.disciplines:
