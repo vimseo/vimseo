@@ -50,6 +50,7 @@ class PostProcessor(ExternalSoftwareComponent):
 
     _run method to be overloaded.
     """
+
     # TODO Florent comment : @Seb del_jobdir seems deprecated
     del_jobdir: bool
     """Whether to delete the job directory after post-processing."""
@@ -132,9 +133,8 @@ class PostProcessor(ExternalSoftwareComponent):
         if show:
             plt.show()
 
-    
     def evaluate_modulus_10_50(
-        # TODO Florent review these weird numeric methods 
+        # TODO Florent review these weird numeric methods
         self,
         strain_history: ndarray,
         stress_history: ndarray,
@@ -185,8 +185,6 @@ class PostProcessor(ExternalSoftwareComponent):
             method="average",
         )
 
-
-    
     def _generate_nan_outputs(self, existing_data: Mapping[str, ndarray] | None = None):
         """Generates dummy outputs for all outputs expected by the output grammar of this
         component, that are not already present in ``existing_data``.
