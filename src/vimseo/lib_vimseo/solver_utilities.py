@@ -69,10 +69,26 @@ def write_json_dict(output_file, dict_outputs):
         f.write(json.dumps(dict_outputs, indent=4))
 
 
-def write_job_outputs_csv_exhaustive(output_file, dict_scalars, dict_curves):
-    """Write an exhaustive CSV output file based on scalars and curves outputs,
-    formated for human reading."""
+def write_job_outputs_csv_exhaustive(odb_name, outputs, *legacy_args):
+    """Write an exhaustive CSV output file based on an outputs dict, formated
+    for human reading. Scalars and curves are split automatically based on
+    their size, and the output file name is derived from ``odb_name``."""
+    if legacy_args:
+        msg = (
+            "write_job_outputs_csv_exhaustive() now takes (odb_name, outputs) "
+            "instead of (output_file, dict_scalars, dict_curves) -- update this caller."
+        )
+        raise TypeError(msg)
 
+    dict_scalars = {}
+    dict_curves = {}
+    for key, value in outputs.items():
+        if np.size(value) > 1:
+            dict_curves[key] = value
+        else:
+            dict_scalars[key] = value
+
+    output_file = 'output_' + odb_name[:-4] + '_' + time_stamper_formatted() + '.csv'
     with open(output_file, 'w') as f:
         f.write(get_metadata_txt())
 
