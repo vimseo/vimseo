@@ -18,6 +18,9 @@ __pycache__/
 /.ipynb_checkpoints
 /tags
 
+/a_link_to_tmp
+/a_link_to_transfert
+
 /docs/generated/
 /docs/runnable_examples/**/*.png
 /docs/runnable_examples/**/*.html
