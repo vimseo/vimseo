@@ -607,9 +607,9 @@ class IntegratedModel(GemseoDisciplineWrapper):
         """
         if save:
             directory_path = (
-                self.archive_manager.job_directory
-                if self.archive_manager.job_directory != ""
-                else (Path(directory_path) if directory_path != "" else Path.cwd())
+                Path(directory_path)
+                if directory_path != ""
+                else Path(self.archive_manager.job_directory or Path.cwd())
             )
             if not directory_path.exists():
                 directory_path.mkdir(parents=True)
