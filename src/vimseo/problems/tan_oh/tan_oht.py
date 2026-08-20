@@ -74,6 +74,10 @@ LOGGER = logging.getLogger(__name__)
 
 NOMINAL_GRID_SIZE = 100
 
+#: Geometry (``d0``, ``radius``, ``width``, ``length``, ``thickness``) is in mm.
+#: ``load`` and the ply material (moduli, strengths) are in MPa -- see
+#: ``MATERIAL_FILE`` -- so the resulting stresses (``sigma_xx``, ``sigma_yy``,
+#: ``sigma_xy``, ``sigma_xx_r``, ``sigma_xx_d0``) are also in MPa.
 DEFAULT_INPUT_DATA = {
     "d0": atleast_1d(0.71),
     "radius": atleast_1d(3.175),
@@ -86,11 +90,12 @@ DEFAULT_INPUT_DATA = {
     "layup": array([0.0, 45.0, -45.0, 90.0, 90.0, -45.0, 45.0, 0.0]),
 }
 
-PLY_THICKNESS = 0.125e-3
+#: Single-ply thickness, mm (consistent with the other geometric inputs above).
+PLY_THICKNESS = 0.125
 
-# The ply material (E1, E2, G12, nu12, strengths) lives in a JSON next to its
-# grammar; the grammar makes the properties model inputs (see the components),
-# and the material provides their default values.
+# The ply material (E1, E2, G12, nu12, strengths, all in MPa) lives in a JSON
+# next to its grammar; the grammar makes the properties model inputs (see the
+# components), and the material provides their default values.
 MATERIAL_FILE = MATERIAL_LIB_DIR / "plane_orthotropic_ply.json"
 MATERIAL_GRAMMAR_FILE = MATERIAL_LIB_DIR / "plane_orthotropic_ply_grammar.json"
 material = Material.from_json(MATERIAL_FILE)
@@ -151,6 +156,8 @@ class TanRun_Tension(BaseComponent):
         dx = length / (n_x - 1)
         dy = width / (n_y - 1)
 
+        # ``load`` is the far-field applied stress, MPa (same unit as the ply
+        # material -- see the module docstring above).
         load = array([input_data["load"][0], 0.0, 0.0]) / thickness
 
         c_strat = compute_c_strat(
@@ -210,6 +217,7 @@ class TanRun_Tension(BaseComponent):
                 "N_xx": flatten_flux[:, 0],
                 "N_yy": flatten_flux[:, 1],
                 "N_xy": flatten_flux[:, 2],
+                # sigma_* are membrane stresses, MPa.
                 "sigma_xx": flatten_flux[:, 0] * thickness,
                 "sigma_yy": flatten_flux[:, 1] * thickness,
                 "sigma_xy": flatten_flux[:, 2] * thickness,
@@ -285,6 +293,7 @@ class PostFieldExtraction(BaseComponent):
             input_data["layup"],
             *(input_data[name][0] for name in STIFFNESS_PROPERTY_NAMES),
         )
+        # ``load`` is the far-field applied stress, MPa.
         load = array([input_data["load"][0], 0.0, 0.0]) / thickness
 
         line_extremities = {
@@ -305,7 +314,7 @@ class PostFieldExtraction(BaseComponent):
             for name in self._flux_components:
                 output_data[f"{line_name}_{name}"] = line[name]
 
-        # sigma_xx just past the hole edge, evaluated directly on the Tan
+        # sigma_xx (MPa) just past the hole edge, evaluated directly on the Tan
         # solution (r = radius [+ d0], theta = pi/2 is the transverse center
         # line). This is differentiable and consistent with the analytic
         # Jacobian of ``TanOpenHole`` (see ``_compute_jacobian``), unlike the
