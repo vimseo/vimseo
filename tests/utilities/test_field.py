@@ -24,7 +24,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from vimseo.utilities.fields import Field
+from vimseo.utilities.fields import MeshField
 
 
 def _linear_field(nx: int = 3, ny: int = 4):
@@ -40,7 +40,7 @@ def _linear_field(nx: int = 3, ny: int = 4):
 def test_to_structured_grid_rectangular():
     """The component is reshaped onto its (rectangular) grid."""
     points, values, x, y = _linear_field()
-    field = Field(mesh_points=points, point_data={"p": values})
+    field = MeshField(mesh_points=points, point_data={"p": values})
     grid_x, grid_y, grid_z = field.to_structured_grid("p")
     np.testing.assert_allclose(grid_x, x)
     np.testing.assert_allclose(grid_y, y)
@@ -52,7 +52,7 @@ def test_to_structured_grid_is_order_independent():
     """Shuffled node ordering still reconstructs the same grid."""
     points, values, x, y = _linear_field()
     perm = np.random.default_rng(0).permutation(len(values))
-    field = Field(mesh_points=points[perm], point_data={"p": values[perm]})
+    field = MeshField(mesh_points=points[perm], point_data={"p": values[perm]})
     _, _, grid_z = field.to_structured_grid("p")
     np.testing.assert_allclose(grid_z, x[:, None] + 2.0 * y[None, :])
 
@@ -62,7 +62,7 @@ def test_to_structured_grid_blanks_missing_nodes():
     points, values, _, _ = _linear_field()
     values = values.copy()
     values[2] = np.nan
-    field = Field(mesh_points=points, point_data={"p": values})
+    field = MeshField(mesh_points=points, point_data={"p": values})
     _, _, grid_z = field.to_structured_grid("p")
     assert np.isnan(grid_z).sum() == 1
 
@@ -70,12 +70,12 @@ def test_to_structured_grid_blanks_missing_nodes():
 def test_probe_is_exact_on_a_linear_field():
     """Bilinear interpolation is exact for a linear field."""
     points, values, _, _ = _linear_field()
-    field = Field(mesh_points=points, point_data={"p": values})
+    field = MeshField(mesh_points=points, point_data={"p": values})
     assert field.probe("p", 1.0, 1.5) == pytest.approx(1.0 + 2.0 * 1.5)
 
 
 def test_probe_outside_grid_returns_nan():
     """A probe point outside the grid returns nan."""
     points, values, _, _ = _linear_field()
-    field = Field(mesh_points=points, point_data={"p": values})
+    field = MeshField(mesh_points=points, point_data={"p": values})
     assert np.isnan(field.probe("p", 10.0, 10.0))
