@@ -1,90 +1,90 @@
 {
   "properties": {
     "E1": {
-      "description": "",
+      "description": "[Stiffness] Longitudinal Young's modulus, fibre direction {{MPa}}",
       "items": {
-        "maximum": 1000000000000.0,
-        "minimum": -1000000000000.0,
+        "maximum": 1000000.0,
+        "minimum": 0.0,
         "type": "number"
       },
       "title": "E1",
       "type": "array"
     },
     "E2": {
-      "description": "",
+      "description": "[Stiffness] Transverse Young's modulus, perpendicular to fibres, in-plane {{MPa}}",
       "items": {
-        "maximum": 1000000000000.0,
-        "minimum": -1000000000000.0,
+        "maximum": 1000000.0,
+        "minimum": 0.0,
         "type": "number"
       },
       "title": "E2",
       "type": "array"
     },
     "G12": {
-      "description": "",
+      "description": "[Stiffness] In-plane shear modulus, 1-2 directions {{MPa}}",
       "items": {
-        "maximum": 1000000000000.0,
-        "minimum": -1000000000000.0,
+        "maximum": 1000000.0,
+        "minimum": 0.0,
         "type": "number"
       },
       "title": "G12",
       "type": "array"
     },
     "nu12": {
-      "description": "",
+      "description": "[Stiffness] Major Poisson's ratio, in-plane, direction 1-2 {{-}}",
       "items": {
-        "maximum": 1000000000000.0,
-        "minimum": -1000000000000.0,
+        "maximum": 1.0,
+        "minimum": 0.0,
         "type": "number"
       },
       "title": "Nu12",
       "type": "array"
     },
     "Xt": {
-      "description": "",
+      "description": "[Strength] Longitudinal tensile strength, fibre direction {{MPa}}",
       "items": {
-        "maximum": 1000000000000.0,
-        "minimum": -1000000000000.0,
+        "maximum": 1000000.0,
+        "minimum": 0.0,
         "type": "number"
       },
       "title": "Xt",
       "type": "array"
     },
     "Xc": {
-      "description": "",
+      "description": "[Strength] Longitudinal compressive strength, fibre direction {{MPa}}",
       "items": {
-        "maximum": 1000000000000.0,
-        "minimum": -1000000000000.0,
+        "maximum": 1000000.0,
+        "minimum": -1000000.0,
         "type": "number"
       },
       "title": "Xc",
       "type": "array"
     },
     "Yt": {
-      "description": "",
+      "description": "[Strength] Transverse tensile strength, matrix direction {{MPa}}",
       "items": {
-        "maximum": 1000000000000.0,
-        "minimum": -1000000000000.0,
+        "maximum": 1000000.0,
+        "minimum": -1000000.0,
         "type": "number"
       },
       "title": "Yt",
       "type": "array"
     },
     "Yc": {
-      "description": "",
+      "description": "[Strength] Transverse compressive strength, matrix direction {{MPa}}",
       "items": {
-        "maximum": 1000000000000.0,
-        "minimum": -1000000000000.0,
+        "maximum": 1000000.0,
+        "minimum": -1000000.0,
         "type": "number"
       },
       "title": "Yc",
       "type": "array"
     },
     "S12": {
-      "description": "",
+      "description": "[Strength] In-plane shear strength, 1-2 directions {{MPa}}",
       "items": {
-        "maximum": 1000000000000.0,
-        "minimum": -1000000000000.0,
+        "maximum": 1000000.0,
+        "minimum": -1000000.0,
         "type": "number"
       },
       "title": "S12",
