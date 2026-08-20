@@ -80,8 +80,8 @@ activate_logger(level=logging.INFO)
 # For a ``DirectoryArchive``, the argument ``job_name`` allows to store the result in a specific directory
 # without creating unique directories.
 #
-# Here, a model is created with the default ``DirectoryArchive`` manager, and a specific job directory is used to
-# store the archive result. The ``_accept_overwrite_job_dir`` attribute must be explicitly set to ``True``.
+# Here, a model is created with the default ``DirectoryArchive`` manager. No ``job_name`` is passed, so a
+# unique directory is generated for the archive result at each execution.
 # The ``MockModelPersistent`` model has the specificity of requiring to store some generated files to the archive.
 # The archive manager automatically handles the copy of these files from the scratch to the archive.
 # Here, the scratch directories are kept such that the user can look into them:
@@ -98,11 +98,10 @@ model = create_model(
         / f"caches/visualize_model_result/{model_name}_{load_case}_cache.hdf",
     ),
 )
-model.archive_manager._accept_overwrite_job_dir = True
 model.cache = None
 
 # %%
-# An execution is then performed. A ``JSON`` file is written in the directory ``my_experiment`` of the archive.
+# An execution is then performed. A ``JSON`` file is written in the archive job directory.
 # It contains the input data, output data and metadata.
 # Two files identified at model-level as being persistent have also been copied from the scratch to the archive.
 model.execute({"x1": atleast_1d(2.0), "x2": atleast_1d(-2.0)})

@@ -95,8 +95,6 @@ model = create_model(
         / f"caches/solution_verification/{model_name}_{load_case}_cache.hdf",
     ),
 )
-# The same job directory is reused across the runs of this study:
-model.archive_manager._accept_overwrite_job_dir = True
 
 # %%
 # We define a set of grid sizes (points per direction), from coarse to fine:

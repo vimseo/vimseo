@@ -68,7 +68,6 @@ model = create_model(
     model_options=model_settings,
 )
 model.set_cache(Discipline.CacheType.NONE)
-model.archive_manager._accept_overwrite_job_dir = True
 
 # %%
 # The model description can be accessed like this:

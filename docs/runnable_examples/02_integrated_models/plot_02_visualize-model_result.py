@@ -66,7 +66,6 @@ model = create_model(
     ),
 )
 model.cache = None
-model.archive_manager._accept_overwrite_job_dir = True
 model.execute()
 result = ModelResult.from_data({
     "inputs": model.get_input_data(),
