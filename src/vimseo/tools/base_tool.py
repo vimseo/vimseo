@@ -286,11 +286,11 @@ class BaseTool(metaclass=GoogleDocstringInheritanceMeta):
         name = cls_name + "_options"
         if self._has_check_options:
             comp_dir = Path(Path(f_class).parent).resolve()
-            schema_file = join(comp_dir, f"{name}.json")  # noqa: PTH118
+            schema_file = join(comp_dir, f"{name}.json")  # ruff: ignore[os-path-join]
             if not Path(schema_file).exists():
                 msg = (
                     "Settings grammar for {} tool json schema does not exist, "
-                    "expected: {}".format(cls_name, join(comp_dir, name + ".json"))  # noqa: PTH118
+                    "expected: {}".format(cls_name, join(comp_dir, name + ".json"))  # ruff: ignore[os-path-join]
                 )
                 raise ValueError(msg)
             self._opt_grammar.update_from_file(schema_file)
@@ -370,7 +370,7 @@ class BaseTool(metaclass=GoogleDocstringInheritanceMeta):
 
         return self._options
 
-    def validate(f):  # noqa: N805
+    def validate(f):  # ruff: ignore[invalid-first-argument-name-for-method]
         @functools.wraps(f)
         def decorated(self, *args, **options):
             self._create_working_directory()

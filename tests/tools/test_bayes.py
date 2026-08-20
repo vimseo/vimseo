@@ -37,13 +37,13 @@ from vimseo.tools.base_result import assert_results_equal
 from vimseo.tools.bayes.bayes_analysis import BayesTool
 from vimseo.tools.bayes.bayes_analysis_result import BayesAnalysisResult
 
-random.seed(1)  # noqa: NPY002
+random.seed(1)  # ruff: ignore[numpy-legacy-random]
 
 
 @pytest.fixture
 def data() -> array:
     """The dataset used to calibrate the probabilistic model."""
-    return random.randn(10) + 2  # noqa: NPY002
+    return random.randn(10) + 2  # ruff: ignore[numpy-legacy-random]
 
 
 @pytest.fixture

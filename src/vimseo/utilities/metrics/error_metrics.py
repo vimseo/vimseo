@@ -40,7 +40,7 @@ class RelativeSquaredErrorMetric(BaseMetric[_InputT, _InputT]):
     """
 
     @staticmethod
-    def compute(a: _InputT, b: _InputT) -> _InputT:  # noqa: D102
+    def compute(a: _InputT, b: _InputT) -> _InputT:  # ruff: ignore[undocumented-public-method]
         return (a - b) ** 2 / (absolute(a) + EPSILON)
 
 
@@ -48,7 +48,7 @@ class AbsoluteErrorMetric(BaseMetric[_InputT, _InputT]):
     """The absolute difference between ``a`` and ``b``."""
 
     @staticmethod
-    def compute(a: _InputT, b: _InputT) -> _InputT:  # noqa: D102
+    def compute(a: _InputT, b: _InputT) -> _InputT:  # ruff: ignore[undocumented-public-method]
         return absolute(a - b)
 
 
@@ -59,7 +59,7 @@ class RelativeErrorMetric(BaseMetric[_InputT, _InputT]):
     """
 
     @staticmethod
-    def compute(a: _InputT, b: _InputT) -> _InputT:  # noqa: D102
+    def compute(a: _InputT, b: _InputT) -> _InputT:  # ruff: ignore[undocumented-public-method]
         return absolute(a - b) / (absolute(b) + EPSILON)
 
 
@@ -67,7 +67,7 @@ class AreaMetric(BaseMetric[_InputT, _InputT]):
     """The area (also called Wasserstein) metric."""
 
     @staticmethod
-    def compute(a: _InputT, b: _InputT) -> _InputT:  # noqa: D102
+    def compute(a: _InputT, b: _InputT) -> _InputT:  # ruff: ignore[undocumented-public-method]
         a = a[~isnan(a)]
         b = b[~isnan(b)]
         return wasserstein_distance(a, b)
@@ -80,7 +80,7 @@ class RelativeAreaMetric(BaseMetric[_InputT, _InputT]):
     """
 
     @staticmethod
-    def compute(a: _InputT, b: _InputT) -> _InputT:  # noqa: D102
+    def compute(a: _InputT, b: _InputT) -> _InputT:  # ruff: ignore[undocumented-public-method]
         a = a[~isnan(a)]
         b = b[~isnan(b)]
         return wasserstein_distance(a, b) / (abs(mean(b)) + EPSILON)
@@ -93,7 +93,7 @@ class RelativeMeanToMean(BaseMetric[_InputT, _InputT]):
     """
 
     @staticmethod
-    def compute(a: _InputT, b: _InputT) -> _InputT:  # noqa: D102
+    def compute(a: _InputT, b: _InputT) -> _InputT:  # ruff: ignore[undocumented-public-method]
         return abs(mean(a) - mean(b)) / (abs(mean(b)) + EPSILON)
 
 
@@ -107,7 +107,7 @@ class AbsoluteRelativeErrorP90(BaseMetric[_InputT, _InputT]):
     """
 
     @staticmethod
-    def compute(a: _InputT, b: _InputT) -> _InputT:  # noqa: D102
+    def compute(a: _InputT, b: _InputT) -> _InputT:  # ruff: ignore[undocumented-public-method]
         return (
             abs(nanmean(a) - nanmean(b))
             + 1.645 * (nanstd(a) ** 2 + nanstd(b) ** 2) ** 0.5

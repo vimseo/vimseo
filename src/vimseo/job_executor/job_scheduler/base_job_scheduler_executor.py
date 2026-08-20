@@ -121,7 +121,7 @@ class BaseJobSchedulerExecutor(JobExecutor):
 
         Copy the files from the Slurm job directory to the Abaqus wrapper job directory.
         """
-        for file in os.listdir(str(self.job_scheduler_job_directory)):  # noqa: PTH208
+        for file in os.listdir(str(self.job_scheduler_job_directory)):  # ruff: ignore[os-listdir]
             file_name = Path(file).name
             for pattern in self._COPY_BACK_PATTERNS:
                 if re.search(pattern, file_name):

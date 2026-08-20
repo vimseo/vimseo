@@ -164,7 +164,7 @@ class StatisticsTool(BaseAnalysisTool):
         constant_df = constant_df.select_dtypes([np.number])
         for constant_name in constant_df.columns:
             df[constant_name] = df[constant_name] * (
-                1 + 1e-6 * random.uniform(-1, 1, size=len(df[constant_name]))  # noqa: NPY002
+                1 + 1e-6 * random.uniform(-1, 1, size=len(df[constant_name]))  # ruff: ignore[numpy-legacy-random]
             )
 
         analysis = create_statistics(

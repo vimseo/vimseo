@@ -80,15 +80,15 @@ def generate_reference_from_dataset(
             dataset.loc[:, ("outputs", output_name, bias.component)] = dataset.loc[
                 :, ("outputs", output_name, bias.component)
             ].apply(
-                lambda x: x * bias.mult_factor + bias.shift  # noqa: B023
-            )  # noqa: B023
+                lambda x: x * bias.mult_factor + bias.shift  # ruff: ignore[function-uses-loop-variable]
+            )  # ruff: ignore[function-uses-loop-variable]
         else:
             for i in bias.component:
                 dataset.loc[:, ("outputs", output_name, i)] = dataset.loc[
                     :, ("outputs", output_name, i)
                 ].apply(
-                    lambda x: x * bias.mult_factor + bias.shift  # noqa: B023
-                )  # noqa: B023
+                    lambda x: x * bias.mult_factor + bias.shift  # ruff: ignore[function-uses-loop-variable]
+                )  # ruff: ignore[function-uses-loop-variable]
     if not as_dataset:
         df_ = dataset.copy()
         df_.columns = dataset.get_columns()

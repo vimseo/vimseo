@@ -128,13 +128,13 @@ def test_ise(
     result = metric._evaluate_measure(model_dataset.to_dict_of_arrays(False))
 
     common_support = min(x_right - x_left, X_RIGHT - X_LEFT)
-    if weight_left == 0.0 and weight_right == 0.0:  # noqa: RUF069
+    if weight_left == 0.0 and weight_right == 0.0:  # ruff: ignore[float-equality-comparison]
         assert result == pytest.approx(common_support * DELTA_Y**2)
-    elif weight_left == 0.0 and weight_right == 1.0:  # noqa: RUF069
+    elif weight_left == 0.0 and weight_right == 1.0:  # ruff: ignore[float-equality-comparison]
         assert result == pytest.approx(
             0.5 * common_support * DELTA_Y**2 + 0.5 * (x_right - X_RIGHT) ** 2
         )
-    elif weight_left == 1.0 and weight_right == 0.0:  # noqa: RUF069
+    elif weight_left == 1.0 and weight_right == 0.0:  # ruff: ignore[float-equality-comparison]
         assert result == pytest.approx(
             0.5 * common_support * DELTA_Y**2 + 0.5 * (X_LEFT - x_left) ** 2
         )

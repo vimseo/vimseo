@@ -65,7 +65,7 @@ class Material(BaseJsonIO):
         props = []
         for mat_rel in self.material_relations:
             for prop in mat_rel.properties:
-                props.append(prop)  # noqa: PERF402
+                props.append(prop)  # ruff: ignore[manual-list-copy]
         return props
 
     @property
