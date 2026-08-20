@@ -7,14 +7,10 @@
  Commons, PO Box 1866, Mountain View, CA 94042, USA.
 -->
 
-<!--
-Copyright 2021 IRT Saint Exupery, https://www.irt-saintexupery.com
-All rights reserved.
--->
-# Material description
+## Plane orthotropic ply
 
+Orthotropic composite ply used by the
+[Tan open-hole model](../open_hole_tan_model/index.md) (moduli and strengths
+in MPa).
 
-[Ta6v](ta6v.md){ .md-button }
-[Plane orthotropic ply](plane_orthotropic_ply.md){ .md-button }
-
-Link to [model gallery][model_gallery]
+{{ read_csv('plane_orthotropic_ply_properties.csv', sep=";", index_col=0) }}

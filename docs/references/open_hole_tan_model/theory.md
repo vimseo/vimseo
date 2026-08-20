@@ -31,6 +31,14 @@ fields in an infinite orthotropic plate with a circular hole.
 2. The material behaviour is linear elastic orthotropic
 3. The loading is planar
 
+### Units
+
+Geometric inputs (`length`, `width`, `radius`, `d0`, `thickness`) are expressed
+in mm. The ply material (moduli, strengths -- see
+[Materials](../materials/index.md)) is expressed in MPa, and so is the applied
+`load` and the resulting stress outputs (`sigma_xx`, `sigma_yy`, `sigma_xy`,
+`sigma_xx_r`, `sigma_xx_d0`).
+
 ### Multiaxial loading
 
 The applied load is defined as:
