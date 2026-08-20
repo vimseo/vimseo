@@ -18,8 +18,10 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from dataclasses import field
-from typing import TYPE_CHECKING, Sequence
+from pathlib import Path
+from typing import TYPE_CHECKING
 
+import pyvista as pv
 from meshio import CellBlock
 from meshio import read
 from numpy import array
@@ -30,7 +32,7 @@ from numpy import searchsorted
 from numpy import unique
 
 if TYPE_CHECKING:
-    from pathlib import Path
+    from collections.abc import Sequence
 
     from meshio import Mesh
     from numpy import ndarray
@@ -205,8 +207,8 @@ def extract_line(
         "coords": coords,
         "dist": dist,
     }
-    for field in fields:
-        result[field] = line.point_data[field]
+    for field_name in fields:
+        result[field_name] = line.point_data[field_name]
 
     return result
 
