@@ -133,7 +133,7 @@ class TanRun_Tension(BaseComponent):
         length = input_data["length"][0]
         width = input_data["width"][0]
         thickness = input_data["thickness"][0]
-        input_data["d0"][0]
+        d0 = input_data["d0"][0]
         radius = input_data["radius"][0]
         grid_size = input_data["grid_size"][0]
         n_x = int(grid_size)
@@ -169,7 +169,6 @@ class TanRun_Tension(BaseComponent):
             zeros(n_x * n_y),  # z=0 for 2D
         ])
 
-        d0_ = 0.0
         # Create quad connectivity. Node index at (i, j) = i * n_y + j.
         i_quad, j_quad = meshgrid(arange(n_x - 1), arange(n_y - 1), indexing="ij")
         i_quad = i_quad.ravel()
@@ -191,7 +190,7 @@ class TanRun_Tension(BaseComponent):
         flux_n = tan_model_grid(
             r.ravel(), theta.ravel(), load, c_strat, radius, width
         ).reshape(n_x, n_y, 3)
-        flux_n[r < radius + d0_] = nan
+        flux_n[r < radius + d0] = nan
 
         flatten_flux = flux_n.reshape(-1, 3)  # shape (nx*ny, 3)
 

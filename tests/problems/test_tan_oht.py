@@ -38,6 +38,18 @@ QUASI_ISOTROPIC_STACKING = np.array([0.0, 45.0, -45.0, 90.0, 90.0, -45.0, 45.0, 
 # reproducible across platforms (see the module docstring of ``tan_lib``).
 ORTHOTROPIC_STACKING = np.array([0.0, 0.0, 90.0, 0.0, 0.0, 90.0, 0.0, 0.0])
 
+# A non-isotropic, well-conditioned orthotropic stiffness (C11 != C22, no
+# extension-shear coupling), used directly as a ``C_strat`` (bypassing the
+# layup/CLT machinery) by the lib-level analytical checks below. It keeps
+# ``Calc_S12_eff`` well away from the isotropy-regularisation branch (see
+# ``test_tan_solution_is_continuous_through_isotropy``), so those tests only
+# exercise the load decomposition / superposition logic.
+C_ORTHOTROPIC = np.array([
+    [8e10, 2.5e10, 0.0],
+    [2.5e10, 4e10, 0.0],
+    [0.0, 0.0, 3e10],
+])
+
 
 def _build_c_strat(stacking: np.ndarray) -> tuple[np.ndarray, float]:
     """Build the effective membrane stiffness ``c_strat`` for a stacking.
@@ -92,6 +104,22 @@ def test_tan_oh(tmp_wd, stacking, expected_sigma_xx_d0):
     assert (model.archive_manager.job_directory / "flux.vtk").exists()
 
 
+def test_tan_oh_d0_zero_matches_hole_edge(tmp_wd):
+    """At ``d0 = 0``, the point-stress evaluation point coincides with the hole edge.
+
+    ``sigma_xx_d0`` is evaluated at ``r = radius + d0`` (see
+    ``PostFieldExtraction._run``), so setting ``d0 = 0`` must make it exactly
+    equal to ``sigma_xx_r`` (evaluated at ``r = radius``). This is a direct
+    regression guard for the bug where ``TanRun_Tension._run`` read ``d0``
+    from the inputs but silently discarded it, hardcoding the hole-blanking
+    radius to ``radius + 0.0`` regardless of the actual ``d0`` input.
+    """
+    model = create_model("TanOpenHole", "Tension")
+    output_data = model.execute({"d0": np.array([0.0])})
+
+    assert output_data["sigma_xx_d0"][0] == pytest.approx(output_data["sigma_xx_r"][0])
+
+
 def test_tan_solution_is_continuous_through_isotropy():
     """The Tan stress must vary continuously as a laminate approaches isotropy.
 
@@ -128,6 +156,98 @@ def test_tan_solution_is_continuous_through_isotropy():
     # instead of oscillating or diverging.
     tail = stresses[-4:]
     assert np.ptp(tail) < 1e-4 * np.abs(stresses[-1])
+
+
+def test_tan_model_far_field_recovers_applied_load():
+    """Far from the hole, the Tan solution must recover the applied remote load.
+
+    The hole only perturbs the stress locally; any physically correct
+    elasticity solution for a hole in an (otherwise unbounded) plate must
+    decay back to the uniform remote load as ``r`` grows, for *any* material
+    and *any* combination of normal/shear load components -- this doesn't
+    depend on isotropy or on any particular closed form. The plate width is
+    also taken very large relative to the radius so the finite-width
+    correction factor (``coeff`` in ``tan_model``) stays negligibly close to
+    1, isolating the hole-decay behaviour being checked here. This is a fast,
+    lib-level check (no full model run).
+    """
+    radius = 3.175
+    width = 1e4 * radius
+    r = 100 * radius
+    # A general biaxial + shear load, not just uniaxial, so the check exercises
+    # the full (p1, p2) decomposition, not just a degenerate one-component case.
+    load = np.array([1e6, 3e5, 2e5])
+
+    flux = tan_lib.tan_model(r, 0.7, load, C_ORTHOTROPIC, radius, width)
+
+    np.testing.assert_allclose(flux, load, rtol=2e-3)
+
+
+def test_tan_model_isotropic_hole_edge_matches_kirsch():
+    """The hole-edge stress concentration must match Kirsch's classical solution.
+
+    For an isotropic infinite plate under uniaxial tension, the closed-form
+    hoop stress at the hole boundary is
+    ``sigma_theta_theta(R, theta) = sigma_inf * (1 - 2*cos(2*theta))``. At
+    ``theta = pi/2`` (the point directly transverse to the load), the hoop
+    direction is tangent to the circle and aligned with the global x-axis, so
+    this maps directly onto ``tan_model``'s ``N_xx`` output there, giving the
+    textbook stress concentration factor ``Kt = 3``. This is an independent
+    literature reference value, not a self-consistency check, and validates
+    the whole rotate/solve/rotate-back pipeline at its most-cited special
+    case. This is a fast, lib-level check (no full model run).
+
+    The isotropic stiffness (``E ~ 5.33e10``, ``nu = 1/3``) is built the same
+    way as ``test_tan_solution_is_continuous_through_isotropy`` above, so
+    ``Q11 = E/(1-nu**2) = 6e10``, ``Q12 = nu*Q11 = 2e10``, and
+    ``Q66 = G = E/(2*(1+nu)) = 2e10`` are mutually consistent.
+    """
+    c_isotropic = np.array([
+        [6e10, 2e10, 0.0],
+        [2e10, 6e10, 0.0],
+        [0.0, 0.0, 2e10],
+    ])
+    radius = 3.175
+    width = 1e4 * radius
+    load_x = 1e6
+
+    flux = tan_lib.tan_model(
+        radius, 0.5 * np.pi, np.array([load_x, 0.0, 0.0]), c_isotropic, radius, width
+    )
+
+    assert flux[0] / load_x == pytest.approx(3.0, rel=1e-3)
+
+
+def test_tan_model_superposition_linear_in_load():
+    """``tan_model`` must be exactly linear in the applied load.
+
+    Internally, ``tan_model`` rotates to the load's principal-stress frame
+    via ``a = principal_stress(N)``, which is a *nonlinear* function of
+    ``N`` (``arctan(2*Nxy / (Nxx - Nyy))``), evaluates two decoupled
+    potentials in that rotated frame, then rotates back. Because the
+    rotation angle differs for ``N1``, ``N2``, and ``N1 + N2``, this internal
+    decomposition is not linear in appearance -- yet the physical elasticity
+    problem *is* linear, so the end-to-end map ``N -> stress field`` must
+    still satisfy exact superposition once correctly implemented. This is a
+    genuine check that the rotate/solve/rotate-back algebra reproduces the
+    general (combined normal + shear) closed-form solution consistently
+    across different load directions, and is exactly the kind of check that
+    would catch a dropped or mis-scaled term in that chain. This is a fast,
+    lib-level check (no full model run).
+    """
+    radius = 3.175
+    width = 32.0
+    load_a = np.array([1e6, 3e5, 2e5])
+    load_b = np.array([-2e5, 7e5, -5e4])
+    r, theta = 8.37, 0.9123
+
+    flux_a = tan_lib.tan_model(r, theta, load_a, C_ORTHOTROPIC, radius, width)
+    flux_b = tan_lib.tan_model(r, theta, load_b, C_ORTHOTROPIC, radius, width)
+    flux_combined = tan_lib.tan_model(
+        r, theta, load_a + load_b, C_ORTHOTROPIC, radius, width
+    )
+
+    np.testing.assert_allclose(flux_a + flux_b, flux_combined, rtol=1e-8)
 
 
 def test_tan_oh_jacobian(tmp_wd):
