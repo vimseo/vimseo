@@ -26,8 +26,12 @@ behaviour for which the Richardson extrapolation cannot be computed.
 The Tan model provides an *analytic* membrane stress field for a plate with a
 circular hole (see the :ref:`Tan model reference <open-hole-plate-model-tan-model>`).
 The field is nonetheless evaluated on a grid whose resolution is driven by the
-``coarsening_factor`` input: the grid has ``n = NOMINAL_GRID_SIZE / coarsening_factor``
-points per direction, so a larger ``coarsening_factor`` gives a coarser grid.
+``grid_size`` input: the grid has ``grid_size`` points per direction, so a larger
+``grid_size`` gives a finer grid. The solution-verification tool needs a
+strictly *decreasing* element-size abscissa (it extrapolates towards an element
+size of zero), so we use the model's own ``dx`` output -- the actual node
+spacing, ``dx = length / (grid_size - 1)`` -- rather than ``grid_size`` itself,
+which grows as the grid is refined.
 
 Because the solution is analytic, the values stored at the grid nodes are exact.
 What a coarse grid degrades is any quantity read from the discrete field. We look
@@ -95,10 +99,8 @@ model = create_model(
 model.archive_manager._accept_overwrite_job_dir = True
 
 # %%
-# We define a set of grid coarsening factors, from coarse to fine. The tool
-# requires strictly decreasing "element sizes"; here the coarsening factor plays
-# that role, as it is proportional to the grid spacing.
-coarsening_factors = [4.0, 3.0, 2.0, 1.5, 1.0, 0.5]
+# We define a set of grid sizes (points per direction), from coarse to fine:
+grid_sizes = [25, 33, 50, 66, 100, 200]
 
 
 # %%
@@ -116,17 +118,18 @@ def side_by_side(fig_left, fig_right, left_title, right_title, y_title):
         # Avoid duplicating the shared legend entries in the right-hand panel.
         trace.showlegend = False
         combined.add_trace(trace, row=1, col=2)
-    combined.update_xaxes(title_text="coarsening_factor")
+    combined.update_xaxes(title_text="dx")
     combined.update_yaxes(title_text=y_title, row=1, col=1)
     return combined
 
 
 # %%
-# The two field-derived quantities are not model outputs, so we compute them
-# ourselves: we run the model for each coarsening factor and collect the smooth
-# probe stress and the sawtooth peak stress from the stress field. (The model's
-# own native outputs, verified further down, will not need this manual loop.)
-model.execute({"coarsening_factor": atleast_1d(coarsening_factors[0])})
+# None of the four quantities of interest -- the two field-derived ones and the
+# two native hole-edge stresses -- are read from a discrete field independently
+# of the others, so a single loop over the grid sizes collects all of them at
+# once, together with ``dx``, the physical element size used as the
+# verification abscissa:
+model.execute({"grid_size": atleast_1d(grid_sizes[0])})
 input_data = model.get_input_data()
 length = float(input_data["length"][0])
 width = float(input_data["width"][0])
@@ -134,39 +137,49 @@ radius = float(input_data["radius"][0])
 probe_x = 0.5 * length
 probe_y = 0.5 * width + radius + 3.0
 
+dx_values = []
 probe_stresses = []
 peak_stresses = []
+sigma_xx_r_values = []
+sigma_xx_d0_values = []
 model_results = {}
-for coarsening_factor in coarsening_factors:
-    output_data = model.execute({"coarsening_factor": atleast_1d(coarsening_factor)})
+for grid_size in grid_sizes:
+    output_data = model.execute({"grid_size": atleast_1d(grid_size)})
     result = ModelResult.from_data(
         {"outputs": output_data, "inputs": model.get_input_data()},
         model=model,
         load_fields=True,
     )
     field = result.fields["flux"][0]
+    dx_values.append(float(output_data["dx"][0]))
     probe_stresses.append(field.probe("sigma_xx", probe_x, probe_y))
     peak_stresses.append(float(np.nanmax(field.point_data["sigma_xx"])))
-    model_results[coarsening_factor] = result
+    sigma_xx_r_values.append(float(output_data["sigma_xx_r"][0]))
+    sigma_xx_d0_values.append(float(output_data["sigma_xx_d0"][0]))
+    model_results[grid_size] = result
 
 convergence_table = DataFrame({
-    "coarsening_factor": coarsening_factors,
+    "dx": dx_values,
     "sigma_xx_probe": probe_stresses,
     "sigma_xx_peak": peak_stresses,
+    "sigma_xx_r": sigma_xx_r_values,
+    "sigma_xx_d0": sigma_xx_d0_values,
 })
 print(convergence_table)
 
 # %%
 # The tool consumes an ``IODataset``. We assemble it from the convergence table
 # with the ``dataframe_to_dataset`` helper, using the ``name{group}`` naming
-# convention to place the coarsening factor in the input group and the two
-# stresses in the output group:
+# convention to place ``dx`` in the input group and the four stresses in the
+# output group:
 dataset = dataframe_to_dataset(
     convergence_table.rename(
         columns={
-            "coarsening_factor": "coarsening_factor{inputs}",
+            "dx": "dx{inputs}",
             "sigma_xx_probe": "sigma_xx_probe{outputs}",
             "sigma_xx_peak": "sigma_xx_peak{outputs}",
+            "sigma_xx_r": "sigma_xx_r{outputs}",
+            "sigma_xx_d0": "sigma_xx_d0{outputs}",
         }
     )
 )
@@ -185,8 +198,8 @@ verificator = DiscretizationSolutionVerification(
 )
 verificator.execute(
     simulated_data=dataset,
-    element_size_variable_name="coarsening_factor",
-    abscissa_name="coarsening_factor",
+    element_size_variable_name="dx",
+    abscissa_name="dx",
     output_name="sigma_xx_probe",
 )
 extrapolation = verificator.result.extrapolation
@@ -229,8 +242,8 @@ verificator_peak = DiscretizationSolutionVerification(
 )
 verificator_peak.execute(
     simulated_data=dataset,
-    element_size_variable_name="coarsening_factor",
-    abscissa_name="coarsening_factor",
+    element_size_variable_name="dx",
+    abscissa_name="dx",
     output_name="sigma_xx_peak",
 )
 extrapolation_peak = verificator_peak.result.extrapolation
@@ -317,15 +330,11 @@ side_by_side(
 # The model's native scalar outputs ``sigma_xx_r`` and ``sigma_xx_d0`` are the
 # hole-edge stresses evaluated directly on the analytic Tan solution (at the hole
 # radius, and one stress-point distance ``d0`` beyond it). They do not read the
-# discretised field at all, so they are *exactly* mesh-independent. Being genuine
-# model outputs, they need no manual loop: we pass the ``model`` straight to the
-# tool, which runs it over the coarsening factors and reads each output itself.
+# discretised field at all, so they are *exactly* mesh-independent. They were
+# collected in the same loop as the field-derived quantities above, so no extra
+# model runs are needed here -- we just verify them from the same dataset.
 # Verifying them is a useful sanity check and a third reference behaviour, next to
 # the smooth and sawtooth field quantities.
-#
-# The model-driven path of the tool uses four meshes, so we pass four coarsening
-# factors here (as opposed to the six used above for the field-derived study).
-native_coarsening_factors = [4.0, 2.0, 1.0, 0.5]
 native_verificators = {}
 for native_output in ("sigma_xx_r", "sigma_xx_d0"):
     verificator_native = DiscretizationSolutionVerification(
@@ -333,9 +342,9 @@ for native_output in ("sigma_xx_r", "sigma_xx_d0"):
         working_directory=f"DiscretizationSolutionVerification_{native_output}",
     )
     verificator_native.execute(
-        model=model,
-        element_size_variable_name="coarsening_factor",
-        element_size_values=native_coarsening_factors,
+        simulated_data=dataset,
+        element_size_variable_name="dx",
+        abscissa_name="dx",
         output_name=native_output,
     )
     native_verificators[native_output] = verificator_native
@@ -386,8 +395,8 @@ side_by_side(
 # Beyond the scalar convergence, the whole ``sigma_xx`` field can be compared
 # between the coarsest and the finest grid. Both are exact at their nodes, but
 # the finer grid resolves the stress concentration around the hole far better:
-coarse = model_results[coarsening_factors[0]].fields["flux"][0]
-fine = model_results[coarsening_factors[-1]].fields["flux"][0]
+coarse = model_results[grid_sizes[0]].fields["flux"][0]
+fine = model_results[grid_sizes[-1]].fields["flux"][0]
 x_coarse, y_coarse, z_coarse = coarse.to_structured_grid("sigma_xx")
 x_fine, y_fine, z_fine = fine.to_structured_grid("sigma_xx")
 
@@ -399,8 +408,8 @@ fig = make_subplots(
     cols=2,
     shared_yaxes=True,
     subplot_titles=(
-        f"coarse grid (coarsening_factor={coarsening_factors[0]})",
-        f"fine grid (coarsening_factor={coarsening_factors[-1]})",
+        f"coarse grid (grid_size={grid_sizes[0]})",
+        f"fine grid (grid_size={grid_sizes[-1]})",
     ),
 )
 fig.add_trace(

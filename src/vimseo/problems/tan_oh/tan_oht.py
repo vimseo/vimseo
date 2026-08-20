@@ -69,7 +69,7 @@ DEFAULT_INPUT_DATA = {
     "width": atleast_1d(32.0),
     "length": atleast_1d(80.0),
     "load": array([1000.0]),
-    "coarsening_factor": atleast_1d(1.0),
+    "grid_size": atleast_1d(float(NOMINAL_GRID_SIZE)),
     # Ply angles in degrees, as floats so they are continuous (differentiable)
     # variables -- the stacking drives c_strat (see ``compute_c_strat``).
     "layup": array([0.0, 45.0, -45.0, 90.0, 90.0, -45.0, 45.0, 0.0]),
@@ -135,9 +135,9 @@ class TanRun_Tension(BaseComponent):
         thickness = input_data["thickness"][0]
         input_data["d0"][0]
         radius = input_data["radius"][0]
-        coarsening_factor = input_data["coarsening_factor"][0]
-        n_x = int(NOMINAL_GRID_SIZE / coarsening_factor)
-        n_y = int(NOMINAL_GRID_SIZE / coarsening_factor)
+        grid_size = input_data["grid_size"][0]
+        n_x = int(grid_size)
+        n_y = int(grid_size)
         dx = length / (n_x - 1)
         dy = width / (n_y - 1)
 
