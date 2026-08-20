@@ -98,7 +98,8 @@ def test_tan_oh(tmp_wd, stacking, expected_sigma_xx_d0):
     sigma_xx_d0 = output_data["sigma_xx_d0"][0]
     # Physical sanity: finite, positive, and above the applied far-field stress
     # (there is a stress concentration next to the hole). ``load`` is the applied
-    # stress, and sigma = N * thickness, so the far-field stress is ``load``.
+    # stress (MPa, same unit as the ply material), and sigma = N * thickness, so
+    # the far-field stress is ``load``.
     applied_stress = input_data["load"][0]
     assert np.isfinite(sigma_xx_d0)
     assert sigma_xx_d0 > applied_stress
