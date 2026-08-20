@@ -87,6 +87,6 @@ def create_material_description_table(
 
 
 if __name__ == "__main__":
-    for name in ["Ta6v"]:
+    for name in ["Ta6v", "plane_orthotropic_ply"]:
         df = create_material_description_table(MATERIAL_LIB_DIR, name)
         print(df)
