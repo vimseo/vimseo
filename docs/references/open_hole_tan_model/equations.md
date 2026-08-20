@@ -37,7 +37,7 @@ where $T_\alpha$ is the rotation matrix.
 
 In this coordinate system, the membrane stress solution for an infinite anisotropic plate with a hole in
 its thickness is determined using a complex method. For each load component, p1 and p2,
-there is a membrane stress field denoted respectively as $N1(x, y)$ and $N2(x, y)$. These are expressed
+there is a membrane stress field denoted respectively as $N_1(x, y)$ and $N_2(x, y)$. These are expressed
 as the combination of a uniform membrane stress and a stress resulting from the hole. For any point
 with coordinates (x, y) in the initial coordinate system, the solution fields are expressed as follows.
 
