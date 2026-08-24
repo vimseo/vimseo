@@ -36,6 +36,9 @@ From <https://www.sciencedirect.com/science/article/abs/pii/S0021999104004619>,
 
 ### Richardson extrapolation
 
+Introduced by
+[Richardson (1911)](https://doi.org/10.1098/rsta.1911.0009).
+
 Considering $\gamma$ is a continuous variable, the true error on the simulation result
 $q$ can be expanded in $\gamma$:
 
@@ -51,6 +54,17 @@ Then $\beta$ can be obtained from the non-linear equation:
   = \frac{E_{q,2}}{-{{\gamma}_3}^{\beta} + {{\gamma}_2}^{\beta}}
 
 with $E_{q,{\gamma}_j} = q_{{\gamma}_{j+1}} - q_{{\gamma}_{j}}$.
+
+### Richardson-independent palliative estimates
+
+The three-point Richardson extrapolation is fragile: its cross-validation returns
+``nan`` as soon as one grid triplet is not cleanly power-law convergent, which
+happens systematically for the sawtooth quantity but also for the smooth one on
+sampled data. The tool therefore also reports two Richardson-independent estimates
+of the converged value -- a least-squares power-law fit, whose order is fitted
+rather than assumed, and a model-free median of the finest grids -- which stay
+available in both cases. Their residual (fit) and band (median) quantify how
+reliable the estimate is.
 
 ### Grid Convergence Index
 

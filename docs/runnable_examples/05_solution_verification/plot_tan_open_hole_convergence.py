@@ -19,40 +19,27 @@ Solution verification of the analytic Tan open-hole model
 =========================================================
 
 Assess the discretization error of the :class:`TanOpenHole` model with the
-``DiscretizationSolutionVerification`` tool, and compare two field-derived
-quantities: one that converges smoothly and one that exhibits a *sawtooth*
-behaviour for which the Richardson extrapolation cannot be computed.
-
-The Tan model provides an *analytic* membrane stress field for a plate with a
-circular hole (see the :ref:`Tan model reference <open-hole-plate-model-tan-model>`).
-The field is nonetheless evaluated on a grid whose resolution is driven by the
-``grid_size`` input: the grid has ``grid_size`` points per direction, so a larger
-``grid_size`` gives a finer grid. The solution-verification tool needs a
-strictly *decreasing* element-size abscissa (it extrapolates towards an element
-size of zero), so we use the model's own ``dx`` output -- the actual node
-spacing, ``dx = length / (grid_size - 1)`` -- rather than ``grid_size`` itself,
-which grows as the grid is refined.
-
-Because the solution is analytic, the values stored at the grid nodes are exact.
-What a coarse grid degrades is any quantity read from the discrete field. We look
-at two of them, plus the model's own native scalar outputs as a baseline:
+``DiscretizationSolutionVerification`` tool, which is based on the
+[Richardson extrapolation](../../../reference/vimseo/tools/verification/solution_verification.md#richardson-extrapolation)
+[@richardson1911_finite_differences]
+[@krysl2022_confidence_intervals_richardson], and compare two
+field-derived quantities: one that converges smoothly (``sigma_xx_probe``) and one that exhibits a
+*sawtooth* behaviour (``sigma_xx_peak``) for which the Richardson extrapolation cannot
+be computed:
 
 - ``sigma_xx_probe``: ``sigma_xx`` bilinearly interpolated at a fixed point just
   outside the hole. It converges smoothly as the grid is refined.
 - ``sigma_xx_peak``: the maximum of ``sigma_xx`` over the grid nodes. Because the
   node that happens to fall closest to the stress concentration jumps around as
   the grid changes, this quantity is *non-monotone* -- a sawtooth.
-- ``sigma_xx_r`` and ``sigma_xx_d0``: the native hole-edge stresses, evaluated
-  directly on the analytic solution and therefore exactly mesh-independent.
 
-The three-point Richardson extrapolation is fragile: its cross-validation returns
-``nan`` as soon as one grid triplet is not cleanly power-law convergent, which
-happens systematically for the sawtooth quantity but also for the smooth one on
-sampled data. The tool therefore also reports two Richardson-independent estimates
-of the converged value -- a least-squares power-law fit, whose order is fitted
-rather than assumed, and a model-free median of the finest grids -- which stay
-available in both cases. Their residual (fit) and band (median) quantify how
-reliable the estimate is.
+Other relevant metrics may also be integrated similarly in a minimal way.
+Because the solution is analytic, the values stored at the grid nodes are exact.
+What a coarse grid degrades is any quantity read from the discrete field. We look
+at two of them, plus the model's own native scalar outputs as a baseline:
+
+This model is used a use-case case, despite having a working principle different from
+what is usually prone to solution verification.
 """
 
 # %%
@@ -102,11 +89,7 @@ grid_sizes = [25, 33, 50, 66, 100, 200]
 
 
 # %%
-# The model writes the stress field to a VTK file. Converting the raw
-# ``output_data`` into a :class:`ModelResult` exposes it as a
-# :class:`~vimseo.utilities.fields.Field` through the ``fields`` attribute. That
-# class provides ``to_structured_grid`` (reshape a nodal field back to its grid)
-# and ``probe`` (bilinearly sample it at an arbitrary point), used below.
+# Helper function to place two plotly figures side by side in a single figure.
 def side_by_side(fig_left, fig_right, left_title, right_title, y_title):
     """Place the traces of two plotly figures in a single 1x2 subplot figure."""
     combined = make_subplots(rows=1, cols=2, subplot_titles=(left_title, right_title))

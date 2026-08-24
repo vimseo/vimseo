@@ -262,8 +262,14 @@ class PostFieldExtraction(BaseComponent):
 
         self._flux_components = ["sigma_xx", "sigma_yy", "sigma_xy", "Distance"]
         self._line_name = "line_center"
-        for name in ["y", *self._flux_components]:
-            self.output_grammar.update_from_names([f"{self._line_name}_{name}"])
+        line_output_names = [
+            "line_center_y",
+            "line_center_sigma_xx",
+            "line_center_sigma_yy",
+            "line_center_sigma_xy",
+            "line_center_Distance",
+        ]
+        self.output_grammar.update_from_names(line_output_names)
 
         self.output_grammar.update_from_names(["sigma_xx_r", "sigma_xx_d0"])
 
@@ -318,7 +324,17 @@ class PostFieldExtraction(BaseComponent):
 
 
 class TanOpenHole(IntegratedModel):
-    """An Open Hole model based on Tan theory."""
+    """An Open Hole model based on Tan theory.
+
+    The model provides an *analytic* membrane stress field for a plate with a
+    circular hole (see the :ref:`Tan model reference
+    <open-hole-plate-model-tan-model>`). The field is nonetheless evaluated on
+    a grid whose resolution is driven by the ``grid_size`` input: the grid has
+    ``grid_size`` points per direction, so a larger ``grid_size`` gives a
+    finer grid. Because the solution is analytic, the values stored at the grid nodes
+    are exact. What a coarse grid degrades is any quantity post-processed from the
+    grid values.
+    """
 
     CURVES: ClassVar[Sequence[tuple[str]]] = [("line_center_y", "line_center_sigma_xx")]
 

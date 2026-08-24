@@ -9,7 +9,7 @@
 
 # Open Hole Plate Model (Tan Model)
 
-Documentation describing the [**analytical Tan model**](@tan2017stress) used to compute stress fields
+Documentation describing the **analytical Tan model** [@tan2017stress] used to compute stress fields
 in a composite plate containing a circular hole.
 
 This documentation focuses on:

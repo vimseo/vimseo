@@ -29,8 +29,7 @@ from vimseo.core.model_settings import IntegratedModelSettings
 def _make_post(base_model, extra_outputs=()):
     """Build a post-processing component that depends on the base model grammars.
 
-    Mirrors the ``MyPost`` component of the ``plot_041_post_processing_patch``
-    gallery example. ``extra_outputs`` lets a test declare additional output
+    ``extra_outputs`` lets a test declare additional output
     names, which is used to emulate a grammar change across code versions.
     """
 

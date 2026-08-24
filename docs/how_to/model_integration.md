@@ -9,7 +9,7 @@
 
 # Integration of models
 
-Integrate the model of interests is the first mandatory step before using the
+Integrate the models of interest is the first mandatory step before using the
 VV&UQ methods of **VIMSEO**.
 As a result, **VIMSEO** should make model integration as easy as possible,
 and provide a range of examples to illustrate different ways of integrating models.
@@ -51,6 +51,10 @@ If you also want to define a material for this model, you can look at the below 
 ```python
 --8<-- "src/vimseo/problems/mock/mock_pre_run_post/mock_with_material.py"
 ```
+
+<!--
+It is weird that we talk about material grammar without before mentionning model/components grammar.
+-->
 
 The material itself is defined from two files. Its grammar, possibly defining the bounds and types of the properties:
 
