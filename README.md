@@ -9,7 +9,7 @@
 
 <div align="center">
 <a href="https://github.com/vimseo/vimseo/">
-<img width="1800" alt="" src="/docs/images/vimseo_illustration.png" />
+<img width="1800" alt="" src="/docs/images/vimseo_illustration.jpg" />
 </a>
 
 <div align="center">
