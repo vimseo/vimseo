@@ -36,6 +36,7 @@ from vimseo.tools.base_settings import BaseInputs
 from vimseo.tools.base_settings import BaseSettings
 from vimseo.tools.base_tool import BaseTool
 from vimseo.tools.statistics.statistics_result import StatisticsResult
+from vimseo.utilities.datasets import DatasetInput
 from vimseo.utilities.datasets import dataset_to_dataframe
 from vimseo.utilities.datasets import get_scalar_names
 
@@ -47,7 +48,7 @@ if TYPE_CHECKING:
 
 
 class StatisticsInputs(BaseInputs):
-    dataset: Dataset | None = None
+    dataset: DatasetInput | None = None
 
 
 class StatisticsSettings(BaseSettings):

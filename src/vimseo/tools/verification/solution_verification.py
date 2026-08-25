@@ -90,7 +90,6 @@ from numpy import array
 from numpy import full
 from numpy import isnan
 from numpy import vstack
-from pandas import DataFrame
 from pydantic import ConfigDict
 from pydantic import Field
 from strenum import StrEnum
@@ -123,6 +122,8 @@ from vimseo.tools.verification.solution_verification_indicators import (
 )
 from vimseo.tools.verification.verification_result import CASE_DESCRIPTION_TYPE
 from vimseo.tools.verification.verification_result import SolutionVerificationResult
+from vimseo.utilities.datasets import DatasetInput
+from vimseo.utilities.datasets import resolve_io_groups
 from vimseo.utilities.file_utils import camel_case_to_snake_case
 
 if TYPE_CHECKING:
@@ -201,10 +202,11 @@ class SolutionVerificationSettings(CustomDOESettings):
         "analysis is performed. If left to default value, the "
         "element_size_variable_name is used.",
     )
-    simulated_data: Dataset | DataFrame | None = Field(
+    simulated_data: DatasetInput | None = Field(
         default=None,
         description="The simulated data, containing the abscissa name "
-        "and the output name.",
+        "and the output name, either as a mapping of variable names to values, "
+        "a DataFrame or a dataset.",
     )
     description: CASE_DESCRIPTION_TYPE | None = None
 
@@ -331,10 +333,12 @@ class DiscretizationSolutionVerification(BaseVerification):
             ).dataset
             nb_meshes = self.__NB_MESHES
         else:
-            doe_dataset = (
-                options["simulated_data"]
-                if isinstance(options["simulated_data"], Dataset)
-                else Dataset.from_dataframe(options["simulated_data"])
+            # The settings of this tool already say which variable plays which
+            # role, so data given without groups is resolved from them.
+            doe_dataset = resolve_io_groups(
+                options["simulated_data"],
+                input_names=[abscissa_name, element_size_variable_name],
+                output_names=[output_name, *options["observed_output_names"]],
             )
             element_size_values = (
                 doe_dataset.get_view(variable_names=abscissa_name).to_numpy().ravel()

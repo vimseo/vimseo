@@ -22,7 +22,6 @@ from typing import Any
 
 from gemseo import BaseRegressor
 from gemseo import create_surrogate
-from gemseo.datasets.dataset import Dataset
 from gemseo.disciplines.surrogate import SurrogateDiscipline
 from gemseo.mlearning.core.quality.base_ml_algo_quality import BaseMLAlgoQuality
 from gemseo.mlearning.core.quality.factory import MLAlgoQualityFactory
@@ -38,6 +37,8 @@ from vimseo.tools.base_composite_tool import BaseCompositeTool
 from vimseo.tools.base_settings import BaseInputs
 from vimseo.tools.base_settings import BaseSettings
 from vimseo.tools.surrogate.surrogate_result import SurrogateResult
+from vimseo.utilities.datasets import DatasetInput
+from vimseo.utilities.datasets import resolve_io_groups
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -66,7 +67,7 @@ MEASURE_EVALUTATION_METHOD_NAMES = {
 
 class SurrogateInputs(BaseInputs):
     model: IntegratedModel | None = None
-    dataset: Dataset | None = None
+    dataset: DatasetInput | None = None
 
 
 class SurrogateSettings(BaseSettings):
@@ -191,6 +192,9 @@ class SurrogateTool(BaseAnalysisTool):
         algo = options["algo"]
         model = options["model"]
         self._load_case = model.load_case.name
+        options["dataset"] = resolve_io_groups(
+            options["dataset"], model=model, output_names=options["output_names"]
+        )
 
         if algo:  # no selection
             self.result.model_name = f"{model.name}.{self._load_case}.{algo}"

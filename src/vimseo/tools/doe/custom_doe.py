@@ -26,7 +26,6 @@ import logging
 from typing import TYPE_CHECKING
 
 from gemseo.algos.design_space import DesignSpace
-from gemseo.datasets.dataset import Dataset
 from gemseo.datasets.io_dataset import IODataset
 from gemseo.scenarios.doe_scenario import DOEScenario
 from gemseo.utils.directory_creator import DirectoryNamingMethod
@@ -40,6 +39,8 @@ from vimseo.tools.base_settings import BaseSettings
 from vimseo.tools.base_tool import BaseTool
 from vimseo.tools.doe.doe import _set_output_names
 from vimseo.tools.doe.doe_result import DOEResult
+from vimseo.utilities.datasets import DatasetInput
+from vimseo.utilities.datasets import resolve_io_groups
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -63,11 +64,11 @@ class CustomDOESettings(BaseSettings):
 
 class CustomDOEInputs(BaseInputs):
     model: IntegratedModel | None = None
-    input_dataset: Dataset | None = Field(
+    input_dataset: DatasetInput | None = Field(
         default=None,
-        description="A dataset containing at least a group named "
-        "``IODataset.INPUT_GROUP``. "
-        "The model is run on the samples defined by this group.",
+        description="The samples on which the model is run, either as a mapping of "
+        "input names to values, a DataFrame or a dataset. When the data does not "
+        "declare an input group, the input variables of the model are used.",
     )
 
 
@@ -105,7 +106,9 @@ class CustomDOETool(BaseAnalysisTool):
         **options,
     ) -> DOEResult:
         model = options["model"]
-        input_dataset = options["input_dataset"]
+        input_dataset = resolve_io_groups(
+            options["input_dataset"], model=model, input_names=options["input_names"]
+        )
         load_case = model.load_case.name
         doe_name = f"DOE_{model.name}_{load_case}_CustomDOE"
 

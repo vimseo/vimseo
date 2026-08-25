@@ -15,7 +15,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import TYPE_CHECKING
+from typing import Annotated
 from typing import Any
 from typing import NamedTuple
 
@@ -25,7 +27,9 @@ from gemseo.datasets.io_dataset import IODataset
 from numpy import arange
 from numpy import asarray
 from numpy import atleast_1d
+from numpy import full
 from numpy import integer
+from numpy import isscalar
 from numpy import issubdtype
 from numpy import mean
 from numpy import ndarray
@@ -33,11 +37,12 @@ from numpy import ones
 from numpy import vstack
 from numpy.ma import array
 from pandas import DataFrame
+from pandas import MultiIndex
 from pandas import testing
+from pydantic import BeforeValidator
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
-    from collections.abc import Mapping
 
     from vimseo.core.base_integrated_model import IntegratedModel
     from vimseo.tools.post_tools.plot_result import PlotResult
@@ -302,12 +307,16 @@ def dataset_to_dataframe(
 
 
 def dataframe_to_dataset(df: DataFrame) -> Dataset:
-    """Compute the GEMSEO Dataset from a DataFrame with a_name[a_group][a_component]
+    """Compute the GEMSEO Dataset from a DataFrame with a_name{a_group}[a_component]
     convention.
 
-    For vectors, naming convention is a_name[a_group][0], a_name[a_group][1], ...
+    For vectors, naming convention is a_name{a_group}[0], a_name{a_group}[1], ...
     This naming convention is obtained with ``dataset_to_dataframe()`` with argument
-    suffix_by_group=True``.
+    ``suffix_by_group=True``.
+
+    This is the advanced, lossless counterpart of :func:`dataset_to_dataframe`, meant for
+    round-tripping a dataset through a mono-indexed DataFrame. To build a dataset from
+    data that does not already follow this convention, use :func:`to_dataset` instead.
     """
 
     def get_group_name(suffixed_name: str) -> str:
@@ -377,6 +386,337 @@ def dataframe_to_dataset(df: DataFrame) -> Dataset:
             dataset.rename_variable(unique_name, name, group_name)
 
     return dataset.astype({col: df.dtypes[i] for i, col in enumerate(dataset.columns)})
+
+
+def _is_sequence_of_vectors(value: Any) -> bool:
+    """Whether ``value`` is a sequence whose entries are themselves vectors.
+
+    Strings are not considered as vectors, so that a variable holding text values is
+    treated as a sequence of scalars.
+
+    Args:
+        value: The value to inspect.
+
+    Returns:
+        Whether the entries of ``value`` are vectors.
+    """
+    if isinstance(value, ndarray):
+        return False
+
+    try:
+        entries = list(value)
+    except TypeError:
+        return False
+
+    return any(isinstance(entry, (ndarray, list, tuple)) for entry in entries)
+
+
+def _pad_ragged_entries(name: str, value: Any) -> ndarray:
+    """Stack vectors of different lengths into a 2D array, padding with ``NaN``.
+
+    This mirrors the convention used when reading vectors of variable length from a csv
+    file, where the blank cells are filled with ``NaN``.
+
+    Args:
+        name: The name of the variable, used in the error message.
+        value: A sequence of vectors.
+
+    Returns:
+        The padded data, shaped as ``(n_entries, n_components)``.
+
+    Raises:
+        ValueError: If an entry cannot be interpreted as a numerical vector.
+    """
+    try:
+        entries = [atleast_1d(asarray(entry, dtype=float)) for entry in value]
+    except (TypeError, ValueError) as err:
+        msg = (
+            f"The variable {name!r} holds vectors of different lengths, "
+            "which are only supported for numerical data."
+        )
+        raise ValueError(msg) from err
+
+    n_components = max(entry.size for entry in entries)
+    padded = full((len(entries), n_components), float("nan"))
+    for entry_id, entry in enumerate(entries):
+        padded[entry_id, : entry.size] = entry
+    return padded
+
+
+def _normalize_variable_data(name: str, value: Any) -> ndarray | None:
+    """Normalize the data of a variable to an array shaped ``(n_entries, n_components)``.
+
+    Args:
+        name: The name of the variable.
+        value: The data of the variable, either a scalar, a vector, an array shaped as
+            ``(n_entries, n_components)`` or a sequence of vectors of possibly different
+            lengths.
+
+    Returns:
+        The normalized data, or ``None`` if ``value`` is a scalar, whose number of
+        entries can only be deduced from the other variables.
+
+    Raises:
+        ValueError: If the data has more than two dimensions.
+    """
+    if isinstance(value, ndarray):
+        array_value = value
+    elif isscalar(value):
+        return None
+    else:
+        try:
+            array_value = asarray(value)
+        except (TypeError, ValueError):
+            return _pad_ragged_entries(name, value)
+        if array_value.dtype == object and _is_sequence_of_vectors(value):
+            return _pad_ragged_entries(name, value)
+
+    if array_value.ndim == 0:
+        return None
+
+    if array_value.ndim == 1:
+        return array_value.reshape(-1, 1)
+
+    if array_value.ndim == 2:
+        return array_value
+
+    msg = (
+        f"The variable {name!r} has {array_value.ndim} dimensions; "
+        "expected a scalar, a vector or an array shaped as "
+        "(n_entries, n_components)."
+    )
+    raise ValueError(msg)
+
+
+def _build_dataset(group_names_to_data: Mapping[str, Mapping[str, Any]]) -> IODataset:
+    """Build a dataset from data mapping group names to variable names to values.
+
+    Args:
+        group_names_to_data: The data, as ``{group_name: {variable_name: values}}``.
+
+    Returns:
+        The dataset.
+
+    Raises:
+        ValueError: If the variables do not all have the same number of entries.
+    """
+    normalized: dict[str, dict[str, ndarray | None]] = {}
+    n_entries = 0
+    reference_name = ""
+    for group_name, variables in group_names_to_data.items():
+        normalized[group_name] = {}
+        for name, value in variables.items():
+            data = _normalize_variable_data(name, value)
+            normalized[group_name][name] = data
+            if data is None:
+                continue
+            if reference_name and len(data) != n_entries:
+                msg = (
+                    f"The variable {name!r} has {len(data)} entries "
+                    f"whereas {reference_name!r} has {n_entries}; "
+                    "all the variables must have the same number of entries."
+                )
+                raise ValueError(msg)
+            n_entries = len(data)
+            reference_name = name
+
+    n_entries = n_entries or 1
+
+    dataset = IODataset()
+    for group_name, variables in normalized.items():
+        for name, data in variables.items():
+            if data is None:
+                data = full((n_entries, 1), group_names_to_data[group_name][name])
+            dataset.add_variable(name, data, group_name=group_name)
+
+    return dataset
+
+
+def to_dataset(
+    data: Dataset | DataFrame | Mapping[str, Any],
+    input_names: Iterable[str] = (),
+    output_names: Iterable[str] = (),
+) -> IODataset:
+    """Convert user data to a GEMSEO dataset.
+
+    This is the entry point used by the tools to accept plain Python data, so that the
+    GEMSEO :class:`~gemseo.datasets.dataset.Dataset` API does not have to be learnt.
+    The accepted forms are:
+
+    - a mapping of variable names to values, e.g. ``{"dx": [1.0, 0.5], "sigma": [3, 4]}``.
+      A value can be a scalar, a vector, an array shaped as ``(n_entries, n_components)``
+      for a vector variable, or a sequence of vectors of different lengths, which are
+      then padded with ``NaN``;
+    - a mapping of group names to such mappings, e.g.
+      ``{"inputs": {"dx": ...}, "outputs": {"sigma": ...}}``, to state the groups
+      explicitly;
+    - a mono-indexed :class:`~pandas.DataFrame`, typically read from a csv file;
+    - a :class:`~pandas.DataFrame` following the ``a_name{a_group}[a_component]`` column
+      convention, see :func:`dataframe_to_dataset`;
+    - a :class:`~gemseo.datasets.dataset.Dataset`, returned unchanged.
+
+    Args:
+        data: The data to convert.
+        input_names: The names of the variables to place in the input group.
+            If empty, no variable is placed in the input group.
+        output_names: The names of the variables to place in the output group.
+            If empty, no variable is placed in the output group.
+
+    Returns:
+        The data as an :class:`~gemseo.datasets.io_dataset.IODataset`.
+
+    Raises:
+        TypeError: If the type of ``data`` is not supported.
+    """
+    if isinstance(data, Dataset):
+        dataset = data if isinstance(data, IODataset) else IODataset(data)
+        if input_names or output_names:
+            return resolve_io_groups(
+                dataset, input_names=input_names, output_names=output_names
+            )
+        return dataset
+
+    if isinstance(data, DataFrame):
+        if isinstance(data.columns, MultiIndex):
+            return to_dataset(
+                IODataset.from_dataframe(data),
+                input_names=input_names,
+                output_names=output_names,
+            )
+        if any(GROUP_SEPARATORS[0] in str(name) for name in data.columns):
+            return to_dataset(
+                dataframe_to_dataset(data),
+                input_names=input_names,
+                output_names=output_names,
+            )
+        data = {str(name): data[name].to_numpy() for name in data.columns}
+
+    if not isinstance(data, Mapping):
+        msg = (
+            f"Cannot build a dataset from an object of type {type(data).__name__}; "
+            "expected a mapping of variable names to values, a DataFrame or a Dataset."
+        )
+        raise TypeError(msg)
+
+    if data and all(isinstance(value, Mapping) for value in data.values()):
+        return _build_dataset(data)
+
+    dataset = _build_dataset({Dataset.DEFAULT_GROUP: data})
+    if input_names or output_names:
+        return resolve_io_groups(
+            dataset, input_names=input_names, output_names=output_names
+        )
+    return dataset
+
+
+def resolve_io_groups(
+    dataset: Dataset,
+    model: IntegratedModel | None = None,
+    input_names: Iterable[str] = (),
+    output_names: Iterable[str] = (),
+) -> IODataset:
+    """Split the default group of a dataset into an input group and an output group.
+
+    A dataset that already declares an input or an output group is returned unchanged,
+    so that this function can be called unconditionally by a tool. Otherwise the roles
+    are taken from ``input_names`` and ``output_names`` when given, and from the grammars
+    of ``model`` otherwise. Variables matching neither role are left in the default
+    group, so that data carried along for reference, such as a batch number, is
+    preserved.
+
+    Args:
+        dataset: The dataset whose groups are to be resolved.
+        model: The model providing the variable roles.
+            If ``None``, the roles must be given explicitly.
+        input_names: The names of the variables to place in the input group.
+            If empty, use the input variables of ``model``.
+        output_names: The names of the variables to place in the output group.
+            If empty, use the output variables of ``model``.
+
+    Returns:
+        The dataset with an input group and an output group.
+
+    Raises:
+        ValueError: If the roles of the variables cannot be resolved.
+    """
+    dataset = dataset if isinstance(dataset, IODataset) else IODataset(dataset)
+
+    group_names = set(dataset.group_names)
+    if IODataset.INPUT_GROUP in group_names or IODataset.OUTPUT_GROUP in group_names:
+        return dataset
+
+    if Dataset.DEFAULT_GROUP not in group_names:
+        return dataset
+
+    available_names = dataset.get_variable_names(Dataset.DEFAULT_GROUP)
+
+    if not input_names and model is not None:
+        input_names = model.input_grammar.names
+
+    if not output_names and model is not None:
+        output_names = model.get_output_data_names(remove_metadata=True)
+
+    names_to_group_names = {
+        name: IODataset.INPUT_GROUP for name in input_names if name in available_names
+    }
+    names_to_group_names.update({
+        name: IODataset.OUTPUT_GROUP for name in output_names if name in available_names
+    })
+
+    if not names_to_group_names:
+        msg = (
+            "Cannot tell the inputs from the outputs of the data. "
+            "Either pass a model, name the variables with the ``input_names`` and "
+            "``output_names`` settings, or group the data explicitly as "
+            f"{{{IODataset.INPUT_GROUP!r}: ..., {IODataset.OUTPUT_GROUP!r}: ...}}. "
+            f"The available variables are {available_names}."
+        )
+        raise ValueError(msg)
+
+    dataset.columns = MultiIndex.from_tuples(
+        [
+            (
+                names_to_group_names.get(variable_name, group_name),
+                variable_name,
+                component,
+            )
+            for group_name, variable_name, component in dataset.columns
+        ],
+        names=dataset.columns.names,
+    )
+    return dataset
+
+
+def _coerce_to_dataset(data: Any) -> Any:
+    """Convert user data to a dataset, letting ``None`` and unsupported types through.
+
+    Unsupported types are passed on unchanged so that Pydantic reports them, rather than
+    this function raising on a value that a field may legitimately accept.
+
+    Args:
+        data: The data to convert.
+
+    Returns:
+        The data as an :class:`~gemseo.datasets.io_dataset.IODataset` when it can be
+        converted, and unchanged otherwise.
+    """
+    if data is None or isinstance(data, IODataset):
+        return data
+
+    if isinstance(data, (Dataset, DataFrame, Mapping)):
+        return to_dataset(data)
+
+    return data
+
+
+DatasetInput = Annotated[IODataset, BeforeValidator(_coerce_to_dataset)]
+"""A dataset field accepting a mapping, a DataFrame or a Dataset.
+
+Use this instead of ``Dataset`` or ``IODataset`` when declaring the field of a tool, so
+that users can pass the data they already have. The conversion is carried by the
+annotation rather than by the tool, so that it also applies when the inputs model is
+built directly, as done by the workflow engine.
+"""
 
 
 def decode_vector(vector_as_str: str, separator="_") -> ndarray:

@@ -24,7 +24,6 @@ from typing import TYPE_CHECKING
 
 import matplotlib.pyplot as plt
 from gemseo.algos.parameter_space import ParameterSpace
-from gemseo.datasets.dataset import Dataset
 from gemseo.datasets.io_dataset import IODataset
 from gemseo.utils.directory_creator import DirectoryNamingMethod
 from gemseo.utils.metrics.metric_factory import MetricFactory
@@ -53,7 +52,9 @@ from vimseo.tools.statistics.statistics_tool import StatisticsSettings
 from vimseo.tools.statistics.statistics_tool import StatisticsTool
 from vimseo.tools.validation.validation_point_result import ValidationPointResult
 from vimseo.utilities.datasets import GROUP_SEPARATORS
+from vimseo.utilities.datasets import DatasetInput
 from vimseo.utilities.datasets import dataframe_to_dataset
+from vimseo.utilities.datasets import resolve_io_groups
 from vimseo.utilities.encoded_to_numerical_vectors import decode_stringified_vectors
 
 if TYPE_CHECKING:
@@ -68,8 +69,9 @@ LOGGER = logging.getLogger(__name__)
 class StochasticValidationPointInputs(BaseInputs):
     model: IntegratedModel | None = None
 
-    measured_data: Dataset | None = None
-    """The dataset containing the validation test samples."""
+    measured_data: DatasetInput | None = None
+    """The validation test samples, either as a mapping of variable names to values, a
+    DataFrame or a dataset."""
 
     uncertain_input_space: ParameterSpace = Field(
         default=ParameterSpace(),
@@ -89,6 +91,12 @@ class StochasticValidationPointSettings(DOESettings, StatisticsSettings):
         description="A dictionary mapping output name to an uncertainty "
         "inherent to the model (standard deviation), "
         "typically estimated from verification studies.",
+    )
+    input_names: list[str] = Field(
+        default=[],
+        description="The names of the measured input variables. "
+        "Only used when the measured data does not declare an input group; "
+        "by default, consider the input variables of the model.",
     )
     output_names: list[str] = Field(
         default=[],
@@ -187,7 +195,13 @@ class StochasticValidationPoint(BaseAnalysisTool):
         """Compute the errors between reference data and simulated data for the
         prescribed error measures."""
 
-        measured_data = options["measured_data"]
+        model = options["model"]
+        measured_data = resolve_io_groups(
+            options["measured_data"],
+            model=model,
+            input_names=options["input_names"],
+            output_names=options["output_names"],
+        )
         nominal_data = options["nominal_data"]
         uncertain_input_space = options["uncertain_input_space"]
 
@@ -195,7 +209,6 @@ class StochasticValidationPoint(BaseAnalysisTool):
             group_name=IODataset.INPUT_GROUP
         )
 
-        model = options["model"]
         model.default_input_data.update({
             name: atleast_1d(value)
             for name, value in nominal_data.items()

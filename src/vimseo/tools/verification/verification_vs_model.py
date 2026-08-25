@@ -34,6 +34,7 @@ from vimseo.tools.base_settings import BaseInputs
 from vimseo.tools.doe.custom_doe import CustomDOETool
 from vimseo.tools.verification.base_verification import BaseCodeVerificationSettings
 from vimseo.tools.verification.base_verification import BaseVerification
+from vimseo.utilities.datasets import DatasetInput
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -44,7 +45,7 @@ if TYPE_CHECKING:
 class CodeVerificationAgainstModelInputs(BaseInputs):
     model: IntegratedModel | None = None
     reference_model: IntegratedModel | None = None
-    input_dataset: Dataset | None = None
+    input_dataset: DatasetInput | None = None
 
 
 # TODO add observed output names.
@@ -90,6 +91,7 @@ class CodeVerificationAgainstModel(BaseVerification):
             else options["output_names"]
         )
 
+        # The whole dataset defines the input space explored by both models.
         if Dataset.DEFAULT_GROUP in input_dataset.group_names:
             input_dataset.rename_group(Dataset.DEFAULT_GROUP, IODataset.INPUT_GROUP)
 

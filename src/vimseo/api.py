@@ -35,6 +35,7 @@ from vimseo.core.model_factory import ModelFactory
 from vimseo.core.model_settings import IntegratedModelSettings
 from vimseo.tools.post_tools.plot_factory import PlotFactory
 from vimseo.tools.tools_factory import ToolsFactory
+from vimseo.utilities.datasets import to_dataset as to_dataset
 
 if TYPE_CHECKING:
     from vimseo.core.base_integrated_model import IntegratedModel
