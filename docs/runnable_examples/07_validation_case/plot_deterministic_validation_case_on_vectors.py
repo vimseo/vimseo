@@ -25,6 +25,7 @@ from __future__ import annotations
 import logging
 
 from gemseo.datasets.io_dataset import IODataset
+from numpy import array
 
 from vimseo import EXAMPLE_RUNS_DIR
 from vimseo.api import activate_logger
@@ -84,6 +85,20 @@ reference_data = (
     .dataset
 )
 print(reference_data)
+
+# %%
+# The same reference data can also be built programmatically, by passing a
+# mapping of variable names to values. ``x3`` holds vectors of different
+# lengths: the shorter ones are padded with NaNs up to the longest, exactly as
+# the blank cells of the csv file are. Neither the component count of ``x3`` nor
+# the input/output role of each variable has to be declared -- the first is read
+# from the data, the second from the grammars of the model:
+reference_data_from_mapping = {
+    "x1": [1, 2],
+    "x2": [6.0, 7.0],
+    "x3": [array([1.0, 2.0]), array([3.0, 4.0, 5.0])],
+    "y4": [3.3, 14.4],
+}
 
 # %%
 # The validation case tool is created and executed.

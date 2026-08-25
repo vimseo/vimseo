@@ -35,8 +35,11 @@ activate_logger()
 
 # %%
 # Loading experimental data is necessary for model validation or calibration.
-# In general, the raw experimental data is not directly compatible with VIMSEO tools.
-# In addition, at least two types of experimental data can be considered:
+# Tools accept the data a user already has -- a mapping of variable names to
+# values, a ``DataFrame`` read from a csv file, or a GEMSEO ``Dataset`` -- so raw
+# experimental data usually needs no conversion at all. What raw data does often
+# need is *reshaping*, which is what this example is about.
+# At least two types of experimental data can be considered:
 #   - a collection of validation points defined by its nominal values.
 #   - a collection of validation points with repeats: the experiment
 #     is repeated several times for the same nominal values. Each repeat captures
@@ -68,10 +71,10 @@ read_csv(raw_file, delimiter=SEP)
 # computed as the mean value of all the repeats for each validation point.
 # In case the raw data names do not match the model variable names,
 # a renaming can be done with ``name_remapping``.
-# Finally, most VIMSEO tools use a GEMSEO Dataset as input.
-# GEMSEO Datasets are multi-index column Pandas DataFrame, allowing to properly
-# handle data by groups and by component (useful to handle vectors).
-# Here, the nominal values are returned as a GEMSEO Dataset.
+# Finally, the nominal values can be returned as a GEMSEO Dataset, a multi-index
+# column Pandas DataFrame that handles data by group and by component. This is
+# useful here because the raw data holds an encoded vector, which has to be
+# decoded into components before the tools can use it.
 # In this case, the following additional arguments are necessary:
 #  - a mapping between scalar variable names and group names, to specify in which groups
 #    the variables are placed,

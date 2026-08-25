@@ -62,7 +62,6 @@ from vimseo.core.model_settings import IntegratedModelSettings
 from vimseo.tools.verification.solution_verification import (
     DiscretizationSolutionVerification,
 )
-from vimseo.utilities.datasets import dataframe_to_dataset
 
 # %%
 # First we set the logger level:
@@ -149,21 +148,11 @@ convergence_table = DataFrame({
 print(convergence_table)
 
 # %%
-# The tool consumes an ``IODataset``. We assemble it from the convergence table
-# with the ``dataframe_to_dataset`` helper, using the ``name{group}`` naming
-# convention to place ``dx`` in the input group and the four stresses in the
-# output group:
-dataset = dataframe_to_dataset(
-    convergence_table.rename(
-        columns={
-            "dx": "dx{inputs}",
-            "sigma_xx_probe": "sigma_xx_probe{outputs}",
-            "sigma_xx_peak": "sigma_xx_peak{outputs}",
-            "sigma_xx_r": "sigma_xx_r{outputs}",
-            "sigma_xx_d0": "sigma_xx_d0{outputs}",
-        }
-    )
-)
+# The table is passed to the tool as it is. Tools accept the data a user already
+# has -- a mapping of variable names to values, a ``DataFrame``, or a GEMSEO
+# ``Dataset`` -- so the dictionary built above would work just as well here. The
+# tool knows which variable plays which role from its own settings, so nothing
+# has to be tagged as an input or an output.
 
 # %%
 # A smoothly converging quantity
@@ -178,7 +167,7 @@ verificator = DiscretizationSolutionVerification(
     working_directory="DiscretizationSolutionVerification_probe",
 )
 verificator.execute(
-    simulated_data=dataset,
+    simulated_data=convergence_table,
     element_size_variable_name="dx",
     abscissa_name="dx",
     output_name="sigma_xx_probe",
@@ -222,7 +211,7 @@ verificator_peak = DiscretizationSolutionVerification(
     working_directory="DiscretizationSolutionVerification_peak",
 )
 verificator_peak.execute(
-    simulated_data=dataset,
+    simulated_data=convergence_table,
     element_size_variable_name="dx",
     abscissa_name="dx",
     output_name="sigma_xx_peak",
@@ -323,7 +312,7 @@ for native_output in ("sigma_xx_r", "sigma_xx_d0"):
         working_directory=f"DiscretizationSolutionVerification_{native_output}",
     )
     verificator_native.execute(
-        simulated_data=dataset,
+        simulated_data=convergence_table,
         element_size_variable_name="dx",
         abscissa_name="dx",
         output_name=native_output,

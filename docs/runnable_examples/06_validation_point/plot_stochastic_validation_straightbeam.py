@@ -24,7 +24,6 @@ from __future__ import annotations
 import logging
 from pathlib import Path
 
-from gemseo.datasets.io_dataset import IODataset
 from pandas import read_csv
 
 from vimseo import EXAMPLE_RUNS_DIR
@@ -41,9 +40,7 @@ from vimseo.tools.validation.validation_point import StochasticValidationPoint
 from vimseo.tools.validation.validation_point import StochasticValidationPointInputs
 from vimseo.tools.validation.validation_point import StochasticValidationPointSettings
 from vimseo.tools.validation.validation_point import read_nominal_values
-from vimseo.utilities.datasets import GROUP_SEPARATORS
 from vimseo.utilities.datasets import SEP
-from vimseo.utilities.datasets import dataframe_to_dataset
 from vimseo.utilities.generate_validation_reference import Bias
 from vimseo.utilities.generate_validation_reference import (
     generate_reference_from_parameter_space,
@@ -147,27 +144,18 @@ nominal_values.update(material.get_values_as_dict())
 # %%
 # The reference samples are then defined from the csv file containing the measured data.
 # First, the data are filtered to retain only the considered batch:
-df = read_csv(
+measured_data = read_csv(
     csv_path,
     delimiter=SEP,
 )
-df = df[df["batch"] == batch]
+measured_data = measured_data[measured_data["batch"] == batch]
 
 # %%
-# Then the reference data are filtered to retain only the measured quantities,
-# and converted to a GEMSEO Dataset:
-df = df[measured_inputs + measured_outputs]
-variable_names_to_group_names = dict.fromkeys(measured_inputs, IODataset.INPUT_GROUP)
-variable_names_to_group_names.update(
-    dict.fromkeys(measured_outputs, IODataset.OUTPUT_GROUP)
-)
-for name, group_name in variable_names_to_group_names.items():
-    df.rename(
-        columns={name: f"{name}{GROUP_SEPARATORS[0]}{group_name}{GROUP_SEPARATORS[1]}"},
-        inplace=True,
-    )
-measured_data = dataframe_to_dataset(df)
-print("The measured data as a GEMSEO Dataset: ", measured_data)
+# The filtered table is passed to the tool as it is. The measured inputs and
+# outputs are named through the ``input_names`` and ``output_names`` settings
+# below, so the columns carried along for reference, such as ``batch``, need not
+# be dropped:
+print("The measured data: ", measured_data)
 
 # %%
 # The uncertainties coming from unmeasured inputs are then taken into account
@@ -187,6 +175,8 @@ validation_point_tool.execute(
         uncertain_input_space=material.to_parameter_space(),
     ),
     settings=StochasticValidationPointSettings(
+        input_names=measured_inputs,
+        output_names=measured_outputs,
         metric_names=[
             "AreaMetric",
             "RelativeAreaMetric",
