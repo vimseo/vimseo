@@ -20,7 +20,6 @@ from collections import defaultdict
 from collections.abc import Mapping
 from typing import TYPE_CHECKING
 
-from gemseo.datasets.io_dataset import IODataset
 from gemseo.utils.directory_creator import DirectoryNamingMethod
 from numpy import array
 from numpy import mean
@@ -36,6 +35,7 @@ from vimseo.tools.base_settings import BaseInputs
 from vimseo.tools.base_settings import BaseSettings
 from vimseo.tools.calibration.direct_measures_result import DirectMeasuresResult
 from vimseo.utilities.curves import Curve
+from vimseo.utilities.datasets import DatasetInput
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -55,12 +55,12 @@ class DirectMeasuresSettings(BaseSettings):
 
 
 class DirectMeasuresInputs(BaseInputs):
-    reference_data: IODataset | None = Field(
+    reference_data: DatasetInput | None = Field(
         default=None,
-        description="The reference [IODataset][gemseo.datasets.io_dataset.IODataset]"
-        "against which the model is compared "
-        "to find the best measures. Several reference samples can be "
-        "provided as rows of the dataset.",
+        description="The reference data against which the model is compared "
+        "to find the best measures, either as a mapping of variable names to values, "
+        "a DataFrame or a dataset. Several reference samples can be "
+        "provided as rows of the data.",
     )
 
 

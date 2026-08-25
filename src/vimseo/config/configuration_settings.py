@@ -38,7 +38,7 @@ class VimseoSettings(
     env_prefix=ENV_PREFIX,
     env_file=".env",
     # nested_model_default_partial_update=True,
-):  # noqa: N801
+):  # ruff: ignore[invalid-class-name]
     """Global configuration."""
 
     logging: str = Field(default="info")

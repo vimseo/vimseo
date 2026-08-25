@@ -57,7 +57,7 @@ def load_results(parent_dir_path: str | Path, file_format="hdf5"):
     pattern = Path(parent_dir_path) / "**" / f"*.{file_format}"
 
     result_paths = []
-    for file in glob.glob(str(pattern), recursive=True):  # noqa: PTH207
+    for file in glob.glob(str(pattern), recursive=True):  # ruff: ignore[glob]
         file_path = Path(file)
         if file_path.is_file():
             result_paths.append(file_path)

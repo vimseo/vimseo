@@ -44,8 +44,10 @@ from vimseo.tools.post_tools.parallel_coordinates_plot import ParallelCoordinate
 from vimseo.tools.post_tools.predict_vs_true_plot import PredictVsTrue
 from vimseo.tools.validation_case.validation_case_result import ValidationCaseResult
 from vimseo.tools.verification.base_verification import BaseCodeVerificationSettings
+from vimseo.utilities.datasets import DatasetInput
 from vimseo.utilities.datasets import dataset_to_dataframe
 from vimseo.utilities.datasets import encode_vector
+from vimseo.utilities.datasets import resolve_io_groups
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
@@ -66,8 +68,9 @@ class DeterministicValidationCaseSettings(BaseCodeVerificationSettings):
 
 class DeterministicValidationCaseInputs(BaseInputs):
     model: IntegratedModel | None = None
-    reference_data: IODataset | None = None
-    """The dataset containing the validation test samples."""
+    reference_data: DatasetInput | None = None
+    """The validation test samples, either as a mapping of variable names to values, a
+    DataFrame or a dataset."""
 
 
 class DeterministicValidationCase(BaseAnalysisTool):
@@ -118,7 +121,12 @@ class DeterministicValidationCase(BaseAnalysisTool):
     ) -> ValidationCaseResult:
 
         model = options["model"]
-        reference_data = options["reference_data"]
+        reference_data = resolve_io_groups(
+            options["reference_data"],
+            model=model,
+            input_names=options["input_names"],
+            output_names=options["output_names"],
+        )
 
         self.result.metadata.model = model.description
         self.result.metadata.report["title"] = (

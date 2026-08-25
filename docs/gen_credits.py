@@ -147,4 +147,4 @@ def _render_credits() -> str:
     return jinja_env.from_string(template_text).render(**template_data)
 
 
-print(_render_credits())  # noqa: T201
+print(_render_credits())  # ruff: ignore[print]

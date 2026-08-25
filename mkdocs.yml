@@ -113,6 +113,11 @@ nav:
 - Reference guides:
    - Available Models: generated/runnable_examples/01_models
    - Materials: references/materials.md
+   - Open Hole Tan Model:
+     - Home: references/open_hole_tan_model/index.md
+     - Theory: references/open_hole_tan_model/theory.md
+     - Equations: references/open_hole_tan_model/equations.md
+     - Validity: references/open_hole_tan_model/validity.md
    - Integrated Model:
      - Component based Model: references/component_based_model.md
    - Solution Verification: references/solution_verification/solution_verification_method.md

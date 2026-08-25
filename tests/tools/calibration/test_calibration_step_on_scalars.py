@@ -158,7 +158,7 @@ def test_calibration_step_with_starting_point(tmp_wd):
         ),
     )
 
-    assert step.result.prior_parameters["young_modulus"] == 2e5  # noqa: RUF069
+    assert step.result.prior_parameters["young_modulus"] == 2e5  # ruff: ignore[float-equality-comparison]
     assert step.result.posterior_parameters["young_modulus"] == pytest.approx(
         TARGET_YOUNG_MODULUS, rel=1e-2
     )

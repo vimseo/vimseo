@@ -605,15 +605,17 @@ class IntegratedModel(GemseoDisciplineWrapper):
 
         Returns:
         """
-        directory_path = (
-            Path(self.archive_manager.job_directory)
-            if directory_path == ""
-            else Path(directory_path)
-        )
-        if not directory_path.exists():
-            directory_path.mkdir(parents=True)
-
-        LOGGER.info(f"Saving plots to {directory_path.absolute()}")
+        if save:
+            directory_path = (
+                Path(directory_path)
+                if directory_path != ""
+                else Path(self.archive_manager.job_directory or Path.cwd())
+            )
+            if not directory_path.exists():
+                directory_path.mkdir(parents=True)
+            LOGGER.info(f"Saving plots to {directory_path.absolute()}")
+        else:
+            directory_path = ""
 
         from vimseo.core.model_result import ModelResult
 

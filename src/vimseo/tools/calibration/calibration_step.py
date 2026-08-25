@@ -54,6 +54,8 @@ from vimseo.tools.base_settings import BaseInputs
 from vimseo.tools.base_settings import BaseSettings
 from vimseo.tools.calibration.calibration_step_result import CalibrationStepResult
 from vimseo.tools.post_tools.calibration_plots import CalibrationCurves
+from vimseo.utilities.datasets import DatasetInput
+from vimseo.utilities.datasets import resolve_io_groups
 from vimseo.utilities.model_data import MetricVariableType
 from vimseo.utilities.model_data import decapsulate_length_one_array
 
@@ -96,8 +98,10 @@ def get_namespace(namespaced_name: str) -> str:
 
 
 class CalibrationStepInputs(BaseInputs):
-    reference_data: dict[str, IODataset] = Field(
-        default={}, description="A mapping between load cases and reference datasets."
+    reference_data: dict[str, DatasetInput] = Field(
+        default={},
+        description="A mapping between load cases and reference data, each given "
+        "either as a mapping of variable names to values, a DataFrame or a dataset.",
     )
     starting_point: dict[str, ndarray | float | int] = Field(
         default={},
@@ -214,8 +218,13 @@ class CalibrationStep(BaseAnalysisTool):
         ]
 
         load_cases = [model.load_case.name for model in models]
-        reference_datasets = list(options["reference_data"].values())
         input_names = options["input_names"]
+        reference_datasets = [
+            resolve_io_groups(reference_data, model=model, input_names=input_names)
+            for reference_data, model in zip(
+                options["reference_data"].values(), models, strict=True
+            )
+        ]
         starting_point = options["starting_point"]
         parameter_names = options["parameter_names"]
 

@@ -18,5 +18,5 @@ from pydantic_settings import BaseSettings
 
 class BaseConfiguration(
     BaseSettings,
-):  # noqa: N801
+):  # ruff: ignore[invalid-class-name]
     """Base configuration class for Vimseo."""

@@ -15,5 +15,6 @@ All rights reserved.
 
 
 [Ta6v](ta6v.md){ .md-button }
+[Plane orthotropic ply](plane_orthotropic_ply.md){ .md-button }
 
 Link to [model gallery][model_gallery]

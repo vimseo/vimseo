@@ -36,6 +36,9 @@ From <https://www.sciencedirect.com/science/article/abs/pii/S0021999104004619>,
 
 ### Richardson extrapolation
 
+Introduced by
+[Richardson (1911)](https://doi.org/10.1098/rsta.1911.0009).
+
 Considering $\gamma$ is a continuous variable, the true error on the simulation result
 $q$ can be expanded in $\gamma$:
 
@@ -52,6 +55,17 @@ Then $\beta$ can be obtained from the non-linear equation:
 
 with $E_{q,{\gamma}_j} = q_{{\gamma}_{j+1}} - q_{{\gamma}_{j}}$.
 
+### Richardson-independent palliative estimates
+
+The three-point Richardson extrapolation is fragile: its cross-validation returns
+``nan`` as soon as one grid triplet is not cleanly power-law convergent, which
+happens systematically for the sawtooth quantity but also for the smooth one on
+sampled data. The tool therefore also reports two Richardson-independent estimates
+of the converged value -- a least-squares power-law fit, whose order is fitted
+rather than assumed, and a model-free median of the finest grids -- which stay
+available in both cases. Their residual (fit) and band (median) quantify how
+reliable the estimate is.
+
 ### Grid Convergence Index
 
 .. math::
@@ -62,6 +76,7 @@ with $E_{q,{\gamma}_j} = q_{{\gamma}_{j+1}} - q_{{\gamma}_{j}}$.
 
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 from typing import TYPE_CHECKING
 from typing import ClassVar
@@ -73,8 +88,8 @@ from gemseo.utils.directory_creator import DirectoryNamingMethod
 from numpy import arange
 from numpy import array
 from numpy import full
+from numpy import isnan
 from numpy import vstack
-from pandas import DataFrame
 from pydantic import ConfigDict
 from pydantic import Field
 from strenum import StrEnum
@@ -87,6 +102,7 @@ from vimseo.tools.base_settings import BaseInputs
 from vimseo.tools.doe.custom_doe import CustomDOESettings
 from vimseo.tools.doe.custom_doe import CustomDOETool
 from vimseo.tools.post_tools.verification_plots import ConvergenceCrossValidation
+from vimseo.tools.post_tools.verification_plots import ConvergenceFit
 from vimseo.tools.post_tools.verification_plots import ErrorVersusElementSize
 from vimseo.tools.post_tools.verification_plots import RelativeErrorVersusCpuTime
 from vimseo.tools.post_tools.verification_plots import RelativeErrorVersusElementSize
@@ -97,14 +113,25 @@ from vimseo.tools.verification.solution_verification_indicators import compute_r
 from vimseo.tools.verification.solution_verification_indicators import (
     compute_richardson,
 )
+from vimseo.tools.verification.solution_verification_indicators import (
+    cross_validated_mad,
+)
+from vimseo.tools.verification.solution_verification_indicators import fit_power_law
+from vimseo.tools.verification.solution_verification_indicators import (
+    robust_converged_value,
+)
 from vimseo.tools.verification.verification_result import CASE_DESCRIPTION_TYPE
 from vimseo.tools.verification.verification_result import SolutionVerificationResult
+from vimseo.utilities.datasets import DatasetInput
+from vimseo.utilities.datasets import resolve_io_groups
 from vimseo.utilities.file_utils import camel_case_to_snake_case
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
     from plotly.graph_objs import Figure
+
+LOGGER = logging.getLogger(__name__)
 
 
 class Analysis(StrEnum):
@@ -175,10 +202,11 @@ class SolutionVerificationSettings(CustomDOESettings):
         "analysis is performed. If left to default value, the "
         "element_size_variable_name is used.",
     )
-    simulated_data: Dataset | DataFrame | None = Field(
+    simulated_data: DatasetInput | None = Field(
         default=None,
         description="The simulated data, containing the abscissa name "
-        "and the output name.",
+        "and the output name, either as a mapping of variable names to values, "
+        "a DataFrame or a dataset.",
     )
     description: CASE_DESCRIPTION_TYPE | None = None
 
@@ -214,6 +242,14 @@ class DiscretizationSolutionVerification(BaseVerification):
     """The safety factor on the Grid Convergence Index (GCI)."""
 
     _DOF_ABSCISSA_NAME = "N_dof_coarsest / N_dof"
+
+    #: Name stored in ``extrapolation["q_converged_method"]`` for the reference
+    #: (literature) Richardson extrapolation.
+    _RICHARDSON_METHOD: ClassVar[str] = "richardson"
+    #: Name flagging that the power-law-fit palliative was used instead of Richardson.
+    _POWER_LAW_PALLIATIVE: ClassVar[str] = "power_law_fit (palliative)"
+    #: Name flagging that the robust-median palliative was used instead of Richardson.
+    _ROBUST_PALLIATIVE: ClassVar[str] = "robust_median (palliative)"
 
     def __init__(
         self,
@@ -297,10 +333,12 @@ class DiscretizationSolutionVerification(BaseVerification):
             ).dataset
             nb_meshes = self.__NB_MESHES
         else:
-            doe_dataset = (
-                options["simulated_data"]
-                if isinstance(options["simulated_data"], Dataset)
-                else Dataset.from_dataframe(options["simulated_data"])
+            # The settings of this tool already say which variable plays which
+            # role, so data given without groups is resolved from them.
+            doe_dataset = resolve_io_groups(
+                options["simulated_data"],
+                input_names=[abscissa_name, element_size_variable_name],
+                output_names=[output_name, *options["observed_output_names"]],
             )
             element_size_values = (
                 doe_dataset.get_view(variable_names=abscissa_name).to_numpy().ravel()
@@ -380,11 +418,82 @@ class DiscretizationSolutionVerification(BaseVerification):
             )[1],
         }
 
-        # Create a ref dataset containing q_extrap
+        # Richardson-independent *palliative* estimates of the converged solution.
+        # Unlike the three-point Richardson extrapolation above, these never return
+        # ``nan`` (they degrade gracefully on non-monotone / sawtooth convergence),
+        # so a converged value and its uncertainty remain available when Richardson
+        # fails. Their order is fitted, not assumed. See ``fit_power_law`` and
+        # ``robust_converged_value``.
+        q_converged_fit, order_fit, coefficient_fit, fit_rmse = fit_power_law(h, q)
+        q_converged_robust, q_converged_robust_band = robust_converged_value(q)
+        extrapolation_result["q_converged_fit"] = q_converged_fit
+        extrapolation_result["order_fit"] = order_fit
+        extrapolation_result["fit_coefficient"] = coefficient_fit
+        extrapolation_result["fit_rmse"] = fit_rmse
+        extrapolation_result["q_converged_robust"] = q_converged_robust
+        extrapolation_result["q_converged_robust_band"] = q_converged_robust_band
+
+        # Cross-validate the palliatives, but only when Richardson failed: each fold
+        # (a leave-one-grid-out subset) yields a palliative converged value, and the
+        # spread of the folds gives a cross-validation uncertainty band, consistent
+        # with how Richardson is cross-validated above. The per-fold estimates are
+        # stored alongside the Richardson ones so the cross-validation plot can show
+        # them. Skipped when Richardson succeeds, since it is then the selected value.
+        fit_cv_mad = float("nan")
+        robust_cv_mad = float("nan")
+        if isnan(q_extrap_final):
+            fit_folds = []
+            robust_folds = []
+            for fold in cross_validation_result.values():
+                fold_fit = fit_power_law(fold["h"], fold["q"])[0]
+                fold_robust = robust_converged_value(fold["q"])[0]
+                fold["q_converged_fit"] = fold_fit
+                fold["q_converged_robust"] = fold_robust
+                fit_folds.append(fold_fit)
+                robust_folds.append(fold_robust)
+            _, fit_cv_mad = cross_validated_mad(fit_folds)
+            _, robust_cv_mad = cross_validated_mad(robust_folds)
+        extrapolation_result["q_converged_fit_cv_mad"] = fit_cv_mad
+        extrapolation_result["q_converged_robust_cv_mad"] = robust_cv_mad
+
+        # Select the converged value: the Richardson extrapolation is the reference
+        # (literature) method and is used whenever it is available; the palliatives
+        # are only fallbacks when Richardson fails (``nan``). ``q_converged_method``
+        # records which method was used and flags explicitly when a palliative was
+        # substituted for Richardson. ``q_converged_cv_mad`` carries the matching
+        # cross-validation uncertainty band (Richardson's MAD, or the palliative's).
+        if not isnan(q_extrap_final):
+            q_converged = q_extrap_final
+            q_converged_method = self._RICHARDSON_METHOD
+            q_converged_cv_mad = q_extrap_mad
+        elif not isnan(q_converged_fit):
+            q_converged = q_converged_fit
+            q_converged_method = self._POWER_LAW_PALLIATIVE
+            q_converged_cv_mad = fit_cv_mad
+        else:
+            q_converged = q_converged_robust
+            q_converged_method = self._ROBUST_PALLIATIVE
+            q_converged_cv_mad = robust_cv_mad
+        extrapolation_result["q_converged"] = q_converged
+        extrapolation_result["q_converged_method"] = q_converged_method
+        extrapolation_result["q_converged_cv_mad"] = q_converged_cv_mad
+        if q_converged_method != self._RICHARDSON_METHOD:
+            LOGGER.warning(
+                "Richardson extrapolation could not be computed (returned nan); "
+                "falling back to the palliative '%s' for output '%s'. This is not "
+                "the reference Richardson method.",
+                q_converged_method,
+                output_name,
+            )
+
+        # Create a ref dataset containing the selected converged value. Using
+        # ``q_converged`` (Richardson when available, otherwise a palliative)
+        # instead of ``q_extrap_final`` keeps the error metrics and the error /
+        # relative-error plots populated even when Richardson returns nan.
         reference_data = Dataset.from_array(
             data=vstack([
                 element_size_values,
-                full((nb_meshes), q_extrap_final),
+                full((nb_meshes), q_converged),
             ]).T,
             variable_names=[
                 abscissa_name,
@@ -443,6 +552,7 @@ class DiscretizationSolutionVerification(BaseVerification):
         figs = {}
         plots = [
             ConvergenceCrossValidation(),
+            ConvergenceFit(),
             ErrorVersusElementSize(),
             RelativeErrorVersusElementSize(),
         ]

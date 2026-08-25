@@ -27,7 +27,6 @@ from __future__ import annotations
 
 import logging
 
-from gemseo.datasets.io_dataset import IODataset
 from gemseo.utils.directory_creator import DirectoryNamingMethod
 
 from vimseo import EXAMPLE_RUNS_DIR
@@ -56,19 +55,16 @@ model = create_model(
 )
 
 # %%
-# We also need a reference dataset.
-# Here we do it programmatically, but we can also create it from a csv file:
-# ``
-reference_data = IODataset().from_array(
-    data=[[10.0, 10.0, -4.0, -12.0], [15.0, 10.0, -6.0, -40.0]],
-    variable_names=["height", "width", "maximum_dplt", "reaction_forces"],
-    variable_names_to_group_names={
-        "height": "inputs",
-        "width": "inputs",
-        "maximum_dplt": "outputs",
-        "reaction_forces": "outputs",
-    },
-)
+# We also need reference data. A mapping of variable names to values is enough:
+# the tool reads the grammars of the model to tell its inputs from its outputs,
+# so the roles do not have to be declared. The same data read from a csv file
+# with ``pandas.read_csv`` could be passed directly as well.
+reference_data = {
+    "height": [10.0, 15.0],
+    "width": [10.0, 10.0],
+    "maximum_dplt": [-4.0, -6.0],
+    "reaction_forces": [-12.0, -40.0],
+}
 
 # %%
 # All inputs to the verification are now available.

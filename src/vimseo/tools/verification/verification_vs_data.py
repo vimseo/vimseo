@@ -30,6 +30,8 @@ from vimseo.tools.doe.custom_doe import CustomDOETool
 from vimseo.tools.verification.base_verification import BaseCodeVerificationSettings
 from vimseo.tools.verification.base_verification import BaseVerification
 from vimseo.tools.verification.base_verification import check_output_names
+from vimseo.utilities.datasets import DatasetInput
+from vimseo.utilities.datasets import resolve_io_groups
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -39,7 +41,7 @@ if TYPE_CHECKING:
 
 class CodeVerificationAgainstDataInputs(BaseInputs):
     model: IntegratedModel | None = None
-    reference_data: IODataset | None = None
+    reference_data: DatasetInput | None = None
 
 
 class CodeVerificationAgainstData(BaseVerification):
@@ -73,14 +75,17 @@ class CodeVerificationAgainstData(BaseVerification):
         **options,
     ) -> VerificationResult:
         model = options["model"]
-        reference_data = options["reference_data"]
+        reference_data = resolve_io_groups(
+            options["reference_data"],
+            model=model,
+            input_names=options["input_names"],
+            output_names=options["output_names"],
+        )
 
         self.result._fill_metadata(options["description"], model.description)
 
         input_names = (
-            options["reference_data"].get_variable_names(
-                group_name=IODataset.INPUT_GROUP
-            )
+            reference_data.get_variable_names(group_name=IODataset.INPUT_GROUP)
             if len(options["input_names"]) == 0
             else options["input_names"]
         )

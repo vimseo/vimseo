@@ -292,10 +292,10 @@ class TestPickleFallback:
 class TestFullResults:
     def test_bayes_analysis_result_full(self, tmp_hdf5):
         result = BayesAnalysisResult(
-            raw_samples=np.linspace(0, 1, 100 * 3).reshape((100, 3)),  # noqa: NPY002
+            raw_samples=np.linspace(0, 1, 100 * 3).reshape((100, 3)),  # ruff: ignore[numpy-legacy-random]
             thin_number=10,
             ndim=3,
-            processed_samples=np.linspace(0, 1, 50 * 3).reshape((50, 3)),  # noqa: NPY002
+            processed_samples=np.linspace(0, 1, 50 * 3).reshape((50, 3)),  # ruff: ignore[numpy-legacy-random]
             lppd=-12.5,
             ml=-8.3,
             posterior_predictive=None,

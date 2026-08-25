@@ -70,8 +70,8 @@ if TYPE_CHECKING:
     from matplotlib.pyplot import Axes
     from matplotlib.pyplot import Figure
 
-random.seed(1)  # noqa: NPY002
-RandomGenerator.SetSeed(0)  # noqa: NPY002
+random.seed(1)  # ruff: ignore[numpy-legacy-random]
+RandomGenerator.SetSeed(0)  # ruff: ignore[numpy-legacy-random]
 LOGGER = logging.getLogger(__name__)
 
 
@@ -273,11 +273,11 @@ class BayesTool(BaseAnalysisTool):
         Returns: The raw MCMC samples before thinning and burn-in.
         """
 
-        likelihood_function = lambda x: self._log_likelihood(x, data)  # noqa: E731
+        likelihood_function = lambda x: self._log_likelihood(x, data)  # ruff: ignore[lambda-assignment]
 
-        prior_function = lambda x: self._log_prior(x)  # noqa: E731
+        prior_function = lambda x: self._log_prior(x)  # ruff: ignore[lambda-assignment]
 
-        log_posterior = lambda x: self.log_posterior(  # noqa: E731
+        log_posterior = lambda x: self.log_posterior(  # ruff: ignore[lambda-assignment]
             x, prior_function, likelihood_function
         )
 
@@ -373,9 +373,9 @@ class BayesTool(BaseAnalysisTool):
             raise ValueError(msg)
 
         self._x0s = (
-            0.5 * ones(dim) + 1e-4 * random.randn(options["n_walkers"], dim)  # noqa: NPY002
+            0.5 * ones(dim) + 1e-4 * random.randn(options["n_walkers"], dim)  # ruff: ignore[numpy-legacy-random]
             if len(options["x0s"]) == 0
-            else options["x0s"] * (1 + 1e-4 * random.randn(options["n_walkers"], dim))  # noqa: NPY002
+            else options["x0s"] * (1 + 1e-4 * random.randn(options["n_walkers"], dim))  # ruff: ignore[numpy-legacy-random]
         )
 
         self._scaler.fit(bounds)
