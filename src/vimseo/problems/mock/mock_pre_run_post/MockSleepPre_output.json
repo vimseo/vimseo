@@ -1,0 +1,22 @@
+{
+  "name": "MockSleepPre_output",
+  "required": [
+    "x2"
+  ],
+  "properties": {
+    "x2": {
+      "description": "x2",
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 1,
+      "items": {
+        "type": "number",
+        "maximum": 100.0,
+        "minimum": -100.0
+      }
+    }
+  },
+  "$schema": "http://json-schema.org/draft-04/schema",
+  "type": "object",
+  "id": "#MockSleepPre_output"
+}

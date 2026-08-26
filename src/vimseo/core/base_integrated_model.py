@@ -58,7 +58,8 @@ from vimseo.core.model_metadata import MetaData
 from vimseo.core.model_metadata import MetaDataNames
 from vimseo.core.model_settings import IntegratedModelSettings
 from vimseo.material.material import Material
-from vimseo.storage_management import NAME_TO_ARCHIVE_CLASS
+from vimseo.material.material_registry import resolve_material
+from vimseo.storage_management import _get_archive_class
 from vimseo.storage_management.scratch_storage import DirectoryScratch
 from vimseo.utilities.json_grammar_utils import load_input_bounds
 from vimseo.utilities.plotting_utils import plot_curves
@@ -223,17 +224,34 @@ class IntegratedModel(GemseoDisciplineWrapper):
     default_cache_type = Discipline.CacheType.HDF5
     default_grammar_type = Discipline.GrammarType.JSON
 
+    @classmethod
+    def _load_material(
+        cls, material: str | Path | Material | None = None
+    ) -> Material | None:
+        """Return the material to build this model with.
+
+        *material* overrides :attr:`.MATERIAL_FILE` and may be a material name, the path
+        to a material JSON file, or an already-built :class:`.Material`; ``None`` falls
+        back to the material the model class declares (itself possibly none). Shared with
+        :class:`.PreRunPostModel`, which needs the same resolution one level earlier, to
+        hand the material to its components.
+        """
+        if material is not None:
+            return resolve_material(material)
+        return (
+            Material.from_json(cls.MATERIAL_FILE) if cls.MATERIAL_FILE != "" else None
+        )
+
     def __init__(
         self,
         load_case_name: str,
         components: Iterable[BaseComponent],
+        material: str | Path | Material | None = None,
         **options,
     ):
         options = IntegratedModelSettings(**options).model_dump()
         self.name = self.__class__.__name__
-        self.__material = (
-            Material.from_json(self.MATERIAL_FILE) if self.MATERIAL_FILE != "" else None
-        )
+        self.__material = self._load_material(material)
         self._load_case = LoadCaseFactory().create(
             load_case_name, domain=self._LOAD_CASE_DOMAIN
         )
@@ -280,7 +298,7 @@ class IntegratedModel(GemseoDisciplineWrapper):
                 for names in c._PERSISTENT_FILE_NAMES
             ],
         }
-        self._archive_manager = NAME_TO_ARCHIVE_CLASS[options["archive_manager"]](
+        self._archive_manager = _get_archive_class(options["archive_manager"])(
             **archive_options
         )
 
@@ -463,14 +481,12 @@ class IntegratedModel(GemseoDisciplineWrapper):
         if self._whether_use_scratch_dir():
             self._scratch_manager.create_job_directory()
             LOGGER.info(
-                f"Current root directory of scratch directory is "
-                f"{self._scratch_manager.root_directory}."
+                f"Current scratch directory is {self._scratch_manager._job_directory}."
             )
 
         self._archive_manager.create_job_directory()
         LOGGER.info(
-            f"Current root directory of job directory is "
-            f"{self._archive_manager.root_directory}."
+            f"Current archive directory is {self._archive_manager._job_directory}."
         )
 
         for discipline in self._chain.disciplines:
@@ -481,38 +497,9 @@ class IntegratedModel(GemseoDisciplineWrapper):
         end_time = time()
         self._run_time = end_time - start_time
 
-        # Fields
-        field_file_names = defaultdict(list)
-        if self.scratch_job_directory not in ["", None]:
-            for f in self.scratch_job_directory.iterdir():
-                for name, field_re in self.FIELDS_FROM_FILE.items():
-                    if match(field_re, f.name):
-                        field_file_names[name].append(f.name)
-
-        if set(field_file_names.keys()) != set(self.FIELDS_FROM_FILE.keys()):
-            missing_fields = set(self.FIELDS_FROM_FILE.keys()) - set(
-                field_file_names.keys()
-            )
-            LOGGER.warning(
-                f"The following fields have not been found in the scratch job directory: "
-                f"{missing_fields}."
-            )
-
-        self._archive_manager.add_persistent_file_names([
-            file_name
-            for file_names in field_file_names.values()
-            for file_name in file_names
-        ])
-
-        output_data.update({
-            name: array([str(file_name) for file_name in field_file_names[name]])
-            for name in field_file_names
-        })
-
-        # metadata as additional outputs
-        meta_data = self.generate_metadata(output_data)
-        output_data.update(asdict(meta_data))
-
+        # Collect field files, generate metadata and write the archive (results
+        # + persistent files); then enforce the scratch-persistency policy.
+        self.archive_outputs(output_data)
         self._manage_persistency(output_data)
 
         return output_data
@@ -712,6 +699,17 @@ class IntegratedModel(GemseoDisciplineWrapper):
         """The component running the external software."""
         return self._chain.disciplines[self._RUN_COMPONENT_INDEX]
 
+    @property
+    def job_executor(self):
+        """The job executor the job-settings form configures and the run step restores.
+
+        The executor of the model's :attr:`run` component — the scheduler doing
+        the heavy solve — or ``None`` when that component carries none. It never
+        raises: a model whose pre/post run interactively while its run uses a
+        scheduler carries several distinct executors, which is legitimate.
+        """
+        return getattr(self.run, "job_executor", None)
+
     def _classify_variables(self, data):
         """Split a dictionary of variables according to the variable groups:
          geometrical, material,
@@ -848,16 +846,67 @@ class IntegratedModel(GemseoDisciplineWrapper):
 
         return self.cache
 
-    def _manage_persistency(self, output_data):
-        """Write results in archive."""
+    def _collect_field_files(self, output_data):
+        """Register the run's field files as persistent and add them to *output_data*.
 
-        # TODO refactor when ModelResult is implemented
+        Scans the scratch job directory for files matching ``FIELDS_FROM_FILE``,
+        records them on the archive manager (so :meth:`archive_outputs` copies
+        them), and adds their names into *output_data* as the field outputs.
+        """
+        field_file_names = defaultdict(list)
+        if self.scratch_job_directory not in ["", None]:
+            for f in self.scratch_job_directory.iterdir():
+                for name, field_re in self.FIELDS_FROM_FILE.items():
+                    if match(field_re, f.name):
+                        field_file_names[name].append(f.name)
+
+        if set(field_file_names.keys()) != set(self.FIELDS_FROM_FILE.keys()):
+            missing_fields = set(self.FIELDS_FROM_FILE.keys()) - set(
+                field_file_names.keys()
+            )
+            LOGGER.warning(
+                f"The following fields have not been found in the scratch job directory: "
+                f"{missing_fields}."
+            )
+
+        self._archive_manager.add_persistent_file_names([
+            file_name
+            for file_names in field_file_names.values()
+            for file_name in file_names
+        ])
+
+        output_data.update({
+            name: array([str(file_name) for file_name in field_file_names[name]])
+            for name in field_file_names
+        })
+
+    def archive_outputs(self, output_data):
+        """Archive the model result: field files, metadata, results, persistent files.
+
+        Runs the archive half of the ``execute`` tail against the current scratch
+        job directory — collecting field files (:meth:`_collect_field_files`),
+        generating the metadata into *output_data*, then writing ``results.json``
+        and copying the persistent files through the archive manager. The archive
+        job directory must already be created
+        (``self._archive_manager.create_job_directory()``). Unlike
+        :meth:`_manage_persistency` it does **not** touch the scratch-persistency
+        policy, so a caller that ran individual disciplines (the vtt GUI's
+        pre/run/post flow) can archive exactly as ``model.execute`` does without
+        deleting the job directory it is reading.
+        """
+        self._collect_field_files(output_data)
+
+        meta_data = self.generate_metadata(output_data)
+        output_data.update(asdict(meta_data))
+
         result_model = {"inputs": self.get_input_data(), "outputs": output_data}
-
         self._archive_manager.enforce_persistency_policy(result_model)
-
         self._archive_manager.copy_persistent_files(self._scratch_manager.job_directory)
+        return output_data
 
+    def _manage_persistency(self, output_data):
+        """Enforce the scratch-persistency policy (archiving is done separately)."""
+        result_model = {"inputs": self.get_input_data(), "outputs": output_data}
         self._scratch_manager.enforce_persistency_policy(result_model)
 
     def _whether_use_scratch_dir(self):

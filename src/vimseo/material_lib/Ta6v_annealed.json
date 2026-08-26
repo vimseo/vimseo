@@ -1,10 +1,10 @@
 {
-  "name": "Ta6v",
+  "name": "Ta6v_annealed",
   "grammar_name": "Ta6v",
-  "description": "",
+  "description": "Annealed Ta6V: lower stiffness than the mill-annealed reference.",
   "material_relations": [
     {
-      "tag": "Ta6v_v1",
+      "tag": "Ta6v_annealed_v1",
       "name": "Ta6v_elastic_iso",
       "metadata": {
         "generic": {
@@ -19,7 +19,7 @@
         {
           "name": "young_modulus",
           "description": "",
-          "value": 210000.0,
+          "value": 200000.0,
           "lower_bound": 190000.0,
           "upper_bound": 230000.0,
           "distribution": {
@@ -27,8 +27,8 @@
             "mode": 0.0,
             "lower": -1000000000000.0,
             "upper": 1000000000000.0,
-            "sigma": 100.0,
-            "mu": 210000.0,
+            "sigma": 150.0,
+            "mu": 200000.0,
             "mean": 0.0,
             "loc": 0.0,
             "location": 0.0,
@@ -42,7 +42,7 @@
         {
           "name": "nu_p",
           "description": "",
-          "value": 0.3,
+          "value": 0.32,
           "lower_bound": -1000000000000.0,
           "upper_bound": 1000000000000.0,
           "distribution": {
@@ -51,7 +51,7 @@
             "lower": -1000000000000.0,
             "upper": 1000000000000.0,
             "sigma": 0.02,
-            "mu": 0.3,
+            "mu": 0.32,
             "mean": 0.0,
             "loc": 0.0,
             "location": 0.0,

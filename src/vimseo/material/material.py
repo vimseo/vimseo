@@ -56,6 +56,14 @@ class Material(BaseJsonIO):
     """
 
     name: str
+    grammar_name: str = ""
+    """The ``name`` of the material grammar this material conforms to.
+
+    A material is offered as an alternative for a model when this equals the ``name``
+    declared by the model's :attr:`~.IntegratedModel._MATERIAL_GRAMMAR_FILE`. Left empty,
+    the material is only ever used by the model naming it in
+    :attr:`~.IntegratedModel.MATERIAL_FILE`.
+    """
     description: str = ""
     material_relations: list[MaterialRelation] = Field(default_factory=list)
 
@@ -109,7 +117,9 @@ class Material(BaseJsonIO):
         """
         dir_path = Path.cwd() if dir_path == "" else dir_path
         file_path = f"{self.name}_grammar.json" if file_name == "" else file_name
-        json_schema = json.dumps(self.model_json_schema(), indent=4)
+        json_schema = json.dumps(
+            self._stamp_grammar_name(self.model_json_schema()), indent=4
+        )
         Path(dir_path / file_path).write_text(json_schema)
 
     def to_legacy_json_schema(
@@ -135,13 +145,27 @@ class Material(BaseJsonIO):
                     Field(description=prop.description),
                 )
         model = create_model(f"{self.name}Legacy", **fields)
-        json_schema = model.model_json_schema()
+        json_schema = self._stamp_grammar_name(model.model_json_schema())
         if write:
             dir_path = Path.cwd() if dir_path == "" else dir_path
             file_name = (
                 f"{self.name}_legacy_grammar.json" if file_name == "" else file_name
             )
             Path(dir_path / file_name).write_text(json.dumps(json_schema, indent=4))
+        return json_schema
+
+    def _stamp_grammar_name(self, json_schema: dict) -> dict:
+        """Write this material's grammar name into a generated JSON schema.
+
+        A material declares the grammar it conforms to through
+        :attr:`.grammar_name`, which must match the ``name`` of that grammar file
+        (see :func:`~vimseo.material.material_registry.compatible_materials`). Stamping
+        it here keeps a regenerated grammar bound to the materials that already point
+        at it, instead of silently dropping the link.
+        """
+        name = self.grammar_name or self.name
+        json_schema["name"] = name
+        json_schema["id"] = f"#{name}"
         return json_schema
 
     @property

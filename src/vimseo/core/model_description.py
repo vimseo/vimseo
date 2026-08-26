@@ -69,20 +69,20 @@ class ModelDescription(BaseDescription):
         text.add("Default values:")
         text.indent()
         for group_name in IntegratedModel.InputGroupNames:
+            group_values = self.default_inputs[group_name]
+            if not group_values:
+                continue
             text.add("")
             text.add(f"Default {group_name}:")
-            text.add(
-                dumps(
-                    self.default_inputs[group_name],
-                    sort_keys=True,
-                )
-            )
-        text.dedent()
-        for key in ["model_inputs", "model_outputs"]:
-            text.add(f"{key}:")
             text.indent()
-            text.add(dumps(self.dataflow[key], sort_keys=True, indent=4))
+            for variable_name, value in sorted(group_values.items()):
+                text.add(f"{variable_name} = {value}")
             text.dedent()
+        text.dedent()
+
+        text.add("")
+        text.add(f"Model inputs: {', '.join(sorted(self.dataflow['model_inputs']))}")
+        text.add(f"Model outputs: {', '.join(sorted(self.dataflow['model_outputs']))}")
 
         if self.verbose:
             dataflow = self.dataflow.copy()

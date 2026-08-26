@@ -1,20 +1,20 @@
 {
-  "name": "MockGrammar",
+  "name": "MockSleepRun_output",
   "required": [
-    "E1"
+    "y0"
   ],
   "properties": {
-    "E1": {
-      "description": "Longitudinal modulus (MPa)",
+    "y0": {
+      "description": "y0",
       "type": "array",
       "items": {
         "type": "number",
-        "maximum": 190000.0,
-        "minimum": 100000.0
+        "maximum": 100.0,
+        "minimum": -100.0
       }
     }
   },
   "$schema": "http://json-schema.org/draft-04/schema",
   "type": "object",
-  "id": "#mock_grammar"
+  "id": "#MockSleepRun_output"
 }

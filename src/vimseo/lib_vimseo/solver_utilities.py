@@ -20,6 +20,15 @@ import numpy as np
 from numpy import array
 from numpy import ndarray
 
+# Python 2/3 compatibility
+try:
+    # unicode exists with Python 2 (Abaqus 2022 python) but not in Python 3 (VIMSEO)
+    unicode
+except NameError:
+    # Python 3
+    unicode = str
+
+
 ARG_FILE = "job_arguments.json"
 OUT_FILE = "job_outputs.json"
 
@@ -32,14 +41,14 @@ def import_json_inputs(json_input_file):
     with open(json_input_file, 'r') as input_file:
         inputs = json.loads(input_file.read())
         for k, v in inputs.items():
-            if isinstance(v, unicode):  # noqa: F821
+            if isinstance(v, unicode): 
                 # unicode strings are casted into strings
                 inputs[k] = str(v)
             if isinstance(v, (list, type(np.array([0.0])))):
                 # np.array with only one element is unpacked into a scalar
                 if len(v) == 1:
                     inputs[k] = v[0]
-                    if isinstance(v[0], unicode):  # noqa: F821
+                    if isinstance(v[0], unicode):
                         # unicode strings are casted into strings
                         inputs[k] = str(v[0])
                 elif len(v) == 0:

@@ -15,4 +15,4 @@
 
 from __future__ import annotations
 
-# TODO Sebastion review : why weird LC1.json and LC2.json in this directory ?
+DUMMY_LOAD_CASE_NAME = "DUMMY_LOAD_CASE_NAME"

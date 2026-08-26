@@ -28,12 +28,13 @@ from vimseo.core.components.subroutines.subroutine_wrapper_factory import (
 )
 from vimseo.core.load_case_factory import LoadCaseFactory
 from vimseo.core.model_settings import IntegratedModelSettings
-from vimseo.material.material import Material
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
+    from pathlib import Path
 
     from vimseo.core.components.base_component import BaseComponent
+    from vimseo.material.material import Material
 
 LOGGER = logging.getLogger(__name__)
 
@@ -86,12 +87,17 @@ class PreRunPostModel(IntegratedModel):
     """The index of the components whose outputs are removed
     from the model outputs."""
 
-    def __init__(self, load_case_name: str, **options):
+    def __init__(
+        self,
+        load_case_name: str,
+        material: str | Path | Material | None = None,
+        **options,
+    ):
 
         options = IntegratedModelSettings(**options).model_dump()
-        material = (
-            Material.from_json(self.MATERIAL_FILE) if self.MATERIAL_FILE != "" else None
-        )
+        # Resolved once here and handed down to ``super().__init__`` as an object, so the
+        # material JSON is read a single time instead of once per level.
+        material = self._load_material(material)
 
         component_factory = ComponentFactory()
 
@@ -126,7 +132,7 @@ class PreRunPostModel(IntegratedModel):
             ),
         ]
 
-        super().__init__(load_case_name, components, **options)
+        super().__init__(load_case_name, components, material=material, **options)
 
         self._pre_processor = self._chain.disciplines[0]
         self._run_processor = self._chain.disciplines[1]

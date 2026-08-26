@@ -109,6 +109,10 @@ def load_default_inputs(grammar: JSONGrammar) -> Mapping[str, float]:
 
 class EnhancedJSONEncoder(json.JSONEncoder):
     def default(self, o):
+        from gemseo.core.grammars.defaults import Defaults
+
+        if isinstance(o, Defaults):
+            return dict(o)
         if isinstance(o, (int, np.integer)):
             return int(o)
         if isinstance(o, (int, np.floating)):

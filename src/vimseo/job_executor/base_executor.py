@@ -104,9 +104,9 @@ class JobExecutor(metaclass=GoogleDocstringInheritanceMeta):
             check_subprocess: Whether to raise an error in case of subprocess failure.
         """
         self._command_line = self._replace_in_command_line(self._command_template)
-        return self._execute_external_software(
-            self._command_line.split(), check_subprocess
-        )
+        cmd = self._command_line.split()
+        LOGGER.info(f"Executing command: {self._command_line}")
+        return self._execute_external_software(cmd, check_subprocess)
 
     def set_options(self, options: BaseUserJobSettings):
         """Set the user job options."""

@@ -18,6 +18,7 @@ from __future__ import annotations
 import logging
 from pathlib import Path
 from typing import TYPE_CHECKING
+from typing import Annotated
 
 from emcee import EnsembleSampler
 from gemseo.mlearning.transformers.scaler.min_max_scaler import MinMaxScaler
@@ -27,7 +28,6 @@ from matplotlib.pyplot import subplots
 from numpy import append
 from numpy import array
 from numpy import delete
-from numpy import empty
 from numpy import exp
 from numpy import floor
 from numpy import inf
@@ -55,6 +55,7 @@ from openturns import UserDefined
 from openturns import dist
 from pydantic import ConfigDict
 from pydantic import Field
+from pydantic import SkipValidation
 
 from vimseo.config.global_configuration import _configuration as config
 from vimseo.tools.base_analysis_tool import BaseAnalysisTool
@@ -105,13 +106,20 @@ class BayesSettings(BaseSettings):
         "<http://openturns.github.io/openturns/latest/user_manual/"
         "probabilistic_modelling.html>`_.",
     )
-    prior_dist: ComposedDistribution | list[DistributionImplementation] = Field(
-        default=[],
-        description="The prior distribution. Either a list of openturns distribution.",
+    prior_dist: Annotated[
+        ComposedDistribution | list[DistributionImplementation], SkipValidation
+    ] = (
+        Field(
+            default=[],
+            description="The prior distribution. Either a list of openturns distribution "
+            "or a composed distribution.",
+        )
     )
-    frozen_variables: dict = Field(
+    frozen_variables: dict[str, list[int | float]] = Field(
         default={},
-        description="The frozen variables",
+        description="The frozen variables. Examples: "
+        "- {'free_index': [0], 'frozen_index': [1], 'frozen_values': [0.1]}, "
+        "- {'frozen_index': [1], 'frozen_values': [0.1]}",
     )
 
 
@@ -119,11 +127,11 @@ class BayesInputs(BaseInputs):
     """The inputs of a Bayes analysis."""
 
     data: ndarray = Field(
-        default=empty(0),
+        default=array([]),
         description="The data from which the inference is carried out.",
     )
     x0s: ndarray = Field(
-        default=empty(0),
+        default=array([]),
         description="The starting points of the algorithm. "
         "In practice a 1-D array of size the number "
         "of parameters of the model.",
@@ -185,7 +193,7 @@ class BayesTool(BaseAnalysisTool):
 
         self.result = BayesAnalysisResult()
 
-    def _log_likelihood(self, x: array, data: Sample) -> float:
+    def _log_likelihood(self, x: ndarray, data: Sample) -> float:
         """Return the value of the log-likelihood for candidate model parameters.
 
         Args:
@@ -312,7 +320,7 @@ class BayesTool(BaseAnalysisTool):
 
             raise ValueError(msg)
 
-        if len(options["data"]) == 0:
+        if options["data"].size == 0:
             msg = "There is no data to calibrate the model."
 
             raise ValueError(msg)
@@ -374,7 +382,7 @@ class BayesTool(BaseAnalysisTool):
 
         self._x0s = (
             0.5 * ones(dim) + 1e-4 * random.randn(options["n_walkers"], dim)  # noqa: NPY002
-            if len(options["x0s"]) == 0
+            if options["x0s"].size == 0
             else options["x0s"] * (1 + 1e-4 * random.randn(options["n_walkers"], dim))  # noqa: NPY002
         )
 

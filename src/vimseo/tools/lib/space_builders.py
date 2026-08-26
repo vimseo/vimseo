@@ -32,6 +32,8 @@ from typing import ClassVar
 from gemseo.uncertainty.distributions.base_distribution import DistributionSettings
 from gemseo.utils.directory_creator import DirectoryNamingMethod
 from numpy import inf
+from numpy import maximum as np_maximum
+from numpy import minimum as np_minimum
 from numpy import sign
 from sympy.parsing.sympy_parser import parse_expr
 
@@ -373,8 +375,8 @@ class FromCenterAndCov(SpaceBuilder):
             "lower": minimum,
             "upper": maximum,
             "mode": center,
-            "lower_bound": max(lb, minimum) if lb is not None else None,
-            "upper_bound": min(ub, maximum) if ub is not None else None,
+            "lower_bound": np_maximum(lb, minimum) if lb is not None else None,
+            "upper_bound": np_minimum(ub, maximum) if ub is not None else None,
         }
 
     def get_filtered_options(self, **options):

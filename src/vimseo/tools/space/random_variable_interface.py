@@ -68,11 +68,20 @@ def add_random_variable_interface(
                 settings=settings,
             )
         else:
+            dumped = settings.model_dump()
             parameters = {
                 k: v
-                for k, v in settings.model_dump().items()
+                for k, v in dumped.items()
                 if k in OPTIONS_PER_DISTRIBUTION[f"OT{settings.name}Distribution"]
             }
+            # The distribution options above never include the truncation bounds,
+            # yet ``add_random_vector`` forwards them per component just like the
+            # scalar path does through ``settings``. Without this the model bounds
+            # are silently dropped for a vector variable, so a distribution built
+            # with truncation on would still overflow the model's validity domain.
+            for bound in ("lower_bound", "upper_bound"):
+                if dumped.get(bound) is not None:
+                    parameters[bound] = dumped[bound]
             parameter_space.add_random_vector(
                 variable_name,
                 size=size,

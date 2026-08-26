@@ -1,0 +1,33 @@
+{
+  "name": "MockSleepPost_input",
+  "required": [
+    "y0",
+    "post_duration"
+  ],
+  "properties": {
+    "y0": {
+      "description": "y0",
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 1,
+      "items": {
+        "type": "number",
+        "maximum": 100.0,
+        "minimum": -100.0
+      }
+    },
+    "post_duration": {
+      "description": "Duration in seconds of the post-processing sleep.",
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 1,
+      "items": {
+        "type": "number",
+        "minimum": 0.0
+      }
+    }
+  },
+  "$schema": "http://json-schema.org/draft-04/schema",
+  "type": "object",
+  "id": "#MockSleepPost_input"
+}

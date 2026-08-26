@@ -23,6 +23,9 @@ from gemseo.algos.parameter_space import ParameterSpace
 from gemseo.uncertainty.distributions.base_distribution import (
     InterfacedDistributionSettings,
 )
+from numpy import array
+from numpy import maximum
+from numpy import minimum
 from numpy import sign
 
 import vimseo.tools as tools
@@ -645,6 +648,83 @@ def test_update_from_model_center_and_cov_with_truncation(
             upper=maximum,
             lower_bound=max(model.lower_bounds[variable_name], minimum),
             upper_bound=min(model.upper_bounds[variable_name], maximum),
+        )
+
+
+@pytest.mark.parametrize("cov", [0.05, 100.0])
+@pytest.mark.parametrize(
+    "distribution_name",
+    [
+        "OTUniformDistribution",
+        "OTTriangularDistribution",
+        "OTNormalDistribution",
+    ],
+)
+def test_update_vector_from_model_center_and_cov_with_truncation(
+    tmp_wd,
+    cov,
+    distribution_name,
+):
+    """A vector variable can be truncated to the model bounds component by component.
+
+    Regression test: with a vector input and truncation on, the builder used
+    Python's builtin ``max``/``min`` on the per-component bound arrays and raised
+    "truth value of an array ... is ambiguous". Even past that, the vector path
+    dropped the truncation bounds entirely. Both are checked here, exercising a
+    bound that mixes model-bound and distribution-derived winners per component.
+    """
+    space_tool = SpaceTool()
+    model = create_model("MockModelPersistent", "LC1")
+    model.EXTRA_INPUT_GRAMMAR_CHECK = True
+    variable_name = "x3"
+    # x3 has no model bounds by default; inject finite per-component bounds so the
+    # truncation branch is actually exercised, as a real vector input (a layup)
+    # with bounds would be. Chosen so that at cov=0.05 the model bound wins on some
+    # components and the distribution min/max on others.
+    model.lower_bounds[variable_name] = array([0.98, 1.0, 2.90])
+    model.upper_bounds[variable_name] = array([1.02, 2.2, 3.10])
+    space_tool.execute(
+        distribution_name=distribution_name,
+        space_builder_name="FromModelCenterAndCov",
+        model=model,
+        variable_names=[variable_name],
+        use_default_values_as_center=True,
+        cov=cov,
+        truncate_to_model_bounds=True,
+    )
+    center = model.default_input_data[variable_name]
+    expected_minimum = center * (1 - sign(center) * cov)
+    expected_maximum = center * (1 + sign(center) * cov)
+    model_lower = model.lower_bounds[variable_name]
+    model_upper = model.upper_bounds[variable_name]
+
+    if distribution_name == "OTNormalDistribution":
+        check_distribution(
+            space_tool.parameter_space,
+            variable_name,
+            mu=center,
+            sigma=abs(cov * center),
+            lower_bound=model_lower,
+            upper_bound=model_upper,
+        )
+    elif distribution_name == "OTUniformDistribution":
+        check_distribution(
+            space_tool.parameter_space,
+            variable_name,
+            lower=expected_minimum,
+            upper=expected_maximum,
+            lower_bound=maximum(model_lower, expected_minimum),
+            upper_bound=minimum(model_upper, expected_maximum),
+        )
+    elif distribution_name == "OTTriangularDistribution":
+        check_distribution(
+            space_tool.parameter_space,
+            variable_name,
+            mode=center,
+            lower=expected_minimum,
+            upper=expected_maximum,
+            lower_bound=maximum(model_lower, expected_minimum),
+            upper_bound=minimum(model_upper, expected_maximum),
         )
 
 
