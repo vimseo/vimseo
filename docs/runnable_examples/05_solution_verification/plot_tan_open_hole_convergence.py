@@ -23,23 +23,26 @@ Assess the discretization error of the :class:`TanOpenHole` model with the
 [Richardson extrapolation](../../../reference/vimseo/tools/verification/solution_verification.md#richardson-extrapolation)
 [@richardson1911_finite_differences]
 [@krysl2022_confidence_intervals_richardson], and compare two
-field-derived quantities: one that converges smoothly (``sigma_xx_probe``) and one that exhibits a
-*sawtooth* behaviour (``sigma_xx_peak``) for which the Richardson extrapolation cannot
-be computed:
+field-derived quantities:
 
 - ``sigma_xx_probe``: ``sigma_xx`` bilinearly interpolated at a fixed point just
   outside the hole. It converges smoothly as the grid is refined.
 - ``sigma_xx_peak``: the maximum of ``sigma_xx`` over the grid nodes. Because the
   node that happens to fall closest to the stress concentration jumps around as
   the grid changes, this quantity is *non-monotone* -- a sawtooth.
+  Richardson extrapolation cannot be computed for a sawtooth,
+  so the tool will fall back to a palliative estimator.
 
-Other relevant metrics may also be integrated similarly in a minimal way.
-Because the solution is analytic, the values stored at the grid nodes are exact.
-What a coarse grid degrades is any quantity read from the discrete field. We look
-at two of them, plus the model's own native scalar outputs as a baseline:
+From the analytic solution, the model computes grid nodes evaluations
+and interpolates a field. Any value at a grid node is therefore exact,
+but coarse meshing degrades any other value querried from the discrete field.
+We look at two of them, plus the model's own native scalar outputs as a baseline.
 
-This model is used a use-case case, despite having a working principle different from
-what is usually prone to solution verification.
+... note::
+
+    This model is here used an illustrative use-case case for solution verification,
+    despite having a working principle different from
+    what is usually prone to solution verification.
 """
 
 # %%
@@ -105,11 +108,10 @@ def side_by_side(fig_left, fig_right, left_title, right_title, y_title):
 
 
 # %%
-# None of the four quantities of interest -- the two field-derived ones and the
-# two native hole-edge stresses -- are read from a discrete field independently
-# of the others, so a single loop over the grid sizes collects all of them at
-# once, together with ``dx``, the physical element size used as the
-# verification abscissa:
+# Generate the convergence data for the four quantities of interest. The model is
+# executed once for each grid size, and the four quantities
+# (the two field-derived ones and the two native hole-edge stresses)
+# are collected in a single table.
 model.execute({"grid_size": atleast_1d(grid_sizes[0])})
 input_data = model.get_input_data()
 length = float(input_data["length"][0])
