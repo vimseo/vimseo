@@ -9,9 +9,8 @@
 
 # Tan model validity
 
-Tan's model is based on an elastic approximation.
-However, when damage occurs (matrix cracking, and possibly later some fibers failure), there are some local stress redistributions and the considered linear elastic law b
-becomes invalid locally. Engineers use the "point-stress" method,
+TanOpenHole is a model representing composite Open-Hole sample (notched plate), based on Tan's work on the stress-field analytic solution (pure elasticity hypothesis) and and the "point-stress distance" failure criterion.
+When damage occurs (matrix cracking, and possibly later some fibers failure), there are some local stress redistributions and the considered linear elastic law becomes invalid locally. Engineers use the "point-stress" method,
 as a correction of basic linear-elastic results, in order to estimate the occurence of substancial damage propagation (fibre failure). This method consists in observing the
 stress value (computed from a fully elastic structure) at a distance 'd_0' from the hole ("point-stress distance"), instead of the direct vicinity of the hole. Despite some physical meaningfulness of 'd_0', its value is actually identified from tests and it is highly sensitive to many parameters
 (material ply properties, layup, size of the hole, etc).
