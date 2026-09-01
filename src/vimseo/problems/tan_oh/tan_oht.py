@@ -334,6 +334,11 @@ class TanOpenHole(IntegratedModel):
     finer grid. Because the solution is analytic, the values stored at the grid nodes
     are exact. What a coarse grid degrades is any quantity post-processed from the
     grid values.
+
+    The model is illustrated by ``TanOpenHole_Tension.png`` (the ``sigma_xx`` field
+    around the hole and the ``line_center_sigma_xx`` centre-line curve, both obtained
+    with the default inputs), picked up by :attr:`.IntegratedModel.image_path` /
+    :meth:`.IntegratedModel.show_image`.
     """
 
     CURVES: ClassVar[Sequence[tuple[str]]] = [("line_center_y", "line_center_sigma_xx")]
