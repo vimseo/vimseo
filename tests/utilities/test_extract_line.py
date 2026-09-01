@@ -31,12 +31,14 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 import pytest
-import pyvista as pv
 
 from vimseo.utilities.fields import extract_line  # adjust according to your module
 
 if TYPE_CHECKING:
     from pathlib import Path
+
+# pyvista is shipped by the "mesh" extra.
+pv = pytest.importorskip("pyvista")
 
 
 # =============================================================================

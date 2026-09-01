@@ -20,6 +20,7 @@ from numpy.testing import assert_array_almost_equal
 from vimseo.api import create_model
 from vimseo.core.model_result import ModelResult
 from vimseo.lib_vimseo import tan_lib
+from vimseo.problems.tan_oh.tan_oht import N_RING_POINTS
 from vimseo.problems.tan_oh.tan_oht import NOMINAL_GRID_SIZE
 from vimseo.problems.tan_oh.tan_oht import PLY_THICKNESS
 from vimseo.problems.tan_oh.tan_oht import STIFFNESS_PROPERTY_NAMES
@@ -73,6 +74,10 @@ def _build_c_strat(stacking: np.ndarray) -> tuple[np.ndarray, float]:
 )
 def test_tan_oh(tmp_wd, stacking, expected_sigma_xx_d0):
     """Run the Tension Tan model for a given laminate and check its outputs."""
+    # PostFieldExtraction reads the flux field back with pyvista, so executing
+    # the model -- not just creating it -- requires the "mesh" extra.
+    pytest.importorskip("pyvista")
+
     # c_strat is now derived from the stacking, so only the stacking is passed.
     model = create_model("TanOpenHole", "Tension")
     output_data = model.execute({"layup": stacking})
@@ -114,10 +119,112 @@ def test_tan_oh_d0_zero_matches_hole_edge(tmp_wd):
     from the inputs but silently discarded it, hardcoding the hole-blanking
     radius to ``radius + 0.0`` regardless of the actual ``d0`` input.
     """
+    # PostFieldExtraction reads the flux field back with pyvista, so executing
+    # the model -- not just creating it -- requires the "mesh" extra.
+    pytest.importorskip("pyvista")
+
     model = create_model("TanOpenHole", "Tension")
     output_data = model.execute({"d0": np.array([0.0])})
 
     assert output_data["sigma_xx_d0"][0] == pytest.approx(output_data["sigma_xx_r"][0])
+
+
+def test_tan_oh_reserve_factor(tmp_wd):
+    """The reserve factor comes from the fibre-direction criterion, not from 1.0.
+
+    ``crit`` is the maximum, over the validity zone ``r >= radius + d0``, of the
+    pointwise criterion ``max(sigma_xx / Xt, -sigma_xx / Xc)``, and
+    ``reserve_factor`` is its inverse. Both used to be missing from the model
+    outputs: ``reserve_factor`` was hardcoded to 1.0 and, not being declared in
+    the output grammar of ``PostFieldExtraction``, was silently dropped.
+    """
+    # PostFieldExtraction reads the flux field back with pyvista, so executing
+    # the model -- not just creating it -- requires the "mesh" extra.
+    pytest.importorskip("pyvista")
+
+    model = create_model("TanOpenHole", "Tension")
+    output_data = model.execute()
+    properties = material.get_values_as_dict()
+
+    crit = output_data["crit"][0]
+    sigma_xx_max = output_data["sigma_xx_max"][0]
+    sigma_xx_min = output_data["sigma_xx_min"][0]
+
+    assert crit == pytest.approx(
+        max(sigma_xx_max / properties["Xt"], -sigma_xx_min / properties["Xc"])
+    )
+    assert output_data["reserve_factor"][0] == pytest.approx(1.0 / crit)
+
+    # The criterion mesh carries N_RING_POINTS nodes on the critical circle
+    # r = radius + d0, a multiple of 4, so theta = pi/2 -- where sigma_xx peaks --
+    # is sampled exactly: the maximum read from the field is the analytical
+    # point-stress value, not an interpolation of the Cartesian grid.
+    assert sigma_xx_max == pytest.approx(output_data["sigma_xx_d0"][0])
+
+    # Under the default load of 1000 MPa, the point-stress value (~2095 MPa)
+    # exceeds Xt = 1500 MPa: the laminate is critical.
+    assert crit > 1.0
+    assert output_data["reserve_factor"][0] < 1.0
+
+
+def test_criterion_field_is_blanked_inside_the_ignored_zone(tmp_wd):
+    """The criterion is defined outside ``r = radius + d0`` only, and nan inside.
+
+    Its mesh is unstructured: the nodes of the Cartesian stress grid, plus
+    ``N_RING_POINTS`` nodes lying exactly on the critical circle. The ``flux``
+    field is left untouched, as a structured grid.
+    """
+    # PostFieldExtraction reads the flux field back with pyvista, so executing
+    # the model -- not just creating it -- requires the "mesh" extra.
+    pytest.importorskip("pyvista")
+
+    model = create_model("TanOpenHole", "Tension")
+    output_data = model.execute()
+    input_data = model.get_input_data()
+    model_result = ModelResult.from_data(
+        {"outputs": output_data, "inputs": input_data}, model=model, load_fields=True
+    )
+    criterion_field = model_result.fields["criterion"][0]
+
+    points = criterion_field.mesh_points
+    radial_distance = np.hypot(
+        points[:, 0] - 0.5 * input_data["length"][0],
+        points[:, 1] - 0.5 * input_data["width"][0],
+    )
+    ignored_radius = input_data["radius"][0] + input_data["d0"][0]
+    crit = criterion_field.point_data["crit"]
+
+    # The radial distance is recomputed from the node coordinates, hence the
+    # tolerance band around the circle itself, checked separately below.
+    tolerance = 1e-9
+    assert np.isnan(crit[radial_distance < ignored_radius - tolerance]).all()
+    assert np.isfinite(crit[radial_distance > ignored_radius + tolerance]).all()
+
+    # The nodes added on the critical circle belong to the validity zone.
+    on_the_circle = np.isclose(radial_distance, ignored_radius)
+    assert on_the_circle.sum() >= N_RING_POINTS
+    assert np.isfinite(crit[on_the_circle]).all()
+
+    assert (model.archive_manager.job_directory / "criterion.vtk").exists()
+
+
+def test_reserve_factor_is_grid_independent(tmp_wd):
+    """The reserve factor does not depend on ``grid_size``.
+
+    Its maximum is reached on the enriched circle ``r = radius + d0``, whose
+    ``N_RING_POINTS`` nodes are fixed: refining the Cartesian grid cannot move
+    the critical value.
+    """
+    # PostFieldExtraction reads the flux field back with pyvista, so executing
+    # the model -- not just creating it -- requires the "mesh" extra.
+    pytest.importorskip("pyvista")
+
+    model = create_model("TanOpenHole", "Tension")
+
+    coarse = model.execute({"grid_size": np.array([25.0])})["reserve_factor"][0]
+    fine = model.execute({"grid_size": np.array([100.0])})["reserve_factor"][0]
+
+    assert coarse == pytest.approx(fine, rel=1e-9)
 
 
 def test_tan_solution_is_continuous_through_isotropy():
@@ -262,6 +369,9 @@ def test_tan_oh_jacobian(tmp_wd):
     input magnitude is used because the inputs span very different scales.
     """
     pytest.importorskip("jax")
+    # PostFieldExtraction reads the flux field back with pyvista, so executing
+    # the model -- not just creating it -- requires the "mesh" extra.
+    pytest.importorskip("pyvista")
 
     stacking = np.array([30.0, -30.0, 60.0, 15.0, 15.0, 60.0, -30.0, 30.0])
 

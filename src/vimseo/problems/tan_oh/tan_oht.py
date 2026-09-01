@@ -27,10 +27,18 @@ from numpy import arctan2
 from numpy import array
 from numpy import atleast_1d
 from numpy import column_stack
+from numpy import concatenate
+from numpy import cos
+from numpy import errstate
+from numpy import full
 from numpy import linspace
+from numpy import maximum
 from numpy import meshgrid
 from numpy import nan
+from numpy import nanmax
+from numpy import nanmin
 from numpy import pi
+from numpy import sin
 from numpy import sqrt
 from numpy import zeros
 from plotly.graph_objs import Scatter
@@ -45,6 +53,7 @@ from vimseo.lib_vimseo.tan_lib import tan_model
 from vimseo.lib_vimseo.tan_lib import tan_model_grid
 from vimseo.material.material import Material
 from vimseo.material_lib import MATERIAL_LIB_DIR
+from vimseo.utilities.fields import MeshField
 from vimseo.utilities.fields import extract_line
 from vimseo.utilities.plotting_utils import plotly_save_and_show
 
@@ -58,6 +67,13 @@ if TYPE_CHECKING:
 LOGGER = logging.getLogger(__name__)
 
 NOMINAL_GRID_SIZE = 100
+
+#: Number of nodes added on the circle ``r = radius + d0`` in the criterion mesh.
+#: Fixed, hence independent of ``grid_size``, so that the criterion is read at its
+#: exact critical location whatever the grid resolution. Must be a multiple of 4,
+#: so that the cardinal angles -- where ``sigma_xx`` is extremal -- are sampled
+#: exactly.
+N_RING_POINTS = 360
 
 #: Geometry (``d0``, ``radius``, ``width``, ``length``, ``thickness``) is in mm.
 #: ``load`` and the ply material (moduli, strengths) are in MPa -- see
@@ -88,6 +104,9 @@ material = Material.from_json(MATERIAL_FILE)
 # Material property names driving the (elastic) membrane stiffness c_strat.
 STIFFNESS_PROPERTY_NAMES = ("E1", "E2", "G12", "nu12")
 
+# Material property names driving the fibre-direction failure criterion.
+STRENGTH_PROPERTY_NAMES = ("Xt", "Xc")
+
 total_thickness = len(DEFAULT_INPUT_DATA["layup"]) * PLY_THICKNESS
 DEFAULT_INPUT_DATA["thickness"] = atleast_1d(total_thickness)
 
@@ -104,6 +123,106 @@ def compute_c_strat(layup, e1, e2, g12, nu12):
     ply = OrthotropicMaterial(e1=e1, e2=e2, v12=nu12, g12=g12, thickness=PLY_THICKNESS)
     laminate = LaminateProperty(layup, ply)
     return array(laminate.A) / (len(layup) * PLY_THICKNESS)
+
+
+def compute_criterion(sigma_xx, xt, xc):
+    """Pointwise fibre-direction failure criterion.
+
+    ``sigma_xx / Xt`` where the material is in tension and ``|sigma_xx| / Xc``
+    where it is in compression, which, both strengths being positive, is
+    ``max(sigma_xx / Xt, -sigma_xx / Xc)``. Failure is reached at 1.
+
+    ``numpy.maximum`` propagates ``nan`` (unlike ``fmax``), so the points blanked
+    inside the ignored zone ``r < radius + d0`` stay ``nan``.
+
+    Args:
+        sigma_xx: The fibre-direction membrane stress, MPa.
+        xt: The longitudinal tensile strength ``Xt``, MPa.
+        xc: The longitudinal compressive strength ``Xc``, MPa.
+
+    Returns:
+        The criterion at each point.
+    """
+    return maximum(sigma_xx / xt, -sigma_xx / xc)
+
+
+def build_criterion_mesh(
+    length, width, radius, d0, n_grid, load, c_strat, thickness, xt, xc
+):
+    """Build the failure criterion on a mesh enriched on the circle r = radius + d0.
+
+    The nodes are those of the Cartesian grid carrying the stress field, plus
+    :data:`N_RING_POINTS` nodes lying exactly on the circle ``r = radius + d0``,
+    where the criterion reaches its extrema -- the critical value is therefore
+    read exactly, whatever the grid resolution. The nodes are triangulated, hence
+    an unstructured mesh. As in the stress field, the points falling inside the
+    ignored zone ``r < radius + d0`` are blanked with ``nan``.
+
+    Args:
+        length: The length of the plate, mm.
+        width: The width of the plate, mm.
+        radius: The radius of the hole, mm.
+        d0: The point-stress characteristic distance, mm.
+        n_grid: The number of grid points per direction.
+        load: The applied force flux vector ``(N_x, N_y, N_xy)``.
+        c_strat: The effective membrane stiffness of the laminate.
+        thickness: The total thickness of the laminate, mm.
+        xt: The longitudinal tensile strength ``Xt``, MPa.
+        xc: The longitudinal compressive strength ``Xc``, MPa.
+
+    Returns:
+        The mesh carrying ``sigma_xx``, ``sigma_yy``, ``sigma_xy``, ``crit`` and
+        ``reserve_factor`` at its points, the grid nodes first and the ring nodes
+        last.
+    """
+    from scipy.spatial import Delaunay
+
+    xx, yy = meshgrid(
+        linspace(0.0, length, n_grid), linspace(0.0, width, n_grid), indexing="ij"
+    )
+    x_grid = xx.ravel()
+    y_grid = yy.ravel()
+    x_0 = x_grid - 0.5 * length
+    y_0 = y_grid - 0.5 * width
+
+    theta_ring = linspace(0.0, 2.0 * pi, N_RING_POINTS, endpoint=False)
+    r_ring = full(N_RING_POINTS, radius + d0)
+
+    r = concatenate([sqrt(x_0**2 + y_0**2), r_ring])
+    theta = concatenate([arctan2(y_0, x_0), theta_ring])
+    points = column_stack([
+        concatenate([x_grid, 0.5 * length + r_ring * cos(theta_ring)]),
+        concatenate([y_grid, 0.5 * width + r_ring * sin(theta_ring)]),
+        zeros(r.size),  # z=0 for 2D
+    ])
+
+    # The grid nodes falling inside the hole are kept (and blanked below), so the
+    # point cloud still covers the whole plate: its Delaunay triangulation needs
+    # no culling.
+    triangles = Delaunay(points[:, :2]).simplices
+
+    # sigma_* are membrane stresses, MPa.
+    sigma = thickness * tan_model_grid(r, theta, load, c_strat, radius, width)
+    # ``r`` holds the very same float ``radius + d0`` for the ring nodes, so they
+    # fall on the valid side of the comparison.
+    sigma[r < radius + d0] = nan
+
+    crit = compute_criterion(sigma[:, 0], xt, xc)
+    with errstate(divide="ignore"):
+        # inf where the plate is unloaded, sigma_xx being exactly 0.
+        reserve_factor = 1.0 / crit
+
+    return Mesh(
+        points=points,
+        cells=[("triangle", triangles)],
+        point_data={
+            "sigma_xx": sigma[:, 0],
+            "sigma_yy": sigma[:, 1],
+            "sigma_xy": sigma[:, 2],
+            "crit": crit,
+            "reserve_factor": reserve_factor,
+        },
+    )
 
 
 class TanRun_Tension(BaseComponent):
@@ -209,6 +328,23 @@ class TanRun_Tension(BaseComponent):
         )
         flux_field.write(self.job_directory / "flux.vtk")
 
+        # The failure criterion lives on its own mesh, enriched with nodes on the
+        # critical circle r = radius + d0 (see ``build_criterion_mesh``), so that
+        # ``flux.vtk`` remains the structured grid the field post-processing and
+        # the grid-convergence studies rely on.
+        criterion_field = build_criterion_mesh(
+            length,
+            width,
+            radius,
+            d0,
+            n_x,
+            load,
+            c_strat,
+            thickness,
+            *(input_data[name][0] for name in STRENGTH_PROPERTY_NAMES),
+        )
+        criterion_field.write(self.job_directory / "criterion.vtk")
+
         output_data[MetaDataNames.error_code] = atleast_1d(0)
         output_data["dx"] = atleast_1d(dx)
         output_data["dy"] = atleast_1d(dy)
@@ -273,6 +409,13 @@ class PostFieldExtraction(BaseComponent):
 
         self.output_grammar.update_from_names(["sigma_xx_r", "sigma_xx_d0"])
 
+        self.output_grammar.update_from_names([
+            "crit",
+            "reserve_factor",
+            "sigma_xx_max",
+            "sigma_xx_min",
+        ])
+
     def _run(self, input_data):
         length = input_data["length"][0]
         width = input_data["width"][0]
@@ -317,14 +460,34 @@ class PostFieldExtraction(BaseComponent):
             * tan_model(radius + d0, 0.5 * pi, load, c_strat, radius, width)[0]
         )
 
-        # TODO: compute reserve factor based on strength criteria instead of just returning 1.0
-        output_data["reserve_factor"] = atleast_1d(1.0)
+        # Reserve factor from the fibre-direction criterion, read back from the
+        # criterion mesh so that the scalars and the field cannot disagree. The
+        # criterion is defined outside the ignored zone only (nan for
+        # r < radius + d0) and its maximum is reached on the enriched circle
+        # r = radius + d0, where the mesh carries the exact analytical values.
+        # The criterion being non-negative, 1 / max(crit) is exactly the minimum
+        # of the reserve_factor field written on that mesh: taking a nanmin of
+        # that field here would be a redundant way of computing the same number.
+        criterion_field = MeshField.load(self.job_directory / "criterion.vtk")
+        crit = nanmax(criterion_field.point_data["crit"])
+        output_data["crit"] = atleast_1d(crit)
+        output_data["reserve_factor"] = atleast_1d(1.0 / crit)
+        output_data["sigma_xx_max"] = atleast_1d(
+            nanmax(criterion_field.point_data["sigma_xx"])
+        )
+        output_data["sigma_xx_min"] = atleast_1d(
+            nanmin(criterion_field.point_data["sigma_xx"])
+        )
 
         return output_data
 
 
 class TanOpenHole(IntegratedModel):
     """An Open Hole model based on Tan theory.
+
+    Executing the model requires the ``mesh`` extra (``pip install "vimseo[mesh]"``):
+    its ``PostFieldExtraction`` step reads the ``flux`` field back with pyvista to
+    extract the ``line_center_sigma_xx`` curve. Creating the model does not.
 
     The model provides an *analytic* membrane stress field for a plate with a
     circular hole (see the :ref:`Tan model reference
@@ -335,6 +498,22 @@ class TanOpenHole(IntegratedModel):
     are exact. What a coarse grid degrades is any quantity post-processed from the
     grid values.
 
+    Besides the stress field ``flux``, the model outputs a ``criterion`` field
+    holding the fibre-direction failure criterion ``crit`` and the associated
+    ``reserve_factor = 1 / crit`` (see :func:`compute_criterion`). Following the
+    point-stress method, the criterion is defined outside the ignored zone only
+    and is ``nan`` for ``r < radius + d0``. Its mesh carries additional nodes on
+    the critical circle ``r = radius + d0`` (see :func:`build_criterion_mesh`), so
+    the scalar outputs ``crit``, ``reserve_factor``, ``sigma_xx_max`` and
+    ``sigma_xx_min`` are exact whatever the ``grid_size``.
+
+    The scalars ``crit`` and ``reserve_factor`` deliberately carry the same names
+    as the point data of the ``criterion`` field: they *are* its critical values
+    over the validity zone, ``crit`` its maximum and ``reserve_factor`` its
+    minimum. Both hold at once because the criterion is non-negative, hence
+    ``min(reserve_factor) = 1 / max(crit)``. There is therefore no separate
+    "minimum reserve factor" to output: ``reserve_factor`` already is it.
+
     The model is illustrated by ``TanOpenHole_Tension.png`` (the ``sigma_xx`` field
     around the hole and the ``line_center_sigma_xx`` centre-line curve, both obtained
     with the default inputs), picked up by :attr:`.IntegratedModel.image_path` /
@@ -343,7 +522,10 @@ class TanOpenHole(IntegratedModel):
 
     CURVES: ClassVar[Sequence[tuple[str]]] = [("line_center_y", "line_center_sigma_xx")]
 
-    FIELDS_FROM_FILE: ClassVar[Mapping[str, str]] = {"flux": r"^flux.vtk$"}
+    FIELDS_FROM_FILE: ClassVar[Mapping[str, str]] = {
+        "flux": r"^flux.vtk$",
+        "criterion": r"^criterion.vtk$",
+    }
 
     def __init__(self, load_case_name: str, **options):
         options = IntegratedModelSettings(**options).model_dump()
@@ -392,10 +574,38 @@ class TanOpenHole(IntegratedModel):
         material Jacobians go through the full chain ``(stacking, material) ->
         c_strat -> sigma`` and are genuine derivatives of the discipline output
         (validated by finite differences).
+
+        Only ``_JACOBIAN_OUTPUTS`` are differentiated. The other outputs -- the
+        ``line_center_*`` curves and the criterion scalars, the latter being a
+        maximum over a discrete set of points -- keep the zero rows set by
+        ``_init_jacobian``, and requesting them is warned about.
+
+        Should a gradient-based objective on the reserve factor be needed, a
+        *differentiable* one is one division away: ``RF_d0 = Xt / sigma_xx_d0``.
+        ``sigma_xx_d0`` is evaluated analytically at ``(radius + d0, pi / 2)`` and
+        already carries an analytic Jacobian, so the chain rule gives
+        ``d(RF_d0) = -(Xt / sigma_xx_d0**2) * d(sigma_xx_d0)``, with nothing new
+        to differentiate. It equals ``reserve_factor`` whenever the criterion
+        peaks at ``theta = pi / 2`` and is driven by its tensile branch, which is
+        the case for a balanced symmetric layup under x tension -- with the
+        default inputs ``sigma_xx_max`` equals ``sigma_xx_d0`` exactly, and the
+        compressive branch contributes 0.0005 against a ``crit`` of 1.397. It is
+        not valid in general though: an anisotropic layup shifts the peak off
+        ``theta = pi / 2``, and a compression-driven case switches branch. Adding
+        it as an output would hence require a guard comparing the analytical
+        point against the field maximum, which is why this is a note rather than
+        a feature.
         """
         import jax
 
         from vimseo.lib_vimseo import tan_lib_jax as tan_jax
+
+        not_differentiated = set(output_names) - set(self._JACOBIAN_OUTPUTS)
+        if not_differentiated:
+            LOGGER.warning(
+                f"The following outputs of {self.name} are not differentiated, "
+                f"their Jacobian is left to zero: {sorted(not_differentiated)}."
+            )
 
         data = self.get_input_data()
         load_x = float(data["load"][0])

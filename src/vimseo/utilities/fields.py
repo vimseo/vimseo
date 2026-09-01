@@ -21,7 +21,6 @@ from dataclasses import field
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-import pyvista as pv
 from meshio import CellBlock
 from meshio import read
 from numpy import array
@@ -30,6 +29,8 @@ from numpy import linalg
 from numpy import nan
 from numpy import searchsorted
 from numpy import unique
+
+from vimseo.utilities.optional_dependencies import import_optional
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -176,7 +177,12 @@ def extract_line(
 
         - ``coords``: coordinates of the line points.
         - ``dist``: distance of the line points to the line start.
+
+    Raises:
+        ImportError: If the ``mesh`` extra is not installed.
     """
+    pv = import_optional("pyvista", "mesh", feature="extract_line()")
+
     mesh = pv.read(vtu_file)
 
     pa = (
@@ -219,7 +225,12 @@ def vtu_to_png(
     output_folder: str,
     clim: tuple[float, float] | None = None,
 ):
-    """Convert a sequence of .vtu files to .png images using PyVista."""
+    """Convert a sequence of .vtu files to .png images using PyVista.
+
+    Raises:
+        ImportError: If the ``mesh`` extra is not installed.
+    """
+    pv = import_optional("pyvista", "mesh", feature="vtu_to_png()")
 
     # TODO voir comment extraire une composante d'un champ vectoriel (ex: Velocity) pour faire une image de cette composante uniquement
 

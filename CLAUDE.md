@@ -13,12 +13,20 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Commands
 
-**Install (editable, with dev dependencies):**
+**Install (editable, with every extra and the dev dependencies):**
 ```bash
-uv pip install -e ".[dev]"
+uv pip install -e ".[all]" --group dev
 # or via tox:
 tox -e py312 -- --co  # list tests without running
 ```
+
+`[all]` and `dev` come from two different mechanisms: `all` is an *extra*
+(`[project.optional-dependencies]`, selected with brackets), whereas `dev` is a
+*dependency group* (`[dependency-groups]`, selected with `--group`). Writing `".[dev]"`
+silently installs nothing extra.
+
+Install the mandatory dependencies only -- the profile an HPC user gets -- with
+`uv pip install -e .`. See the Optional dependencies section below.
 
 **Run tests (fast tests only, default):**
 ```bash
@@ -82,10 +90,37 @@ Available tool categories: DOE, sensitivity analysis, calibration, verification 
 
 ### Storage (`src/vimseo/storage_management/`)
 
-`IntegratedModelSettings.archive_manager` selects the storage backend:
-- `"MlflowArchive"` — stores model runs in an MLflow tracking server (default for users).
-- `"DirectoryArchive"` — stores results in a local directory structure.
-- `"ScratchArchive"` — temporary storage.
+`IntegratedModelSettings.archive_manager` selects the storage backend, resolved by
+`get_archive_class()` in [storage_management/__init__.py](src/vimseo/storage_management/__init__.py):
+- `"DirectoryArchive"` — stores results in a local directory structure. **This is the default**
+  ([configuration_settings.py:71](src/vimseo/config/configuration_settings.py)).
+- `"MlflowArchive"` — stores model runs in an MLflow tracking server. Requires the `mlflow`
+  extra, and is imported lazily so that the model layer does not depend on mlflow.
+
+Scratch storage is a separate mechanism: `DirectoryScratch`
+([scratch_storage.py](src/vimseo/storage_management/scratch_storage.py)) is always used and
+is not selectable through `archive_manager`.
+
+### Optional dependencies
+
+The mandatory dependencies are limited to what is needed to build a model, execute it and
+serialize its results, so that VIMSEO installs on a machine with no graphical stack. The
+rest is shipped by extras: `dashboard` (streamlit), `mlflow`, `mesh` (pyvista/vtk) and
+`jax`. Import anything they provide through `import_optional()` in
+[utilities/optional_dependencies.py](src/vimseo/utilities/optional_dependencies.py), never
+at module top level.
+
+**Exception:** `TanOpenHole` is a core model (`meshio` is mandatory, so it stays
+discoverable and instantiable) but its `PostFieldExtraction` step reads the flux field
+back with pyvista, so *executing* it -- not just creating it -- needs the `mesh` extra.
+[problems/tan_oh/tan_oht.py](src/vimseo/problems/tan_oh/tan_oht.py) is the only model with
+this split; before adding a similar one, prefer keeping execution extra-free.
+
+This matters because GEMSEO's `BaseFactory` swallows import failures during class
+discovery: a top-level import of an optional dependency does not raise, it just makes the
+class silently disappear from the factory. [tests/test_optional_dependencies.py](tests/test_optional_dependencies.py)
+is the guard rail. Run `tox -e py312` for the core profile and `tox -e full-py312` for the
+profile with every extra.
 
 ### Workflow engine (`src/vimseo/workflow/`)
 

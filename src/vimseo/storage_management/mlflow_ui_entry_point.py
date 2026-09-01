@@ -19,9 +19,17 @@ from pathlib import Path
 
 from vimseo.config.global_configuration import _configuration as config
 from vimseo.storage_management.archive_settings import DEFAULT_ARCHIVE_ROOT
+from vimseo.utilities.optional_dependencies import import_optional
 
 
 def main() -> None:
+    """Print the command opening the MLflow user interface.
+
+    Raises:
+        ImportError: If the ``mlflow`` extra is not installed.
+    """
+    import_optional("mlflow", "mlflow", feature="The MLflow user interface")
+
     if config.database.mode == "Local":
         command = [
             "mlflow",

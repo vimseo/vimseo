@@ -22,32 +22,48 @@ dynamic = ["version"]
 requires-python = ">=3.10, <3.13"
 dependencies = [
     "gemseo-vimseo[all] >= 6, < 7",
-    "plotly >= 5.15.0, <= 5.24.0",
-    "nbformat>=4.2.0, <= 5.10.4",
-    "future >= 1.0.0, <= 1.0.0",
-    "PyYAML >= 6.0.2, <= 6.0.3",
-    "streamlit >= 1.44.0, <= 1.50.0",
-    "streamlit-pydantic-sebastienbocquet == 0.6.1.dev1",
-    "pytest-csv >= 3.0.0, <= 3.0.0",
-    "statsmodels >= 0.14.4, <= 0.14.5",
-    "eval-type-backport >= 0.2.2, <= 0.2.2",
     "gemseo_calibration-vimseo >= 3.0.2, < 4",
-    "seaborn >= 0.13.2, <= 0.13.2",
-    "meshio >= 5.3.5, <= 5.3.5",
-    "mlflow >= 3.5.1, <= 3.5.1",
-    "emcee >= 3.1.6, <= 3.1.6",
+    "plotly >= 5.15.0, <= 5.24.0",
+    "statsmodels >= 0.14.4, <= 0.14.5",
     "openturns >=1.24, <= 1.24",
-    "pydantic-settings",
-    "pyvista",
+    "emcee >= 3.1.6, <= 3.1.6",
     "composipy",
+    "meshio >= 5.3.5, <= 5.3.5",
+    "PyYAML >= 6.0.2, <= 6.0.3",
+    "pydantic-settings",
+    # Required by pydantic to evaluate PEP 604 unions under
+    # ``from __future__ import annotations`` before Python 3.11.
+    "eval-type-backport >= 0.2.2, <= 0.2.2 ; python_version < '3.11'",
 ]
 
+# The mandatory dependencies above are limited to what is needed to build a model,
+# execute it and serialize its results, so that VIMSEO installs on a machine with no
+# graphical stack, typically an HPC compute node. See
+# ``vimseo.utilities.optional_dependencies`` for how the code guards them.
 [project.optional-dependencies]
+# Streamlit dashboards (vimseo.dashboards) and their entry points.
+dashboard = [
+    "streamlit >= 1.44.0, <= 1.50.0",
+    "streamlit-pydantic-sebastienbocquet == 0.6.1.dev1",
+]
+# The MlflowArchive storage backend. Without this extra, DirectoryArchive
+# -- the default -- remains available.
+mlflow = [
+    "mlflow >= 3.5.1, <= 3.5.1",
+]
+# VTK-based field post-processing.
+# Necessary to execute the Tan Open Hole model.
+mesh = [
+    "pyvista",
+]
 # Differentiable JAX port of the Tan kernel (vimseo.lib_vimseo.tan_lib_jax).
 # Pinned < 0.5 to stay compatible with the numpy 1.26 baseline.
 jax = [
     "jax >=0.4,<0.5",
     "jaxlib >=0.4,<0.5",
+]
+all = [
+    "vimseo[dashboard,mlflow,mesh,jax]",
 ]
 
 [dependency-groups]
@@ -55,6 +71,7 @@ dev = [
     "covdefaults >=2",
     "pytest >=7,<9",
     "pytest-cov >=5",
+    "pytest-csv >=3",
     "pytest-xdist >=3",
 ]
 doc = [
@@ -75,6 +92,7 @@ doc = [
     "mkdocs-table-reader-plugin",
     "mkdocs-exclude",
     "mkdocs-autorefs",
+    "nbformat>=4.2.0, <= 5.10.4",
 ]
 
 [project.urls]
