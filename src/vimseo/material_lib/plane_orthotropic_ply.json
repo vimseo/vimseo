@@ -89,12 +89,12 @@
           "description": "Major Poisson's ratio, in-plane, direction 1-2 (dimensionless)",
           "value": 0.3,
           "lower_bound": 0.0,
-          "upper_bound": 1.0,
+          "upper_bound": 0.5,
           "distribution": {
             "name": "",
             "mode": 0.0,
             "lower": 0.0,
-            "upper": 1.0,
+            "upper": 0.5,
             "sigma": 0.0,
             "mu": 1.0,
             "mean": 0.0,
@@ -104,7 +104,7 @@
             "scale": 1.0,
             "rate": 1.0,
             "lower_bound": 0.0,
-            "upper_bound": 1.0
+            "upper_bound": 0.5
           }
         },
         {
@@ -134,12 +134,12 @@
           "name": "Xc",
           "description": "Longitudinal compressive strength, fibre direction (MPa)",
           "value": 1200.0,
-          "lower_bound": -1000000.0,
+          "lower_bound": 0.0,
           "upper_bound": 1000000.0,
           "distribution": {
             "name": "",
             "mode": 0.0,
-            "lower": -1000000.0,
+            "lower": 0.0,
             "upper": 1000000.0,
             "sigma": 0.0,
             "mu": 1.0,
@@ -149,7 +149,7 @@
             "shape": 1.0,
             "scale": 1.0,
             "rate": 1.0,
-            "lower_bound": -1000000.0,
+            "lower_bound": 0.0,
             "upper_bound": 1000000.0
           }
         },
@@ -157,12 +157,12 @@
           "name": "Yt",
           "description": "Transverse tensile strength, matrix direction (MPa)",
           "value": 40.0,
-          "lower_bound": -1000000.0,
+          "lower_bound": 0.0,
           "upper_bound": 1000000.0,
           "distribution": {
             "name": "",
             "mode": 0.0,
-            "lower": -1000000.0,
+            "lower": 0.0,
             "upper": 1000000.0,
             "sigma": 0.0,
             "mu": 1.0,
@@ -172,7 +172,7 @@
             "shape": 1.0,
             "scale": 1.0,
             "rate": 1.0,
-            "lower_bound": -1000000.0,
+            "lower_bound": 0.0,
             "upper_bound": 1000000.0
           }
         },
@@ -180,12 +180,12 @@
           "name": "Yc",
           "description": "Transverse compressive strength, matrix direction (MPa)",
           "value": 120.0,
-          "lower_bound": -1000000.0,
+          "lower_bound": 0.0,
           "upper_bound": 1000000.0,
           "distribution": {
             "name": "",
             "mode": 0.0,
-            "lower": -1000000.0,
+            "lower": 0.0,
             "upper": 1000000.0,
             "sigma": 0.0,
             "mu": 1.0,
@@ -195,7 +195,7 @@
             "shape": 1.0,
             "scale": 1.0,
             "rate": 1.0,
-            "lower_bound": -1000000.0,
+            "lower_bound": 0.0,
             "upper_bound": 1000000.0
           }
         },
@@ -203,12 +203,12 @@
           "name": "S12",
           "description": "In-plane shear strength, 1-2 directions (MPa)",
           "value": 50.0,
-          "lower_bound": -1000000.0,
+          "lower_bound": 0.0,
           "upper_bound": 1000000.0,
           "distribution": {
             "name": "",
             "mode": 0.0,
-            "lower": -1000000.0,
+            "lower": 0.0,
             "upper": 1000000.0,
             "sigma": 0.0,
             "mu": 1.0,
@@ -218,7 +218,7 @@
             "shape": 1.0,
             "scale": 1.0,
             "rate": 1.0,
-            "lower_bound": -1000000.0,
+            "lower_bound": 0.0,
             "upper_bound": 1000000.0
           }
         }

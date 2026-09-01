@@ -33,7 +33,7 @@
     "nu12": {
       "description": "[Stiffness] Major Poisson's ratio, in-plane, direction 1-2 {{-}}",
       "items": {
-        "maximum": 1.0,
+        "maximum": 0.5,
         "minimum": 0.0,
         "type": "number"
       },
@@ -54,7 +54,7 @@
       "description": "[Strength] Longitudinal compressive strength, fibre direction {{MPa}}",
       "items": {
         "maximum": 1000000.0,
-        "minimum": -1000000.0,
+        "minimum": 0.0,
         "type": "number"
       },
       "title": "Xc",
@@ -64,7 +64,7 @@
       "description": "[Strength] Transverse tensile strength, matrix direction {{MPa}}",
       "items": {
         "maximum": 1000000.0,
-        "minimum": -1000000.0,
+        "minimum": 0.0,
         "type": "number"
       },
       "title": "Yt",
@@ -74,7 +74,7 @@
       "description": "[Strength] Transverse compressive strength, matrix direction {{MPa}}",
       "items": {
         "maximum": 1000000.0,
-        "minimum": -1000000.0,
+        "minimum": 0.0,
         "type": "number"
       },
       "title": "Yc",
@@ -84,7 +84,7 @@
       "description": "[Strength] In-plane shear strength, 1-2 directions {{MPa}}",
       "items": {
         "maximum": 1000000.0,
-        "minimum": -1000000.0,
+        "minimum": 0.0,
         "type": "number"
       },
       "title": "S12",
