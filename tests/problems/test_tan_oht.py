@@ -21,7 +21,7 @@ from vimseo.api import create_model
 from vimseo.core.model_result import ModelResult
 from vimseo.lib_vimseo import tan_lib
 from vimseo.problems.tan_oh.tan_oht import N_RING_POINTS
-from vimseo.problems.tan_oh.tan_oht import NOMINAL_GRID_SIZE
+from vimseo.problems.tan_oh.tan_oht import NOMINAL_GRID_RESOLUTION
 from vimseo.problems.tan_oh.tan_oht import PLY_THICKNESS
 from vimseo.problems.tan_oh.tan_oht import STIFFNESS_PROPERTY_NAMES
 from vimseo.problems.tan_oh.tan_oht import compute_c_strat
@@ -93,7 +93,7 @@ def test_tan_oh(tmp_wd, stacking, expected_sigma_xx_d0):
     ):
         n_data = model_result.fields["flux"][0].point_data[n_name]
         sigma_data = model_result.fields["flux"][0].point_data[sigma_name]
-        assert n_data.shape == ((NOMINAL_GRID_SIZE * NOMINAL_GRID_SIZE),)
+        assert n_data.shape == ((NOMINAL_GRID_RESOLUTION * NOMINAL_GRID_RESOLUTION),)
         assert_array_almost_equal(n_data, sigma_data / thickness)
 
     sigma_xx_d0 = output_data["sigma_xx_d0"][0]
@@ -209,7 +209,7 @@ def test_criterion_field_is_blanked_inside_the_ignored_zone(tmp_wd):
 
 
 def test_reserve_factor_is_grid_independent(tmp_wd):
-    """The reserve factor does not depend on ``grid_size``.
+    """The reserve factor does not depend on ``grid_resolution``.
 
     Its maximum is reached on the enriched circle ``r = radius + d0``, whose
     ``N_RING_POINTS`` nodes are fixed: refining the Cartesian grid cannot move
@@ -221,8 +221,8 @@ def test_reserve_factor_is_grid_independent(tmp_wd):
 
     model = create_model("TanOpenHole", "Tension")
 
-    coarse = model.execute({"grid_size": np.array([25.0])})["reserve_factor"][0]
-    fine = model.execute({"grid_size": np.array([100.0])})["reserve_factor"][0]
+    coarse = model.execute({"grid_resolution": np.array([25.0])})["reserve_factor"][0]
+    fine = model.execute({"grid_resolution": np.array([100.0])})["reserve_factor"][0]
 
     assert coarse == pytest.approx(fine, rel=1e-9)
 
@@ -505,8 +505,8 @@ def test_numpy_and_jax_forwards_match():
 
     # (b) whole flux field matches on the well-conditioned orthotropic laminate.
     c_strat = _build_c_strat(ORTHOTROPIC_STACKING)[0]
-    x = np.linspace(0, length, NOMINAL_GRID_SIZE)
-    y = np.linspace(0, width, NOMINAL_GRID_SIZE)
+    x = np.linspace(0, length, NOMINAL_GRID_RESOLUTION)
+    y = np.linspace(0, width, NOMINAL_GRID_RESOLUTION)
     xx, yy = np.meshgrid(x, y, indexing="ij")
     r = np.sqrt((xx - 0.5 * length) ** 2 + (yy - 0.5 * width) ** 2).ravel()
     theta = np.arctan2(yy - 0.5 * width, xx - 0.5 * length).ravel()

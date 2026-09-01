@@ -36,7 +36,9 @@ and this project adheres to
 
 ## Changed
 
-- None
+- Renamed the `TanOpenHole` model input `grid_size` to `grid_resolution` (same
+  meaning: number of grid points per direction) to remove the ambiguity with a
+  grid spacing.
 
 ## Fixed
 

@@ -87,8 +87,8 @@ model = create_model(
 )
 
 # %%
-# We define a set of grid sizes (points per direction), from coarse to fine:
-grid_sizes = [25, 33, 50, 66, 100, 200]
+# We define a set of grid resolutions (points per direction), from coarse to fine:
+grid_resolutions = [25, 33, 50, 66, 100, 200]
 
 
 # %%
@@ -113,10 +113,10 @@ def side_by_side(fig_left, fig_right, left_title, right_title, y_title):
 
 # %%
 # Generate the convergence data for the four quantities of interest. The model is
-# executed once for each grid size, and the four quantities
+# executed once for each grid resolution, and the four quantities
 # (the two field-derived ones and the two native hole-edge stresses)
 # are collected in a single table.
-model.execute({"grid_size": atleast_1d(grid_sizes[0])})
+model.execute({"grid_resolution": atleast_1d(grid_resolutions[0])})
 input_data = model.get_input_data()
 length = float(input_data["length"][0])
 width = float(input_data["width"][0])
@@ -130,8 +130,8 @@ peak_stresses = []
 sigma_xx_r_values = []
 sigma_xx_d0_values = []
 model_results = {}
-for grid_size in grid_sizes:
-    output_data = model.execute({"grid_size": atleast_1d(grid_size)})
+for grid_resolution in grid_resolutions:
+    output_data = model.execute({"grid_resolution": atleast_1d(grid_resolution)})
     result = ModelResult.from_data(
         {"outputs": output_data, "inputs": model.get_input_data()},
         model=model,
@@ -143,7 +143,7 @@ for grid_size in grid_sizes:
     peak_stresses.append(float(np.nanmax(field.point_data["sigma_xx"])))
     sigma_xx_r_values.append(float(output_data["sigma_xx_r"][0]))
     sigma_xx_d0_values.append(float(output_data["sigma_xx_d0"][0]))
-    model_results[grid_size] = result
+    model_results[grid_resolution] = result
 
 convergence_table = DataFrame({
     "dx": dx_values,
@@ -382,8 +382,8 @@ side_by_side(
 # Beyond the scalar convergence, the whole ``sigma_xx`` field can be compared
 # between the coarsest and the finest grid. Both are exact at their nodes, but
 # the finer grid resolves the stress concentration around the hole far better:
-coarse = model_results[grid_sizes[0]].fields["flux"][0]
-fine = model_results[grid_sizes[-1]].fields["flux"][0]
+coarse = model_results[grid_resolutions[0]].fields["flux"][0]
+fine = model_results[grid_resolutions[-1]].fields["flux"][0]
 x_coarse, y_coarse, z_coarse = coarse.to_structured_grid("sigma_xx")
 x_fine, y_fine, z_fine = fine.to_structured_grid("sigma_xx")
 
@@ -395,8 +395,8 @@ fig = make_subplots(
     cols=2,
     shared_yaxes=True,
     subplot_titles=(
-        f"coarse grid ({grid_sizes[0]})",
-        f"fine grid ({grid_sizes[-1]})",
+        f"coarse grid ({grid_resolutions[0]})",
+        f"fine grid ({grid_resolutions[-1]})",
     ),
 )
 fig.add_trace(

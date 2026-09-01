@@ -66,10 +66,10 @@ if TYPE_CHECKING:
 
 LOGGER = logging.getLogger(__name__)
 
-NOMINAL_GRID_SIZE = 100
+NOMINAL_GRID_RESOLUTION = 100
 
 #: Number of nodes added on the circle ``r = radius + d0`` in the criterion mesh.
-#: Fixed, hence independent of ``grid_size``, so that the criterion is read at its
+#: Fixed, hence independent of ``grid_resolution``, so that the criterion is read at its
 #: exact critical location whatever the grid resolution. Must be a multiple of 4,
 #: so that the cardinal angles -- where ``sigma_xx`` is extremal -- are sampled
 #: exactly.
@@ -85,7 +85,7 @@ DEFAULT_INPUT_DATA = {
     "width": atleast_1d(32.0),
     "length": atleast_1d(80.0),
     "load": array([1000.0]),
-    "grid_size": atleast_1d(float(NOMINAL_GRID_SIZE)),
+    "grid_resolution": atleast_1d(float(NOMINAL_GRID_RESOLUTION)),
     # Ply angles in degrees, as floats so they are continuous (differentiable)
     # variables -- the stacking drives c_strat (see ``compute_c_strat``).
     "layup": array([0.0, 45.0, -45.0, 90.0, 90.0, -45.0, 45.0, 0.0]),
@@ -254,9 +254,9 @@ class TanRun_Tension(BaseComponent):
         thickness = input_data["thickness"][0]
         d0 = input_data["d0"][0]
         radius = input_data["radius"][0]
-        grid_size = input_data["grid_size"][0]
-        n_x = int(grid_size)
-        n_y = int(grid_size)
+        grid_resolution = input_data["grid_resolution"][0]
+        n_x = int(grid_resolution)
+        n_y = int(grid_resolution)
         dx = length / (n_x - 1)
         dy = width / (n_y - 1)
 
@@ -492,8 +492,8 @@ class TanOpenHole(IntegratedModel):
     The model provides an *analytic* membrane stress field for a plate with a
     circular hole (see the :ref:`Tan model reference
     <open-hole-plate-model-tan-model>`). The field is nonetheless evaluated on
-    a grid whose resolution is driven by the ``grid_size`` input: the grid has
-    ``grid_size`` points per direction, so a larger ``grid_size`` gives a
+    a grid whose resolution is driven by the ``grid_resolution`` input: the grid has
+    ``grid_resolution`` points per direction, so a larger ``grid_resolution`` gives a
     finer grid. Because the solution is analytic, the values stored at the grid nodes
     are exact. What a coarse grid degrades is any quantity post-processed from the
     grid values.
@@ -505,7 +505,7 @@ class TanOpenHole(IntegratedModel):
     and is ``nan`` for ``r < radius + d0``. Its mesh carries additional nodes on
     the critical circle ``r = radius + d0`` (see :func:`build_criterion_mesh`), so
     the scalar outputs ``crit``, ``reserve_factor``, ``sigma_xx_max`` and
-    ``sigma_xx_min`` are exact whatever the ``grid_size``.
+    ``sigma_xx_min`` are exact whatever the ``grid_resolution``.
 
     The scalars ``crit`` and ``reserve_factor`` deliberately carry the same names
     as the point data of the ``criterion`` field: they *are* its critical values

@@ -50,7 +50,7 @@ dedicated mesh whose nodes are those of the grid plus a set of nodes lying exact
 that circle. Those additional nodes make the mesh unstructured (it is triangulated), so
 the criterion is written to its own file, `criterion.vtk`, while the stress field keeps
 its structured grid in `flux.vtk`. The reserve factor is therefore independent of the
-`grid_size` input.
+`grid_resolution` input.
 
 In the model outputs, both quantities are available in two forms. As **fields**, on the
 enriched mesh written to `criterion.vtk`, where they are defined outside the ignored
