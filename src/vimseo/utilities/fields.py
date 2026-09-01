@@ -52,6 +52,9 @@ class MeshField:
     path: str = ""
     """The path of the file the field was read from, empty if none."""
 
+    name: str = ""
+    """The name of the field, e.g. the zone name for a multi-zone mesh file."""
+
     def __post_init__(self) -> None:
         """Cast the path to a string, so that a ``Path`` is also accepted."""
         self.path = str(self.path)
@@ -65,18 +68,21 @@ class MeshField:
         return list(self.point_data.keys())
 
     @classmethod
-    def from_mesh(cls, mesh: Mesh, path: Path | str = "") -> MeshField:
+    def from_mesh(cls, mesh: Mesh, path: Path | str = "", name: str = "") -> MeshField:
         """Build a field from an already-read mesh.
 
         Args:
             path: The path the mesh was read from.
             mesh: The mesh to build the field from.
+            name: The name of the field, e.g. the zone name for a multi-zone
+                mesh file.
 
         Returns:
             The field.
         """
         return cls(
             path=path,
+            name=name,
             point_data=mesh.point_data,
             cell_data=mesh.cell_data,
             mesh_points=mesh.points,
