@@ -104,6 +104,10 @@ def side_by_side(fig_left, fig_right, left_title, right_title, y_title):
         combined.add_trace(trace, row=1, col=2)
     combined.update_xaxes(title_text="dx")
     combined.update_yaxes(title_text=y_title, row=1, col=1)
+    # ``make_subplots`` centres each panel title over its half-width column, so
+    # keep them short (see call sites) and a touch smaller than the default so
+    # they do not run into each other in the middle gutter.
+    combined.update_annotations(font_size=13)
     return combined
 
 
@@ -278,8 +282,8 @@ figures_peak["convergence_fit"]
 side_by_side(
     figures["convergence_cross_validation"],
     figures_peak["convergence_cross_validation"],
-    "smooth probe (sigma_xx_probe)",
-    "sawtooth peak (sigma_xx_peak)",
+    "smooth probe",
+    "sawtooth peak",
     "sigma_xx",
 )
 
@@ -293,8 +297,8 @@ side_by_side(
 side_by_side(
     figures["relative_error_versus_element_size"],
     figures_peak["relative_error_versus_element_size"],
-    "smooth probe (sigma_xx_probe)",
-    "sawtooth peak (sigma_xx_peak)",
+    "smooth probe",
+    "sawtooth peak",
     "relative error",
 )
 
@@ -354,8 +358,8 @@ native_figures = {
 side_by_side(
     native_figures["sigma_xx_r"]["convergence_fit"],
     native_figures["sigma_xx_d0"]["convergence_fit"],
-    "sigma_xx_r (hole edge)",
-    "sigma_xx_d0 (stress point)",
+    "sigma_xx_r",
+    "sigma_xx_d0",
     "sigma_xx",
 )
 
@@ -367,8 +371,8 @@ side_by_side(
 side_by_side(
     native_figures["sigma_xx_r"]["relative_error_versus_element_size"],
     native_figures["sigma_xx_d0"]["relative_error_versus_element_size"],
-    "sigma_xx_r (hole edge)",
-    "sigma_xx_d0 (stress point)",
+    "sigma_xx_r",
+    "sigma_xx_d0",
     "relative error",
 )
 
@@ -391,8 +395,8 @@ fig = make_subplots(
     cols=2,
     shared_yaxes=True,
     subplot_titles=(
-        f"coarse grid (grid_size={grid_sizes[0]})",
-        f"fine grid (grid_size={grid_sizes[-1]})",
+        f"coarse grid ({grid_sizes[0]})",
+        f"fine grid ({grid_sizes[-1]})",
     ),
 )
 fig.add_trace(
@@ -408,7 +412,16 @@ fig.add_trace(
     col=2,
 )
 fig.update_layout(
-    title="sigma_xx field around the hole",
+    title={
+        "text": "sigma_xx field around the hole",
+        "x": 0.5,
+        "xanchor": "center",
+        "y": 0.98,
+        "yanchor": "top",
+    },
+    # Extra top margin so the centred figure title clears the two panel titles
+    # that ``make_subplots`` pins just above the plot area.
+    margin={"t": 110},
     coloraxis={
         "colorscale": "Viridis",
         "cmin": color_min,
