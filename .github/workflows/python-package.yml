@@ -14,8 +14,9 @@ on:
 
 jobs:
   test:
-    # "core" installs the mandatory dependencies only, the profile an HPC user gets;
-    # "full" adds every extra, and is the only profile running the tests that need one.
+    # "full" (the default `tox -e py311`) adds every extra, and is the only profile
+    # running the tests that need one; "core" (`tox -e core-py311`) installs the
+    # mandatory dependencies only, the profile an HPC user gets.
     name: test (${{ matrix.os }}, ${{ matrix.profile.name }})
     runs-on: ${{ matrix.os }}
     strategy:
@@ -24,10 +25,10 @@ jobs:
         os: [ubuntu-latest, windows-latest]
         python-version: ["3.11"]
         profile:
-          - name: core
-            tox-env: py-coverage
           - name: full
-            tox-env: full-py311-coverage
+            tox-env: py311-coverage
+          - name: core
+            tox-env: core-py311-coverage
     steps:
       - uses: actions/checkout@v5
       - name: Setup Python

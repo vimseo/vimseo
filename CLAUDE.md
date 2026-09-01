@@ -31,8 +31,10 @@ Install the mandatory dependencies only -- the profile an HPC user gets -- with
 **Run tests (fast tests only, default):**
 ```bash
 pytest
-# or via tox:
+# or via tox (full profile -- every extra):
 tox -e py312
+# mandatory dependencies only (the HPC user profile):
+tox -e core-py312
 ```
 
 **Run a single test file:**
@@ -119,8 +121,8 @@ this split; before adding a similar one, prefer keeping execution extra-free.
 This matters because GEMSEO's `BaseFactory` swallows import failures during class
 discovery: a top-level import of an optional dependency does not raise, it just makes the
 class silently disappear from the factory. [tests/test_optional_dependencies.py](tests/test_optional_dependencies.py)
-is the guard rail. Run `tox -e py312` for the core profile and `tox -e full-py312` for the
-profile with every extra.
+is the guard rail. `tox -e py312` runs the full profile (every extra); `tox -e core-py312`
+runs the core profile (mandatory dependencies only).
 
 ### Workflow engine (`src/vimseo/workflow/`)
 
