@@ -17,12 +17,16 @@ from __future__ import annotations
 
 from copy import deepcopy
 
+import pytest
 from numpy.core.shape_base import atleast_1d
 from numpy.testing import assert_array_equal
 
 from vimseo.api import create_model
 from vimseo.core.model_metadata import MetaDataNames
 from vimseo.core.model_settings import IntegratedModelSettings
+
+# The MlflowArchive backend is shipped by the "mlflow" extra.
+pytest.importorskip("mlflow")
 
 
 def test_result_decoding(tmp_wd):

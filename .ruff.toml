@@ -9,61 +9,63 @@ future-annotations = true
 task-tags = ["TODO"]
 ignore = [
     # Shadowing a Python builtin module.
-    "A005",
+    "stdlib-module-shadowing",
     # Dynamically typed expressions (typing.Any) are disallowed.
-    "ANN401",
+    "any-type",
     # Checks for undocumented magic method definitions.
-    "D105",
+    "undocumented-magic-method",
     # Missing argument description in the docstring.
-    "D417",
+    "undocumented-param",
     # Conflicts with ruff format.
-    "E203",
+    "whitespace-before-punctuation",
     # Avoid unexpected behavior with the formatter.
-    "ISC001",
+    "single-line-implicit-string-concatenation",
     # Too many arguments in function definition.
-    "PLR0913",
+    "too-many-arguments",
     # `subprocess.run` without explicit `check` argument.
-    "PLR2004",
+    "magic-value-comparison",
     # Too many public methods.
-    "PLR0904",
+    "too-many-public-methods",
     # Too many branches.
-    "PLR0912",
+    "too-many-branches",
     # Too many statements.
-    "PLR0915",
+    "too-many-statements",
     # Too many return statements.
-    "PLR0911",
+    "too-many-return-statements",
     # `for` loop variable `name` overwritten by assignment target.
-    "PLW1510",
+    "subprocess-run-without-check",
     # Magic value used in comparison.
-    "PLW2901",
+    "redefined-loop-name",
     # Bad or misspelled dunder method name `_repr_html_`.
-    "PLW3201",
+    "bad-dunder-method-name",
     # Object does not implement `__hash__` method.
-    "PLW1641",
+    "eq-without-hash",
     # Checks for noqa directives that are no longer applicable.
-    "RUF100",
+    "unused-noqa",
     # Checks for long exception messages that are not defined in the exception class itself.
-    "TRY003",
+    "raise-vanilla-args",
     # vimseo specific
-    "E501",
-    "N818",
+    "line-too-long",
+    "error-suffix-on-exception-name",
     # print or pprint found
-    "T201",
-    "T203",
+    "print",
+    "p-print",
     # login statement uses +
-    "G001",
-    "G003",
-    "G004",
+    "logging-string-format",
+    "logging-string-concat",
+    "logging-f-string",
     # class name should use CapWords convention
     # because a naming rule is that component class name
     # are of the form Model_LoadCase
-    "N801",
+    "invalid-class-name",
     # try-except in loop
-    "PERF203",
+    "try-except-in-loop",
     # Add / to signature for positional-only arguments
-    "PYI063",
+    "pep484-style-positional-only-parameter",
     # "module should only contain docstrings and re-exports"
-    "RUF067",
+    "non-empty-init-module",
+    # "Avoid using `autouse=True` in `pytest.fixture` decorators"
+    "pytest-fixture-autouse",
 ]
 
 select = [
@@ -83,7 +85,7 @@ select = [
 #    "FBT",
     "FLY",
     "FURB",
-    "F401",
+    "unused-import",
     "G",
     "I",
     "ISC",
@@ -171,18 +173,18 @@ force-single-line = true
 convention = "google"
 
 [lint.per-file-ignores]
-"*.ipynb" = ["RET504", "PTH"]
-"tests/*.py" = ["D", "PT009", "PT011", "PT027", "PTH"]
+"*.ipynb" = ["unnecessary-assign", "PTH"]
+"tests/*.py" = ["D", "pytest-unittest-assertion", "pytest-raises-too-broad", "pytest-unittest-raises-assertion", "PTH"]
 "docs/*.py" = [
   "T",
   "D",
-  "B018",
+  "useless-expression",
   "PTH",
-  "E501",
+  "line-too-long",
   "PERF",
-  "A001",
-  "RET504",
-  "INP001",
+  "builtin-variable-shadowing",
+  "unnecessary-assign",
+  "implicit-namespace-package",
 ]
 # ignore docstring that have not yet be converted to the google style
 "src/*.py" = ["D"]

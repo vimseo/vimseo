@@ -58,7 +58,7 @@ from vimseo.core.model_metadata import MetaData
 from vimseo.core.model_metadata import MetaDataNames
 from vimseo.core.model_settings import IntegratedModelSettings
 from vimseo.material.material import Material
-from vimseo.storage_management import NAME_TO_ARCHIVE_CLASS
+from vimseo.storage_management import get_archive_class
 from vimseo.storage_management.scratch_storage import DirectoryScratch
 from vimseo.utilities.json_grammar_utils import load_input_bounds
 from vimseo.utilities.plotting_utils import plot_curves
@@ -280,7 +280,7 @@ class IntegratedModel(GemseoDisciplineWrapper):
                 for names in c._PERSISTENT_FILE_NAMES
             ],
         }
-        self._archive_manager = NAME_TO_ARCHIVE_CLASS[options["archive_manager"]](
+        self._archive_manager = get_archive_class(options["archive_manager"])(
             **archive_options
         )
 
@@ -605,15 +605,17 @@ class IntegratedModel(GemseoDisciplineWrapper):
 
         Returns:
         """
-        directory_path = (
-            Path(self.archive_manager.job_directory)
-            if directory_path == ""
-            else Path(directory_path)
-        )
-        if not directory_path.exists():
-            directory_path.mkdir(parents=True)
-
-        LOGGER.info(f"Saving plots to {directory_path.absolute()}")
+        if save:
+            directory_path = (
+                Path(directory_path)
+                if directory_path != ""
+                else Path(self.archive_manager.job_directory or Path.cwd())
+            )
+            if not directory_path.exists():
+                directory_path.mkdir(parents=True)
+            LOGGER.info(f"Saving plots to {directory_path.absolute()}")
+        else:
+            directory_path = ""
 
         from vimseo.core.model_result import ModelResult
 

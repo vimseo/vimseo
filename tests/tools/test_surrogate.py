@@ -79,7 +79,7 @@ def mock_model_surrogate(mock_dataset):
     candidates = surrogate_tool.options["candidates"]
     for i, candidate in enumerate(candidates):
         if candidate[0] == "PolynomialRegressor":
-            del candidates[i]  # noqa: B909
+            del candidates[i]  # ruff: ignore[loop-iterator-mutation]
     surrogate_tool.execute(
         model=model,
         dataset=mock_dataset,
@@ -182,7 +182,7 @@ def test_surrogate_bending_test_analytical(
     #  > if algo_name not in self.descriptions:
     #      E
     #      TypeError: unhashable
-    #      type: 'IODataset'
+    #      type: 'IODataset'  # ruff: ignore[legacy-type-comment]
     #  / home / sebastien.bocquet / PycharmProjects / vims_only /.tox / py311 / lib / python3
     #  .11 / site - packages / gemseo / algos / algorithm_library.py: 375: TypeError
     # dataset = CustomDOE().execute(surrogate_tool.result.model, input_dataset).dataset
@@ -229,7 +229,7 @@ def test_show_results_after_selection(tmp_wd, mock_dataset):
     candidates = surrogate_tool.options["candidates"]
     for i, candidate in enumerate(candidates):
         if candidate[0] == "PolynomialRegressor":
-            del candidates[i]  # noqa: B909
+            del candidates[i]  # ruff: ignore[loop-iterator-mutation]
 
     surrogate_tool.execute(
         model=model,

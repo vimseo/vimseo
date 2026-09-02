@@ -28,7 +28,7 @@
 [![PyPI - License](https://img.shields.io/pypi/l/vimseo)](https://www.gnu.org/licenses/lgpl-3.0.en.html)
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/vimseo)](https://pypi.org/project/vimseo/)
 [![PyPI](https://img.shields.io/pypi/v/vimseo)](https://pypi.org/project/vimseo/)
-[![Codecov branch](https://img.shields.io/codecov/github/vimseo/vimseo/tree/main)](https://app.codecov.io/github/vimseo/vimseo/tree/main)
+[![codecov](https://codecov.io/gh/vimseo/vimseo/branch/main/graph/badge.svg)](https://codecov.io/gh/vimseo/vimseo)
 
 ## Why VIMSEO?
 
@@ -53,6 +53,23 @@ This is where **VIMSEO** comes into play.
 Install the latest version with `pip install vimseo`.
 
 See [pip](https://pip.pypa.io/en/stable/getting-started/) for more information.
+
+This installs the mandatory dependencies only: everything needed to build a model,
+execute it and store its results. **VIMSEO** therefore installs on a machine with no
+graphical stack, typically an HPC compute node.
+
+The rest is shipped by optional dependencies, the *extras*:
+
+| Extra | Install with | Brings | Needed for |
+| --- | --- | --- | --- |
+| `dashboard` | `pip install "vimseo[dashboard]"` | `streamlit` | The `dashboard_workflow` and `dashboard_database_viewer` interfaces |
+| `mlflow` | `pip install "vimseo[mlflow]"` | `mlflow` | The `MlflowArchive` storage backend. Without it, `DirectoryArchive` -- the default -- remains available |
+| `mesh` | `pip install "vimseo[mesh]"` | `pyvista` | VTK field post-processing (`extract_line`, `vtu_to_png`) and **executing the `TanOpenHole` model**. Pulls `vtk` (~330 MB) and needs system OpenGL libraries |
+| `jax` | `pip install "vimseo[jax]"` | `jax` | Necessary to obtain the jacobian of the `TanOpenHole` model |
+
+Install them all at once with `pip install "vimseo[all]"`.
+
+Asking for a feature whose extra is missing raises an error naming the extra to install.
 
 ---
 **NOTE**

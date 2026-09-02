@@ -65,8 +65,13 @@ class Material(BaseJsonIO):
         props = []
         for mat_rel in self.material_relations:
             for prop in mat_rel.properties:
-                props.append(prop)  # noqa: PERF402
+                props.append(prop)  # ruff: ignore[manual-list-copy]
         return props
+
+    @property
+    def name_to_material_relation(self):
+        """The mapping between material relation names and the corresponding material relation."""
+        return {mat_rel.name: mat_rel for mat_rel in self.material_relations}
 
     @property
     def name_to_property(self):

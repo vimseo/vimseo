@@ -1,0 +1,107 @@
+{
+  "properties": {
+    "E1": {
+      "description": "[Stiffness] Longitudinal Young's modulus, fibre direction {{MPa}}",
+      "items": {
+        "maximum": 1000000.0,
+        "minimum": 0.0,
+        "type": "number"
+      },
+      "title": "E1",
+      "type": "array"
+    },
+    "E2": {
+      "description": "[Stiffness] Transverse Young's modulus, perpendicular to fibres, in-plane {{MPa}}",
+      "items": {
+        "maximum": 1000000.0,
+        "minimum": 0.0,
+        "type": "number"
+      },
+      "title": "E2",
+      "type": "array"
+    },
+    "G12": {
+      "description": "[Stiffness] In-plane shear modulus, 1-2 directions {{MPa}}",
+      "items": {
+        "maximum": 1000000.0,
+        "minimum": 0.0,
+        "type": "number"
+      },
+      "title": "G12",
+      "type": "array"
+    },
+    "nu12": {
+      "description": "[Stiffness] Major Poisson's ratio, in-plane, direction 1-2 {{-}}",
+      "items": {
+        "maximum": 0.5,
+        "minimum": 0.0,
+        "type": "number"
+      },
+      "title": "Nu12",
+      "type": "array"
+    },
+    "Xt": {
+      "description": "[Strength] Longitudinal tensile strength, fibre direction {{MPa}}",
+      "items": {
+        "maximum": 1000000.0,
+        "minimum": 0.0,
+        "type": "number"
+      },
+      "title": "Xt",
+      "type": "array"
+    },
+    "Xc": {
+      "description": "[Strength] Longitudinal compressive strength, fibre direction {{MPa}}",
+      "items": {
+        "maximum": 1000000.0,
+        "minimum": 0.0,
+        "type": "number"
+      },
+      "title": "Xc",
+      "type": "array"
+    },
+    "Yt": {
+      "description": "[Strength] Transverse tensile strength, matrix direction {{MPa}}",
+      "items": {
+        "maximum": 1000000.0,
+        "minimum": 0.0,
+        "type": "number"
+      },
+      "title": "Yt",
+      "type": "array"
+    },
+    "Yc": {
+      "description": "[Strength] Transverse compressive strength, matrix direction {{MPa}}",
+      "items": {
+        "maximum": 1000000.0,
+        "minimum": 0.0,
+        "type": "number"
+      },
+      "title": "Yc",
+      "type": "array"
+    },
+    "S12": {
+      "description": "[Strength] In-plane shear strength, 1-2 directions {{MPa}}",
+      "items": {
+        "maximum": 1000000.0,
+        "minimum": 0.0,
+        "type": "number"
+      },
+      "title": "S12",
+      "type": "array"
+    }
+  },
+  "required": [
+    "E1",
+    "E2",
+    "G12",
+    "nu12",
+    "Xt",
+    "Xc",
+    "Yt",
+    "Yc",
+    "S12"
+  ],
+  "title": "plane_orthotropic_plyLegacy",
+  "type": "object"
+}

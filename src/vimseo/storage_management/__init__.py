@@ -15,10 +15,15 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from strenum import StrEnum
 
 from vimseo.storage_management.directory_storage import DirectoryArchive
-from vimseo.storage_management.mlflow_storage import MlflowArchive
+from vimseo.utilities.optional_dependencies import import_optional
+
+if TYPE_CHECKING:
+    from vimseo.storage_management.base_archive_storage import BaseArchiveManager
 
 
 class ArchiveManager(StrEnum):
@@ -26,7 +31,35 @@ class ArchiveManager(StrEnum):
     Mlflow = "MlflowArchive"
 
 
-NAME_TO_ARCHIVE_CLASS = {
-    "DirectoryArchive": DirectoryArchive,
-    "MlflowArchive": MlflowArchive,
-}
+def get_archive_class(name: str) -> type[BaseArchiveManager]:
+    """Return the archive manager class matching an ``archive_manager`` setting.
+
+    ``MlflowArchive`` is imported lazily: ``mlflow`` is shipped by the ``mlflow``
+    extra, and importing it eagerly would make the whole model layer depend on it.
+
+    Args:
+        name: The name of the archive manager,
+            one of the values of :class:`.ArchiveManager`.
+
+    Returns:
+        The archive manager class.
+
+    Raises:
+        ImportError: If ``name`` is ``"MlflowArchive"`` and the ``mlflow`` extra
+            is not installed.
+        ValueError: If ``name`` does not match any archive manager.
+    """
+    if name == ArchiveManager.Directory:
+        return DirectoryArchive
+
+    if name == ArchiveManager.Mlflow:
+        import_optional("mlflow", "mlflow", feature="The MlflowArchive backend")
+        from vimseo.storage_management.mlflow_storage import MlflowArchive
+
+        return MlflowArchive
+
+    msg = (
+        f"Unknown archive manager: {name}. "
+        f"Available ones: {sorted(m.value for m in ArchiveManager)}."
+    )
+    raise ValueError(msg)

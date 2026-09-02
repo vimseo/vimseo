@@ -21,14 +21,15 @@ from vimseo.api import create_model
 
 
 @pytest.mark.parametrize(
-    ("model_name", "load_case"),
+    ("model_name", "load_case", "image_name"),
     [
-        ("BendingTestAnalytical", "Cantilever"),
+        ("BendingTestAnalytical", "Cantilever", "Beam_Cantilever.png"),
+        ("TanOpenHole", "Tension", "TanOpenHole_Tension.png"),
     ],
 )
-def test_auto_get_image(tmp_wd, model_name, load_case):
+def test_auto_get_image(tmp_wd, model_name, load_case, image_name):
     """Check that the path to the image associated with a model and a load case is
     correct."""
     model = create_model(model_name, load_case)
     assert model.image_path.is_file()
-    assert model.image_path.name == "Beam_Cantilever.png"
+    assert model.image_path.name == image_name

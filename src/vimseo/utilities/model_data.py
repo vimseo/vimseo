@@ -47,6 +47,6 @@ def decapsulate_length_one_array(data: Mapping[str, Any]):
     for k in data:
         if isinstance(data[k], dict):
             # recursivity on encapsulated dicts
-            data[k] = encode_model_data(data[k])  # noqa : F821
+            data[k] = encode_model_data(data[k])  # ruff: ignore[undefined-name]
 
     return data

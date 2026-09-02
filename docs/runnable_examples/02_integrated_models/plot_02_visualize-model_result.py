@@ -34,6 +34,7 @@ from __future__ import annotations
 
 import logging
 
+import plotly.graph_objects as go
 from gemseo.datasets.dataset import Dataset
 from gemseo.post.dataset.bars import BarPlot
 from gemseo.post.dataset.scatter_plot_matrix import ScatterMatrix
@@ -46,6 +47,8 @@ from vimseo.api import activate_logger
 from vimseo.api import create_model
 from vimseo.core.model_result import ModelResult
 from vimseo.core.model_settings import IntegratedModelSettings
+from vimseo.utilities.curves import Curve
+from vimseo.utilities.fields import extract_line
 from vimseo.utilities.plotting_utils import plot_curves
 
 activate_logger(level=logging.INFO)
@@ -66,7 +69,6 @@ model = create_model(
     ),
 )
 model.cache = None
-model.archive_manager._accept_overwrite_job_dir = True
 model.execute()
 result = ModelResult.from_data({
     "inputs": model.get_input_data(),
@@ -187,3 +189,160 @@ fig = plot.execute(
     show=True,
 )
 fig
+
+# %%
+# Retrieve and manipulate a field
+# -------------------------------
+# The models above expose scalar outputs and curves. Some models also produce
+# *fields* -- variables defined over a mesh -- which can be retrieved from a
+# result and post-processed: probed at a point, sampled along a line, or reshaped
+# onto a grid. Here we use the analytic Tan open-hole model, which computes the
+# membrane stress field around a hole in a loaded composite plate.
+#
+# !!! note
+#
+#     Executing ``TanOpenHole`` requires the ``mesh`` extra
+#     (``pip install "vimseo[mesh]"``): the field is read back with ``pyvista``.
+field_model_name = "TanOpenHole"
+field_load_case = "Tension"
+field_model = create_model(
+    field_model_name,
+    field_load_case,
+    model_options=IntegratedModelSettings(
+        directory_archive_root=EXAMPLE_RUNS_DIR / "archive/visualize_model_result",
+        directory_scratch_root=EXAMPLE_RUNS_DIR / "scratch/visualize_model_result",
+        cache_file_path=EXAMPLE_RUNS_DIR
+        / f"caches/visualize_model_result/{field_model_name}_{field_load_case}_cache.hdf",
+    ),
+)
+field_model.cache = None
+field_output = field_model.execute()
+
+# %%
+# The field is retrieved by rebuilding a ``ModelResult`` with ``load_fields=True``.
+# ``result.fields`` maps each field name to a list of ``MeshField`` objects:
+field_result = ModelResult.from_data(
+    {"inputs": field_model.get_input_data(), "outputs": field_output},
+    model=field_model,
+    load_fields=True,
+)
+flux_field = field_result.fields["flux"][0]
+flux_field.point_variable_names
+
+# %%
+# The mesh file backing the field is kept on disk, ready to be opened in an
+# external tool such as ParaView:
+flux_field.path
+
+# %%
+# We read the plate geometry and the applied far-field stress from the inputs:
+inputs = field_model.get_input_data()
+length = float(inputs["length"][0])
+width = float(inputs["width"][0])
+radius = float(inputs["radius"][0])
+d0 = float(inputs["d0"][0])
+applied_stress = float(inputs["load"][0])
+
+# %%
+# **Probing.** ``MeshField.probe`` bilinearly interpolates a component at an
+# arbitrary point. Walking outward from the hole along the transverse mid-section
+# (``x = length / 2``), ``sigma_xx`` decays from its peak towards the applied
+# stress. The field is blanked inside ``r < radius + d0``, so a point in that
+# region returns ``nan``:
+probe_x = 0.5 * length
+blank_edge_y = 0.5 * width + radius + d0
+probe_ys = [
+    0.5 * width,
+    blank_edge_y + 0.5,
+    blank_edge_y + 2.0,
+    blank_edge_y + 5.0,
+    blank_edge_y + 9.0,
+]
+probe_values = [flux_field.probe("sigma_xx", probe_x, y) for y in probe_ys]
+for y, value in zip(probe_ys, probe_values, strict=False):
+    print(f"sigma_xx at (x={probe_x:.1f}, y={y:5.2f}) = {value:8.1f} MPa")
+
+# %%
+# **Line extraction.** ``extract_line`` samples the field along a segment. We cut
+# the full transverse section at ``x = length / 2``. It returns the sampling
+# ``coords``, the curvilinear distance ``dist`` from the first point, and one
+# array per requested field; points falling in the blanked hole come back
+# ``nan``:
+line = extract_line(
+    flux_field.path,
+    point_a=(probe_x, 0.0, 0.0),
+    point_b=(probe_x, width, 0.0),
+    n_points=200,
+    fields=["sigma_xx"],
+)
+line["sigma_xx"].shape
+
+# %%
+# The extracted profile, the probe points and the model's own centre-line output
+# (``line_center_sigma_xx``, sampled internally over the same segment) are drawn
+# together. They overlap, which confirms the three retrieval routes are
+# consistent:
+fig = go.Figure()
+fig.add_trace(
+    go.Scatter(
+        x=line["coords"][:, 1],
+        y=line["sigma_xx"],
+        mode="lines",
+        name="extract_line",
+    )
+)
+fig.add_trace(
+    go.Scatter(
+        x=field_output["line_center_y"],
+        y=field_output["line_center_sigma_xx"],
+        mode="lines",
+        line={"dash": "dot"},
+        name="line_center output",
+    )
+)
+fig.add_trace(
+    go.Scatter(
+        x=probe_ys,
+        y=probe_values,
+        mode="markers",
+        marker={"size": 9, "symbol": "x"},
+        name="probe",
+    )
+)
+fig.add_hline(y=applied_stress, line_dash="dash", annotation_text="applied stress")
+fig.update_layout(
+    title="sigma_xx across the transverse mid-section",
+    xaxis_title="y (mm)",
+    yaxis_title="sigma_xx (MPa)",
+)
+fig
+
+# %%
+# Compare a field between two designs
+# ----------------------------------
+# Running the same extraction on a second design turns the field into a
+# quantitative comparison. We re-execute with a 0-dominated layup, wrap each
+# transverse profile in a ``Curve``, and overlay them with ``plot_curves`` (the
+# same helper used for the beam curves above), which gives each line its own
+# colour and legend entry. Away from the hole both profiles relax to the applied
+# far-field stress (~1000 MPa); they differ around the concentration:
+field_output_ud = field_model.execute({"layup": atleast_1d([0.0] * 8)})
+flux_field_ud = ModelResult.from_data(
+    {"inputs": field_model.get_input_data(), "outputs": field_output_ud},
+    model=field_model,
+    load_fields=True,
+).fields["flux"][0]
+line_ud = extract_line(
+    flux_field_ud.path,
+    point_a=(probe_x, 0.0, 0.0),
+    point_b=(probe_x, width, 0.0),
+    n_points=200,
+    fields=["sigma_xx"],
+)
+
+quasi_iso_curve = Curve({"y": line["coords"][:, 1], "sigma_xx": line["sigma_xx"]})
+ud_curve = Curve({"y": line_ud["coords"][:, 1], "sigma_xx": line_ud["sigma_xx"]})
+plot_curves(
+    [quasi_iso_curve, ud_curve],
+    labels=["quasi-isotropic", "0-dominated"],
+)

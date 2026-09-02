@@ -163,10 +163,10 @@ def test_update_deterministic_material():
     """Check that a deterministic values of a material can updated."""
     material = Material.from_json(MATERIAL_LIB_DIR / "Mock.json")
     print(material)
-    assert material.get_values_as_dict()["E1"] == 1.5e5  # noqa: RUF069
+    assert material.get_values_as_dict()["E1"] == 1.5e5  # ruff: ignore[float-equality-comparison]
     new_e1 = 1.4e5
     material.update_from_dict({"E1": new_e1})
-    assert material.get_values_as_dict()["E1"] == new_e1  # noqa: RUF069
+    assert material.get_values_as_dict()["E1"] == new_e1  # ruff: ignore[float-equality-comparison]
 
 
 def test_update_stochastic_material():
@@ -224,7 +224,7 @@ def test_update_uniform_distribution_keeps_parameters():
         name="m", material_relations=[MaterialRelation(name="r", properties=[prop])]
     )
     material.update_from_dict({"x": 1.5})
-    assert prop.value == 1.5  # noqa: RUF069
+    assert prop.value == 1.5  # ruff: ignore[float-equality-comparison]
     assert prop.distribution.name == "Uniform"
 
 
@@ -269,5 +269,5 @@ def test_create_material_from_legacy_grammar():
     )
     assert material.name == "Ta6v"
     values = material.get_values_as_dict()
-    assert values["young_modulus"] == 2.1e5  # noqa: RUF069
-    assert values["nu_p"] == 0.3  # noqa: RUF069
+    assert values["young_modulus"] == 2.1e5  # ruff: ignore[float-equality-comparison]
+    assert values["nu_p"] == 0.3  # ruff: ignore[float-equality-comparison]

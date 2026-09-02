@@ -19,10 +19,19 @@ import runpy
 import sys
 from pathlib import Path
 
-from vimseo.dashboards.database_viewer import db_viewer
+from vimseo.utilities.optional_dependencies import import_optional
 
 
 def main() -> None:
+    """Launch the database viewer dashboard.
+
+    Raises:
+        ImportError: If the ``dashboard`` extra is not installed.
+    """
+    import_optional("streamlit", "dashboard", feature="The database viewer dashboard")
+
+    from vimseo.dashboards.database_viewer import db_viewer
+
     sys.argv = [
         "streamlit",
         "run",

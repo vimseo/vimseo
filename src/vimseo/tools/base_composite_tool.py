@@ -41,7 +41,7 @@ class BaseCompositeToolConstructorSettings(ToolConstructorSettings):
 class StreamlitBaseCompositeToolConstructorSettings(StreamlitToolConstructorSettings):
     """The options of the BaseCompositeTool constructor."""
 
-    subtools: list = []  # noqa: RUF012
+    subtools: list = []  # ruff: ignore[mutable-class-default]
 
 
 class BaseCompositeTool(BaseTool):
@@ -54,7 +54,7 @@ class BaseCompositeTool(BaseTool):
         self._subtools = {tool.name: tool for tool in options.pop("subtools")}
         super().__init__(**options)
 
-    def validate(f):  # noqa: N805
+    def validate(f):  # ruff: ignore[invalid-first-argument-name-for-method]
         @functools.wraps(f)
         def decorated(self, *args, **options):
             self._create_working_directory()

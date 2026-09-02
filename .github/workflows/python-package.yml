@@ -14,11 +14,21 @@ on:
 
 jobs:
   test:
+    # "full" (the default `tox -e py311`) adds every extra, and is the only profile
+    # running the tests that need one; "core" (`tox -e core-py311`) installs the
+    # mandatory dependencies only, the profile an HPC user gets.
+    name: test (${{ matrix.os }}, ${{ matrix.profile.name }})
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest]
         python-version: ["3.11"]
+        profile:
+          - name: full
+            tox-env: py311-coverage
+          - name: core
+            tox-env: core-py311-coverage
     steps:
       - uses: actions/checkout@v5
       - name: Setup Python
@@ -29,7 +39,7 @@ jobs:
         run: pip install tox-uv
       - name: Run tox
         # Run tox using the version of Python in `PATH`.
-        run: tox run -e py-coverage
+        run: tox run -e ${{ matrix.profile.tox-env }}
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
         with:

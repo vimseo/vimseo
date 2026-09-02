@@ -89,7 +89,7 @@ class SBPISE(IntegratedMeasure):
 
     PLOT = False
 
-    def _evaluate_measure(self, model_dataset: DataType) -> float:  # noqa: D102
+    def _evaluate_measure(self, model_dataset: DataType) -> float:  # ruff: ignore[undocumented-public-method]
         model_data = model_dataset[self.output_name]
         model_mesh = (
             model_dataset[self.mesh_name]
@@ -206,7 +206,7 @@ class SBPISE(IntegratedMeasure):
                 f"Area metric: {trapezoid(compared_data[-1], x_ref)}\n"
                 f"(model_support_length - reference_support_length) / model_support_length = "
                 f"{(delta_x_left + delta_x_right) / abs(x_i[-1] - x_i[0])}\n"
-            )  # noqa: T201
+            )  # ruff: ignore[print]
 
         if self.PLOT:
             plt.legend()
@@ -244,7 +244,7 @@ class SBPISE(IntegratedMeasure):
         LOGGER.warning(
             f"{self.__class__.__name__} metric for variable {self.output_name}: {metric}\n"
             f"Weights (left, area, right): ({weights})."
-        )  # noqa: T201
+        )  # ruff: ignore[print]
         return metric
 
     @staticmethod

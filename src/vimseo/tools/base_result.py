@@ -24,15 +24,15 @@ from dataclasses import dataclass
 from dataclasses import field
 from dataclasses import fields
 from io import BytesIO
+from math import isclose
 from math import isnan
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 import h5py
-import matplotlib
+import matplotlib.figure
 import numpy as np
 import pandas as pd
-import pytest
 from docstring_inheritance import GoogleDocstringInheritanceMeta
 from gemseo.datasets.dataset import Dataset
 
@@ -153,7 +153,7 @@ def assert_results_equal(r1, r2):
             assert_results_equal(v1, v2)
     elif isinstance(r1, float):
         if not isnan(r1):
-            assert r1 == pytest.approx(r2)
+            assert isclose(r1, r2, rel_tol=1e-6, abs_tol=1e-12), f"{r1} != {r2}"
         else:
             assert isnan(r2)
     else:

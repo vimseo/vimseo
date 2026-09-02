@@ -15,6 +15,6 @@
 
 from __future__ import annotations
 
-from vimseo.utilities.pytest_conftest import *  # noqa: F401,F403
+from vimseo.utilities.pytest_conftest import *  # ruff: ignore[unused-import, undefined-local-with-import-star]
 
 # os.environ["VIMS_PROJECT_DIRECTORY"] = os.path.dirname(__file__)

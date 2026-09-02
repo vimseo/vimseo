@@ -19,10 +19,19 @@ import runpy
 import sys
 from pathlib import Path
 
-import vimseo.dashboards.workflow.dashboard_workflow as dashboard
+from vimseo.utilities.optional_dependencies import import_optional
 
 
 def main() -> None:
+    """Launch the workflow dashboard.
+
+    Raises:
+        ImportError: If the ``dashboard`` extra is not installed.
+    """
+    import_optional("streamlit", "dashboard", feature="The workflow dashboard")
+
+    import vimseo.dashboards.workflow.dashboard_workflow as dashboard
+
     sys.argv = [
         "streamlit",
         "run",

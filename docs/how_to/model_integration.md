@@ -9,7 +9,7 @@
 
 # Integration of models
 
-Integrate the model of interests is the first mandatory step before using the
+Integrate the models of interest is the first mandatory step before using the
 VV&UQ methods of **VIMSEO**.
 As a result, **VIMSEO** should make model integration as easy as possible,
 and provide a range of examples to illustrate different ways of integrating models.
@@ -21,29 +21,51 @@ To learn more about the advantages of this approach, you can refer to
 
 ## Integration of a **GEMSEO** discipline
 
+A **GEMSEO** discipline can be easily turned into a **VIMSEO** model,
+by deriving a class from `BaseDisciplineModel` and setting the `_DISCIPLINE`
+class attribute:
+
 ```python
 --8<-- "src/vimseo/problems/mock/mock_convergence/mock_convergence.py"
 ```
 
-## Integration of a pure Python model as a single component model
+If you have a model defined as a Python code, the integration process to **VIMSEO** can be:
 
-Here, model ``MockModelFields`` defines the variable ``FIELDS_FROM_FILE``,
-which means that files corresponding to this pattern are expected to be written
-by the model in the scrtch directory.
-
-```python
---8<-- "src/vimseo/problems/mock/mock_fields/mock_fields.py"
-```
+- wrap this model in a **GEMSEO** discipline
+- use the above procedure to convert it as a **VIMSEO** model
 
 ## Integration of a pure Python model as a pre-run-post component model
+
+If you have a model defined from Python code, and want to integrate it as a three-step pre-processing, run-processing and post-processing:
 
 ```python
 --8<-- "src/vimseo/problems/mock/mock_pre_run_post/mock_main.py"
 ```
 
-And a second example where a material is defined. The input grammar
-and default input data are automatically filled with the material properties.
+```python
+--8<-- "src/vimseo/problems/mock/mock_pre_run_post/mock_components_lc1.py"
+```
+
+If you also want to define a material for this model, you can look at the below example:
 
 ```python
 --8<-- "src/vimseo/problems/mock/mock_pre_run_post/mock_with_material.py"
 ```
+
+<!--
+It is weird that we talk about material grammar without before mentionning model/components grammar.
+-->
+
+The material itself is defined from two files. Its grammar, possibly defining the bounds and types of the properties:
+
+```python
+--8<-- "src/vimseo/material_lib/Mock_grammar.json"
+```
+
+and the values, possibly defining probability distributions for the properties:
+
+```python
+--8<-- "src/vimseo/material_lib/Mock.json"
+```
+
+The input grammar and default input data are automatically filled with the material properties.

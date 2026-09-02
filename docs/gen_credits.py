@@ -92,24 +92,32 @@ def _get_deps(base_deps: Mapping[str, Mapping[str, str]]) -> dict[str, dict[str,
 
 
 def _render_credits() -> str:
-    external_dependencies = _get_deps(project["dependencies"])
     opt_dep_key = "optional-dependencies"
     optional_dependencies = (
         project[opt_dep_key].values() if opt_dep_key in project else []
     )
-    external_applications = _get_deps(
+    # The extras ship libraries VIMSEO imports, so they belong to the dependencies
+    # even though they are not mandatory. The "all" extra only refers to the other
+    # ones, hence the filtering of the self-references.
+    external_dependencies = _get_deps(
         chain(
-            *optional_dependencies,
+            project["dependencies"],
             (
-                "commitizen",
-                "docformatter",
-                "pre-commit",
-                "ruff",
-                "setuptools",
-                "setuptools-scm",
+                dep
+                for deps in optional_dependencies
+                for dep in deps
+                if not dep.startswith("vimseo[")
             ),
         )
     )
+    external_applications = _get_deps((
+        "commitizen",
+        "docformatter",
+        "pre-commit",
+        "ruff",
+        "setuptools",
+        "setuptools-scm",
+    ))
 
     # Add softwares not in PyPI.
     external_applications.update({
@@ -147,4 +155,4 @@ def _render_credits() -> str:
     return jinja_env.from_string(template_text).render(**template_data)
 
 
-print(_render_credits())  # noqa: T201
+print(_render_credits())  # ruff: ignore[print]

@@ -111,7 +111,7 @@ class DirectoryArchive(BaseArchiveManager):
             archive_dir = Path(file).parent
             try:
                 archive_result = self.get_result(archive_dir)
-            except FileNotFoundError as err:  # noqa: BLE001
+            except FileNotFoundError as err:  # ruff: ignore[blind-except]
                 msg = f"{err!s} \nError encountered while parsing file {file}"
                 raise FileNotFoundError(msg) from err
 
