@@ -1,0 +1,107 @@
+{
+  "name": "PostFieldExtraction_input",
+  "required": [
+    "length",
+    "width",
+    "radius",
+    "d0",
+    "dx",
+    "dy",
+    "load",
+    "thickness",
+    "layup"
+  ],
+  "properties": {
+    "length": {
+      "description": "Plate length, mm",
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 1,
+      "items": {
+        "type": "number",
+        "minimum": 0.0,
+        "exclusiveMinimum": true
+      }
+    },
+    "width": {
+      "description": "Plate width, mm",
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 1,
+      "items": {
+        "type": "number",
+        "minimum": 0.0,
+        "exclusiveMinimum": true
+      }
+    },
+    "radius": {
+      "description": "Hole radius, mm",
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 1,
+      "items": {
+        "type": "number",
+        "minimum": 0.0,
+        "exclusiveMinimum": true
+      }
+    },
+    "d0": {
+      "description": "Point-stress evaluation offset past the hole edge, mm",
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 1,
+      "items": {
+        "type": "number",
+        "minimum": 0.0
+      }
+    },
+    "dx": {
+      "description": "Grid element size along x (from the run stage), mm",
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 1,
+      "items": {
+        "type": "number"
+      }
+    },
+    "dy": {
+      "description": "Grid element size along y (from the run stage), mm",
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 1,
+      "items": {
+        "type": "number"
+      }
+    },
+    "load": {
+      "description": "Far-field applied stress, MPa",
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 1,
+      "items": {
+        "type": "number"
+      }
+    },
+    "thickness": {
+      "description": "Total laminate thickness, mm",
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 1,
+      "items": {
+        "type": "number",
+        "minimum": 0.0,
+        "exclusiveMinimum": true
+      }
+    },
+    "layup": {
+      "description": "Ply angles of the laminate, degrees",
+      "type": "array",
+      "items": {
+        "type": "number"
+      }
+    }
+  },
+  "$schema": "http://json-schema.org/draft-04/schema",
+  "type": "object",
+  "id": "#PostFieldExtraction_input"
+}

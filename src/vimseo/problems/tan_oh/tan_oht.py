@@ -228,24 +228,17 @@ def build_criterion_mesh(
 class TanRun_Tension(BaseComponent):
     """An Open Hole Tension model based on Tan theory (#open-hole-plate-model-tan-model).
 
-    No grammar is defined for the material (and thus no bounds).
+    Inputs and outputs (geometry, ``load``, ``grid_resolution``, ``layup``,
+    ``dx``/``dy``) are described by the ``TanRun_Tension_{input,output}.json``
+    grammar files next to this module; the ply material properties and their
+    bounds are merged in from ``MATERIAL_GRAMMAR_FILE``.
     """
 
     USE_JOB_DIRECTORY = True
 
-    auto_detect_grammar_files = False
-    default_grammar_type = "JSONGrammar"
-
     def __init__(self, **options):
         super().__init__(**options)
-
-        self.input_grammar.update_from_data(DEFAULT_INPUT_DATA)
         self.default_input_data.update(DEFAULT_INPUT_DATA)
-        self.output_grammar.update_from_data({
-            MetaDataNames.error_code.name: atleast_1d(0),
-            "dx": atleast_1d(0.0),
-            "dy": atleast_1d(0.0),
-        })
 
     def _run(self, input_data):
 
@@ -353,10 +346,14 @@ class TanRun_Tension(BaseComponent):
 
 
 class PostFieldExtraction(BaseComponent):
-    """A post-processor to extract data from a field."""
+    """A post-processor to extract data from a field.
 
-    auto_detect_grammar_files = False
-    default_grammar_type = "JSONGrammar"
+    Inputs (the geometry and ``load``/``thickness``/``layup`` it re-uses, plus the
+    ``dx``/``dy`` coupling from the run stage) and outputs (the ``line_center_*``
+    curves and the hole-edge / criterion scalars) are described by the
+    ``PostFieldExtraction_{input,output}.json`` grammar files next to this module;
+    the ply material properties are merged in from ``MATERIAL_GRAMMAR_FILE``.
+    """
 
     def __init__(
         self,
@@ -373,48 +370,8 @@ class PostFieldExtraction(BaseComponent):
             check_subprocess=check_subprocess,
         )
         self._fields_from_file = fields_from_file
-
-        input_names = [
-            "length",
-            "width",
-            "radius",
-            "d0",
-            "dx",
-            "dy",
-            "load",
-            "thickness",
-        ]
-
-        self.input_grammar.update_from_data({
-            name: array([0.0]) for name in input_names
-        })
-        # The stacking drives c_strat (computed here), needed to evaluate the
-        # stress directly at the hole edge (see ``_run``).
-        self.input_grammar.update_from_data({"layup": DEFAULT_INPUT_DATA["layup"]})
-        input_names.append("layup")
-
-        for name in input_names:
-            self.input_grammar.required_names.add(name)
-
         self._flux_components = ["sigma_xx", "sigma_yy", "sigma_xy", "Distance"]
         self._line_name = "line_center"
-        line_output_names = [
-            "line_center_y",
-            "line_center_sigma_xx",
-            "line_center_sigma_yy",
-            "line_center_sigma_xy",
-            "line_center_Distance",
-        ]
-        self.output_grammar.update_from_names(line_output_names)
-
-        self.output_grammar.update_from_names(["sigma_xx_r", "sigma_xx_d0"])
-
-        self.output_grammar.update_from_names([
-            "crit",
-            "reserve_factor",
-            "sigma_xx_max",
-            "sigma_xx_min",
-        ])
 
     def _run(self, input_data):
         length = input_data["length"][0]
