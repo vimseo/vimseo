@@ -1,8 +1,9 @@
 artifact_uri: file:///C:\Users\sebastien.bocquet\PycharmProjects\vimseo\docs\runnable_examples\model_runs\mlflow_archive\visualize_model_result/659041833149900979/6aea8530c7a941adb4ebc836feb46633/artifacts
+deleted_time: 1783425660692
 end_time: 1781631888279
 entry_point_name: ''
 experiment_id: '659041833149900979'
-lifecycle_stage: active
+lifecycle_stage: deleted
 run_id: 6aea8530c7a941adb4ebc836feb46633
 run_name: wise-perch-900
 source_name: ''

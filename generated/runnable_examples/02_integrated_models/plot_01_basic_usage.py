@@ -1,4 +1,4 @@
-# Copyright 2021 IRT Saint Exupéry, https://www.irt-saintexupery.com
+# Copyright 2021 IRT Saint Exupery, https://www.irt-saintexupery.com
 #
 # This work is licensed under a BSD 0-Clause License.
 #
@@ -68,7 +68,6 @@ model = create_model(
     model_options=model_settings,
 )
 model.set_cache(Discipline.CacheType.NONE)
-model.archive_manager._accept_overwrite_job_dir = True
 
 # %%
 # The model description can be accessed like this:

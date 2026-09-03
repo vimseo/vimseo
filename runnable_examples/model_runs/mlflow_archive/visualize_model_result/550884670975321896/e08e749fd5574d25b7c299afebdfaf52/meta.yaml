@@ -1,8 +1,9 @@
 artifact_uri: file:///C:\Users\sebastien.bocquet\PycharmProjects\vimseo\docs\runnable_examples\model_runs\mlflow_archive\visualize_model_result/550884670975321896/e08e749fd5574d25b7c299afebdfaf52/artifacts
+deleted_time: 1783425660688
 end_time: 1781631893048
 entry_point_name: ''
 experiment_id: '550884670975321896'
-lifecycle_stage: active
+lifecycle_stage: deleted
 run_id: e08e749fd5574d25b7c299afebdfaf52
 run_name: burly-sow-330
 source_name: ''

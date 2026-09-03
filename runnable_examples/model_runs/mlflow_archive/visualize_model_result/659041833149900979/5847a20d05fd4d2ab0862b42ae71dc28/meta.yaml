@@ -1,0 +1,15 @@
+artifact_uri: file:///C:\Users\sebastien.bocquet\PycharmProjects\vimseo\docs\runnable_examples\model_runs\mlflow_archive\visualize_model_result/659041833149900979/5847a20d05fd4d2ab0862b42ae71dc28/artifacts
+deleted_time: 1783431493064
+end_time: 1783430737284
+entry_point_name: ''
+experiment_id: '659041833149900979'
+lifecycle_stage: deleted
+run_id: 5847a20d05fd4d2ab0862b42ae71dc28
+run_name: casual-cod-626
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1783430736723
+status: 3
+tags: []
+user_id: unknown

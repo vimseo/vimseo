@@ -1,0 +1,15 @@
+artifact_uri: file:///C:\Users\sebastien.bocquet\PycharmProjects\vimseo\docs\runnable_examples\model_runs\mlflow_archive\visualize_model_result/550884670975321896/5db33bac79cb4643a96abb0f32995f4d/artifacts
+deleted_time: 1788256682498
+end_time: 1785343839542
+entry_point_name: ''
+experiment_id: '550884670975321896'
+lifecycle_stage: deleted
+run_id: 5db33bac79cb4643a96abb0f32995f4d
+run_name: unique-seal-650
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1785343839087
+status: 3
+tags: []
+user_id: sebastien.bocquet

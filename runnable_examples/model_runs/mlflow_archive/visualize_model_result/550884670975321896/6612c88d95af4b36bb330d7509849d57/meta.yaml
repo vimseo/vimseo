@@ -1,0 +1,15 @@
+artifact_uri: file:///C:\Users\sebastien.bocquet\PycharmProjects\vimseo\docs\runnable_examples\model_runs\mlflow_archive\visualize_model_result/550884670975321896/6612c88d95af4b36bb330d7509849d57/artifacts
+deleted_time: 1788264121221
+end_time: 1788256685419
+entry_point_name: ''
+experiment_id: '550884670975321896'
+lifecycle_stage: deleted
+run_id: 6612c88d95af4b36bb330d7509849d57
+run_name: wistful-whale-479
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1788256684762
+status: 3
+tags: []
+user_id: unknown

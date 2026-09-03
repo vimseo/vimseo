@@ -1,0 +1,15 @@
+artifact_uri: file:///C:\Users\sebastien.bocquet\PycharmProjects\vimseo\docs\runnable_examples\model_runs\mlflow_archive\visualize_model_result/550884670975321896/95da227915cf490f9c9a0e563aaf5eed/artifacts
+deleted_time: 1783517385298
+end_time: 1783445994994
+entry_point_name: ''
+experiment_id: '550884670975321896'
+lifecycle_stage: deleted
+run_id: 95da227915cf490f9c9a0e563aaf5eed
+run_name: redolent-robin-652
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1783445994076
+status: 3
+tags: []
+user_id: unknown

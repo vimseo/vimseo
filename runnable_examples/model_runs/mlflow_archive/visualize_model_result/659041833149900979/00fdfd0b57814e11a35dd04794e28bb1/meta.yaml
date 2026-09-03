@@ -1,0 +1,15 @@
+artifact_uri: file:///C:\Users\sebastien.bocquet\PycharmProjects\vimseo\docs\runnable_examples\model_runs\mlflow_archive\visualize_model_result/659041833149900979/00fdfd0b57814e11a35dd04794e28bb1/artifacts
+deleted_time: 1788256682502
+end_time: 1785343839038
+entry_point_name: ''
+experiment_id: '659041833149900979'
+lifecycle_stage: deleted
+run_id: 00fdfd0b57814e11a35dd04794e28bb1
+run_name: polite-crane-571
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1785343838326
+status: 3
+tags: []
+user_id: sebastien.bocquet

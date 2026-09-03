@@ -1,0 +1,15 @@
+artifact_uri: file:///C:\Users\sebastien.bocquet\PycharmProjects\vimseo\docs\runnable_examples\model_runs\mlflow_archive\visualize_model_result/659041833149900979/23be5c38c63049b0be782d3f386b16ce/artifacts
+deleted_time: 1783445992363
+end_time: 1783431494678
+entry_point_name: ''
+experiment_id: '659041833149900979'
+lifecycle_stage: deleted
+run_id: 23be5c38c63049b0be782d3f386b16ce
+run_name: tasteful-dolphin-774
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1783431493617
+status: 3
+tags: []
+user_id: unknown

@@ -1,0 +1,15 @@
+artifact_uri: file:///C:\Users\sebastien.bocquet\PycharmProjects\vimseo\docs\runnable_examples\model_runs\mlflow_archive\visualize_model_result/550884670975321896/29792d04be524ec4bf37e837ec9fe5cb/artifacts
+deleted_time: 1784898007797
+end_time: 1783517388091
+entry_point_name: ''
+experiment_id: '550884670975321896'
+lifecycle_stage: deleted
+run_id: 29792d04be524ec4bf37e837ec9fe5cb
+run_name: thundering-ox-752
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1783517387469
+status: 3
+tags: []
+user_id: unknown

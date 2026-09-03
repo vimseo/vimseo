@@ -1,0 +1,15 @@
+artifact_uri: file:///C:\Users\sebastien.bocquet\PycharmProjects\vimseo\docs\runnable_examples\model_runs\mlflow_archive\visualize_model_result/550884670975321896/9c6739c8aa4f4badbbbed35ce08ed66a/artifacts
+deleted_time: 1788256682496
+end_time: 1785343840126
+entry_point_name: ''
+experiment_id: '550884670975321896'
+lifecycle_stage: deleted
+run_id: 9c6739c8aa4f4badbbbed35ce08ed66a
+run_name: capricious-worm-582
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1785343839575
+status: 3
+tags: []
+user_id: sebastien.bocquet

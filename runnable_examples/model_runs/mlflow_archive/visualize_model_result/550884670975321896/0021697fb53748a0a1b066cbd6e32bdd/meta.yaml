@@ -1,0 +1,15 @@
+artifact_uri: file:///C:\Users\sebastien.bocquet\PycharmProjects\vimseo\docs\runnable_examples\model_runs\mlflow_archive\visualize_model_result/550884670975321896/0021697fb53748a0a1b066cbd6e32bdd/artifacts
+deleted_time: 1783431493056
+end_time: 1783430738215
+entry_point_name: ''
+experiment_id: '550884670975321896'
+lifecycle_stage: deleted
+run_id: 0021697fb53748a0a1b066cbd6e32bdd
+run_name: incongruous-doe-275
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1783430737856
+status: 3
+tags: []
+user_id: unknown

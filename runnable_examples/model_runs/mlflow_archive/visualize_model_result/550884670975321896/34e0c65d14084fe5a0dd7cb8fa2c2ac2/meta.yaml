@@ -1,0 +1,15 @@
+artifact_uri: file:///C:\Users\sebastien.bocquet\PycharmProjects\vimseo\docs\runnable_examples\model_runs\mlflow_archive\visualize_model_result/550884670975321896/34e0c65d14084fe5a0dd7cb8fa2c2ac2/artifacts
+deleted_time: 1783431493060
+end_time: 1783430737827
+entry_point_name: ''
+experiment_id: '550884670975321896'
+lifecycle_stage: deleted
+run_id: 34e0c65d14084fe5a0dd7cb8fa2c2ac2
+run_name: painted-shrike-796
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1783430737329
+status: 3
+tags: []
+user_id: unknown

@@ -1,4 +1,4 @@
-# Copyright 2021 IRT Saint Exupéry, https://www.irt-saintexupery.com
+# Copyright 2021 IRT Saint Exupery, https://www.irt-saintexupery.com
 #
 # This work is licensed under a BSD 0-Clause License.
 #
@@ -36,7 +36,7 @@ from vimseo.tools.bayes.bayes_analysis import BayesTool
 from vimseo.tools.bayes.bayes_analysis_result import PosteriorChecks
 from vimseo.tools.statistics.statistics_tool import StatisticsTool
 
-random.seed(0)  # noqa: NPY002
+random.seed(0)  # ruff: ignore[numpy-legacy-random]
 
 activate_logger()
 
@@ -47,7 +47,7 @@ N_MCMC = 100
 # ==================================
 # We start loading the experimental data
 # that will be processed to calibrate models:
-data_modulus = random.logistic(150000, 8000, 8)  # noqa: NPY002
+data_modulus = random.logistic(150000, 8000, 8)  # ruff: ignore[numpy-legacy-random]
 
 
 # %%

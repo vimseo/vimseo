@@ -1,0 +1,15 @@
+artifact_uri: file:///C:\Users\sebastien.bocquet\PycharmProjects\vimseo\docs\runnable_examples\model_runs\mlflow_archive\visualize_model_result/659041833149900979/5c970616a1184cc18765c79a66d35af7/artifacts
+deleted_time: 1783430736371
+end_time: 1783425662128
+entry_point_name: ''
+experiment_id: '659041833149900979'
+lifecycle_stage: deleted
+run_id: 5c970616a1184cc18765c79a66d35af7
+run_name: nebulous-lamb-48
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1783425661467
+status: 3
+tags: []
+user_id: unknown
