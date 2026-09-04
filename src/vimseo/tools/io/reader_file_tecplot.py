@@ -15,7 +15,9 @@
 
 from __future__ import annotations
 
+import re
 from io import StringIO
+from itertools import pairwise
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -81,6 +83,42 @@ def _rename_header_variables(
             lines[i] = line
             break
     return "".join(lines)
+
+
+def _split_into_zones(text: str) -> list[tuple[str, str]]:
+    """Split a Tecplot file into one self-contained document per zone.
+
+    meshio's Tecplot reader only reads the first ``ZONE`` block of a file and
+    silently ignores the rest. Splitting the file upfront and reading each
+    zone on its own recovers every zone.
+
+    Args:
+        text: The content of the Tecplot file, with the ``VARIABLES`` header
+            already renamed to names meshio understands.
+
+    Returns:
+        One ``(zone_name, zone_text)`` pair per zone, where ``zone_text``
+        combines the file's ``VARIABLES`` header with that zone's ``ZONE``
+        block, and ``zone_name`` is the zone's ``T="..."`` title (empty
+        string if absent).
+    """
+    lines = text.splitlines(keepends=True)
+    variables_line = ""
+    zone_start_indices = []
+    for i, line in enumerate(lines):
+        stripped = line.strip().upper()
+        if not variables_line and stripped.startswith("VARIABLES"):
+            variables_line = line
+        elif stripped.startswith("ZONE"):
+            zone_start_indices.append(i)
+
+    zones = []
+    for start, end in pairwise([*zone_start_indices, len(lines)]):
+        zone_text = "".join(lines[start:end])
+        match = re.search(r'T\s*=\s*"([^"]*)"', zone_text)
+        zone_name = match.group(1) if match else ""
+        zones.append((zone_name, variables_line + zone_text))
+    return zones
 
 
 class ReaderFileTecplotSettings(BaseFileReaderSettings):
@@ -150,7 +188,8 @@ class ReaderFileTecplot(BaseReaderFile):
         text = _rename_header_variables(
             text, coordinate_names, variable_name_aliases, ["X", "Y", "Z"]
         )
-        print(text)
-        mesh = read(StringIO(text), file_format=_FORMAT)
-
-        self.result.fields.append(MeshField.from_mesh(mesh, file_path))
+        for zone_name, zone_text in _split_into_zones(text):
+            mesh = read(StringIO(zone_text), file_format=_FORMAT)
+            self.result.fields.append(
+                MeshField.from_mesh(mesh, file_path, name=zone_name)
+            )

@@ -36,6 +36,25 @@ ZONE T="patch", N=4, E=1, ET=QUADRILATERAL, F=FEBLOCK
 1 2 3 4
 """
 
+# Two single-quad FEBLOCK zones sharing one VARIABLES header, mimicking a CFD
+# export with one zone per component (e.g. "avion"/"fairing").
+_TECPLOT_MULTIZONE_CONTENT = """\
+TITLE = "two quads"
+VARIABLES = "CoordinateX" "CoordinateY" "CoordinateZ" "Pressure"
+ZONE T="patch1", N=4, E=1, ET=QUADRILATERAL, F=FEBLOCK
+0.0 1.0 1.0 0.0
+0.0 0.0 1.0 1.0
+0.0 0.0 0.0 0.0
+10.0 20.0 30.0 40.0
+1 2 3 4
+ZONE T="patch2", N=4, E=1, ET=QUADRILATERAL, F=FEBLOCK
+2.0 3.0 3.0 2.0
+0.0 0.0 1.0 1.0
+0.0 0.0 0.0 0.0
+50.0 60.0 70.0 80.0
+1 2 3 4
+"""
+
 
 @pytest.mark.parametrize(
     "pressure_alias", [False, True], ids=["No alias", "With alias"]
@@ -57,6 +76,7 @@ def test_reader_file_tecplot(tmp_wd, pressure_alias):
     pressure_name = "P" if pressure_alias else "Pressure"
 
     assert isinstance(result, FieldResult)
+    assert len(result.fields) == 1
     field = result.fields[0]
     assert field.mesh_points.shape == (4, 3)
     assert_allclose(field.mesh_points[:, 0], [0.0, 1.0, 1.0, 0.0])
@@ -65,6 +85,33 @@ def test_reader_file_tecplot(tmp_wd, pressure_alias):
     assert field.mesh_cells[0].data.shape == (1, 4)
     assert field.point_variable_names == [pressure_name]
     assert_allclose(field.point_data[pressure_name], [10.0, 20.0, 30.0, 40.0])
+
+
+def test_reader_file_tecplot_multizone(tmp_wd):
+    """Check that the reader reads every zone of a multi-zone Tecplot file."""
+    file_name = "surface.dat"
+    Path(file_name).write_text(_TECPLOT_MULTIZONE_CONTENT)
+
+    reader = ReaderFileTecplot()
+    result = reader.execute(
+        file_name=file_name,
+        coordinate_names=("CoordinateX", "CoordinateY", "CoordinateZ"),
+    )
+
+    assert isinstance(result, FieldResult)
+    assert len(result.fields) == 2
+
+    field_0 = result.fields[0]
+    assert field_0.name == "patch1"
+    assert field_0.mesh_points.shape == (4, 3)
+    assert_allclose(field_0.mesh_points[:, 0], [0.0, 1.0, 1.0, 0.0])
+    assert_allclose(field_0.point_data["Pressure"], [10.0, 20.0, 30.0, 40.0])
+
+    field_1 = result.fields[1]
+    assert field_1.name == "patch2"
+    assert field_1.mesh_points.shape == (4, 3)
+    assert_allclose(field_1.mesh_points[:, 0], [2.0, 3.0, 3.0, 2.0])
+    assert_allclose(field_1.point_data["Pressure"], [50.0, 60.0, 70.0, 80.0])
 
 
 def test_wrong_coordinate_name(tmp_wd):
