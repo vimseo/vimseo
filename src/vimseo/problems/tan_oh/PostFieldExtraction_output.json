@@ -1,0 +1,98 @@
+{
+  "name": "PostFieldExtraction_output",
+  "required": [],
+  "properties": {
+    "line_center_y": {
+      "description": "y coordinate along the transverse centre line (x = length / 2), mm",
+      "type": "array",
+      "items": {
+        "type": "number"
+      }
+    },
+    "line_center_sigma_xx": {
+      "description": "sigma_xx along the transverse centre line, MPa",
+      "type": "array",
+      "items": {
+        "type": "number"
+      }
+    },
+    "line_center_sigma_yy": {
+      "description": "sigma_yy along the transverse centre line, MPa",
+      "type": "array",
+      "items": {
+        "type": "number"
+      }
+    },
+    "line_center_sigma_xy": {
+      "description": "sigma_xy along the transverse centre line, MPa",
+      "type": "array",
+      "items": {
+        "type": "number"
+      }
+    },
+    "line_center_Distance": {
+      "description": "Arc length along the transverse centre line, mm",
+      "type": "array",
+      "items": {
+        "type": "number"
+      }
+    },
+    "sigma_xx_r": {
+      "description": "sigma_xx at the hole edge (r = radius, theta = pi / 2), MPa",
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 1,
+      "items": {
+        "type": "number"
+      }
+    },
+    "sigma_xx_d0": {
+      "description": "sigma_xx one stress-point distance past the hole edge (r = radius + d0, theta = pi / 2), MPa",
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 1,
+      "items": {
+        "type": "number"
+      }
+    },
+    "crit": {
+      "description": "Peak fibre-direction failure criterion over the criterion mesh (failure at 1)",
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 1,
+      "items": {
+        "type": "number"
+      }
+    },
+    "reserve_factor": {
+      "description": "Minimum reserve factor, = 1 / crit",
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 1,
+      "items": {
+        "type": "number"
+      }
+    },
+    "sigma_xx_max": {
+      "description": "Maximum sigma_xx over the criterion mesh, MPa",
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 1,
+      "items": {
+        "type": "number"
+      }
+    },
+    "sigma_xx_min": {
+      "description": "Minimum sigma_xx over the criterion mesh, MPa",
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 1,
+      "items": {
+        "type": "number"
+      }
+    }
+  },
+  "$schema": "http://json-schema.org/draft-04/schema",
+  "type": "object",
+  "id": "#PostFieldExtraction_output"
+}

@@ -20,7 +20,7 @@ Solution verification of the analytic Tan open-hole model
 
 Assess the discretization error of the :class:`TanOpenHole` model with the
 ``DiscretizationSolutionVerification`` tool, which is based on the
-[Richardson extrapolation](../../../reference/vimseo/tools/verification/solution_verification.md#richardson-extrapolation)
+[Richardson extrapolation](../../../references/solution_verification/solution_verification_method.md#richardson-extrapolation)
 [@richardson1911_finite_differences]
 [@krysl2022_confidence_intervals_richardson], and compare two
 field-derived quantities:
