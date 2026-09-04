@@ -1,0 +1,15 @@
+artifact_uri: file:///C:\Users\sebastien.bocquet\PycharmProjects\vimseo\docs\runnable_examples\model_runs\mlflow_archive\visualize_model_result/659041833149900979/e7d5742fb7ca402fa8b5a8231a4b6900/artifacts
+deleted_time: 1788472353981
+end_time: 1788468884554
+entry_point_name: ''
+experiment_id: '659041833149900979'
+lifecycle_stage: deleted
+run_id: e7d5742fb7ca402fa8b5a8231a4b6900
+run_name: spiffy-tern-816
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1788468883508
+status: 3
+tags: []
+user_id: unknown

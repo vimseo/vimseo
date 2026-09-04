@@ -14156,31 +14156,58 @@ Complete this dictionary with the :attr:<code>.default_input_data</code>.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src\vimseo\core\gemseo_discipline_wrapper.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">49</span>
-<span class="normal">50</span>
-<span class="normal">51</span>
-<span class="normal">52</span>
-<span class="normal">53</span>
-<span class="normal">54</span>
-<span class="normal">55</span>
-<span class="normal">56</span>
-<span class="normal">57</span>
-<span class="normal">58</span>
-<span class="normal">59</span>
-<span class="normal">60</span>
-<span class="normal">61</span>
-<span class="normal">62</span>
-<span class="normal">63</span>
-<span class="normal">64</span>
-<span class="normal">65</span>
-<span class="normal">66</span>
-<span class="normal">67</span>
-<span class="normal">68</span>
-<span class="normal">69</span>
-<span class="normal">70</span>
-<span class="normal">71</span>
-<span class="normal">72</span>
-<span class="normal">73</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">execute</span><span class="p">(</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 96</span>
+<span class="normal"> 97</span>
+<span class="normal"> 98</span>
+<span class="normal"> 99</span>
+<span class="normal">100</span>
+<span class="normal">101</span>
+<span class="normal">102</span>
+<span class="normal">103</span>
+<span class="normal">104</span>
+<span class="normal">105</span>
+<span class="normal">106</span>
+<span class="normal">107</span>
+<span class="normal">108</span>
+<span class="normal">109</span>
+<span class="normal">110</span>
+<span class="normal">111</span>
+<span class="normal">112</span>
+<span class="normal">113</span>
+<span class="normal">114</span>
+<span class="normal">115</span>
+<span class="normal">116</span>
+<span class="normal">117</span>
+<span class="normal">118</span>
+<span class="normal">119</span>
+<span class="normal">120</span>
+<span class="normal">121</span>
+<span class="normal">122</span>
+<span class="normal">123</span>
+<span class="normal">124</span>
+<span class="normal">125</span>
+<span class="normal">126</span>
+<span class="normal">127</span>
+<span class="normal">128</span>
+<span class="normal">129</span>
+<span class="normal">130</span>
+<span class="normal">131</span>
+<span class="normal">132</span>
+<span class="normal">133</span>
+<span class="normal">134</span>
+<span class="normal">135</span>
+<span class="normal">136</span>
+<span class="normal">137</span>
+<span class="normal">138</span>
+<span class="normal">139</span>
+<span class="normal">140</span>
+<span class="normal">141</span>
+<span class="normal">142</span>
+<span class="normal">143</span>
+<span class="normal">144</span>
+<span class="normal">145</span>
+<span class="normal">146</span>
+<span class="normal">147</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">execute</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">input_data</span><span class="p">:</span> <span class="n">StrKeyMapping</span> <span class="o">=</span> <span class="n">READ_ONLY_EMPTY_DICT</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DisciplineData</span><span class="p">:</span>
@@ -14204,7 +14231,34 @@ Complete this dictionary with the :attr:<code>.default_input_data</code>.</p>
             <span class="p">)</span>
             <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
-    <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">input_data</span><span class="p">)</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">input_data</span><span class="p">)</span>
+
+    <span class="c1"># Fail loudly when an input was supplied by the caller but did not make</span>
+    <span class="c1"># it through to the model (e.g. a dtype/shape the grammar quietly</span>
+    <span class="c1"># rejects), which GEMSEO otherwise silently reverts to the default.</span>
+    <span class="c1"># Scoped to the model boundary and to this discipline's *own* declared</span>
+    <span class="c1"># inputs: in a coupled process (calibration, MDA, workflow) a sub-model</span>
+    <span class="c1"># is handed the whole shared data dict -- sibling inputs and its own</span>
+    <span class="c1"># fed-back outputs included -- none of which it is meant to validate.</span>
+    <span class="k">if</span> <span class="n">input_data</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">vimseo.core.base_integrated_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">IntegratedModel</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">IntegratedModel</span><span class="p">):</span>
+            <span class="n">applied_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_input_data</span><span class="p">(</span><span class="n">with_namespaces</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">applied_names</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">applied_data</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">passed</span> <span class="ow">in</span> <span class="n">input_data</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">grammar_name</span> <span class="o">=</span> <span class="n">_resolve_input_name</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">applied_names</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">grammar_name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="n">applied</span> <span class="o">=</span> <span class="n">applied_data</span><span class="p">[</span><span class="n">grammar_name</span><span class="p">]</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">_input_applied</span><span class="p">(</span><span class="n">applied</span><span class="p">,</span> <span class="n">passed</span><span class="p">):</span>
+                    <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">"'</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">' was provided but not applied (dtype/shape "</span>
+                        <span class="sa">f</span><span class="s2">"mismatch?): passed </span><span class="si">{</span><span class="n">passed</span><span class="si">!r}</span><span class="s2">, used </span><span class="si">{</span><span class="n">applied</span><span class="si">!r}</span><span class="s2">."</span>
+                    <span class="p">)</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">result</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -14374,31 +14428,58 @@ Complete this dictionary with the :attr:<code>.default_input_data</code>.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src\vimseo\core\gemseo_discipline_wrapper.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">49</span>
-<span class="normal">50</span>
-<span class="normal">51</span>
-<span class="normal">52</span>
-<span class="normal">53</span>
-<span class="normal">54</span>
-<span class="normal">55</span>
-<span class="normal">56</span>
-<span class="normal">57</span>
-<span class="normal">58</span>
-<span class="normal">59</span>
-<span class="normal">60</span>
-<span class="normal">61</span>
-<span class="normal">62</span>
-<span class="normal">63</span>
-<span class="normal">64</span>
-<span class="normal">65</span>
-<span class="normal">66</span>
-<span class="normal">67</span>
-<span class="normal">68</span>
-<span class="normal">69</span>
-<span class="normal">70</span>
-<span class="normal">71</span>
-<span class="normal">72</span>
-<span class="normal">73</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">execute</span><span class="p">(</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 96</span>
+<span class="normal"> 97</span>
+<span class="normal"> 98</span>
+<span class="normal"> 99</span>
+<span class="normal">100</span>
+<span class="normal">101</span>
+<span class="normal">102</span>
+<span class="normal">103</span>
+<span class="normal">104</span>
+<span class="normal">105</span>
+<span class="normal">106</span>
+<span class="normal">107</span>
+<span class="normal">108</span>
+<span class="normal">109</span>
+<span class="normal">110</span>
+<span class="normal">111</span>
+<span class="normal">112</span>
+<span class="normal">113</span>
+<span class="normal">114</span>
+<span class="normal">115</span>
+<span class="normal">116</span>
+<span class="normal">117</span>
+<span class="normal">118</span>
+<span class="normal">119</span>
+<span class="normal">120</span>
+<span class="normal">121</span>
+<span class="normal">122</span>
+<span class="normal">123</span>
+<span class="normal">124</span>
+<span class="normal">125</span>
+<span class="normal">126</span>
+<span class="normal">127</span>
+<span class="normal">128</span>
+<span class="normal">129</span>
+<span class="normal">130</span>
+<span class="normal">131</span>
+<span class="normal">132</span>
+<span class="normal">133</span>
+<span class="normal">134</span>
+<span class="normal">135</span>
+<span class="normal">136</span>
+<span class="normal">137</span>
+<span class="normal">138</span>
+<span class="normal">139</span>
+<span class="normal">140</span>
+<span class="normal">141</span>
+<span class="normal">142</span>
+<span class="normal">143</span>
+<span class="normal">144</span>
+<span class="normal">145</span>
+<span class="normal">146</span>
+<span class="normal">147</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">execute</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">input_data</span><span class="p">:</span> <span class="n">StrKeyMapping</span> <span class="o">=</span> <span class="n">READ_ONLY_EMPTY_DICT</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DisciplineData</span><span class="p">:</span>
@@ -14422,7 +14503,34 @@ Complete this dictionary with the :attr:<code>.default_input_data</code>.</p>
             <span class="p">)</span>
             <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
-    <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">input_data</span><span class="p">)</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">input_data</span><span class="p">)</span>
+
+    <span class="c1"># Fail loudly when an input was supplied by the caller but did not make</span>
+    <span class="c1"># it through to the model (e.g. a dtype/shape the grammar quietly</span>
+    <span class="c1"># rejects), which GEMSEO otherwise silently reverts to the default.</span>
+    <span class="c1"># Scoped to the model boundary and to this discipline's *own* declared</span>
+    <span class="c1"># inputs: in a coupled process (calibration, MDA, workflow) a sub-model</span>
+    <span class="c1"># is handed the whole shared data dict -- sibling inputs and its own</span>
+    <span class="c1"># fed-back outputs included -- none of which it is meant to validate.</span>
+    <span class="k">if</span> <span class="n">input_data</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">vimseo.core.base_integrated_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">IntegratedModel</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">IntegratedModel</span><span class="p">):</span>
+            <span class="n">applied_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_input_data</span><span class="p">(</span><span class="n">with_namespaces</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">applied_names</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">applied_data</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">passed</span> <span class="ow">in</span> <span class="n">input_data</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">grammar_name</span> <span class="o">=</span> <span class="n">_resolve_input_name</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">applied_names</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">grammar_name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="n">applied</span> <span class="o">=</span> <span class="n">applied_data</span><span class="p">[</span><span class="n">grammar_name</span><span class="p">]</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">_input_applied</span><span class="p">(</span><span class="n">applied</span><span class="p">,</span> <span class="n">passed</span><span class="p">):</span>
+                    <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">"'</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">' was provided but not applied (dtype/shape "</span>
+                        <span class="sa">f</span><span class="s2">"mismatch?): passed </span><span class="si">{</span><span class="n">passed</span><span class="si">!r}</span><span class="s2">, used </span><span class="si">{</span><span class="n">applied</span><span class="si">!r}</span><span class="s2">."</span>
+                    <span class="p">)</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">result</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>

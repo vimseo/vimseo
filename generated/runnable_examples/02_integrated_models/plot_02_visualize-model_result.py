@@ -244,6 +244,32 @@ d0 = float(inputs["d0"][0])
 applied_stress = float(inputs["load"][0])
 
 # %%
+# **Whole-field view.** Before probing into it, the field can be looked at as a
+# whole. ``MeshField.to_structured_grid`` reshapes one component back onto the
+# grid it is defined on, returning the ``x`` and ``y`` axes and the 2-D array of
+# values (``nan`` inside the blanked hole), which plots directly as a heatmap.
+# The stress concentration at the hole edge and the relaxation towards the
+# applied far-field stress away from it are both visible:
+grid_x, grid_y, sigma_xx_grid = flux_field.to_structured_grid("sigma_xx")
+fig = go.Figure(
+    go.Heatmap(
+        x=grid_x,
+        y=grid_y,
+        z=sigma_xx_grid.T,
+        colorscale="Viridis",
+        colorbar={"title": "sigma_xx (MPa)"},
+    )
+)
+fig.update_layout(
+    title="sigma_xx field over the plate",
+    xaxis_title="x (mm)",
+    yaxis_title="y (mm)",
+)
+# Equal aspect ratio so the hole stays circular:
+fig.update_yaxes(scaleanchor="x")
+fig
+
+# %%
 # **Probing.** ``MeshField.probe`` bilinearly interpolates a component at an
 # arbitrary point. Walking outward from the hole along the transverse mid-section
 # (``x = length / 2``), ``sigma_xx`` decays from its peak towards the applied

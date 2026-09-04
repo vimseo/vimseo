@@ -1,8 +1,9 @@
 artifact_uri: file:///C:\Users\sebastien.bocquet\PycharmProjects\vimseo\docs\runnable_examples\model_runs\mlflow_archive\visualize_model_result/550884670975321896/a29c07cebd824e20ae2868e88835ba0c/artifacts
+deleted_time: 1788468882690
 end_time: 1788264867561
 entry_point_name: ''
 experiment_id: '550884670975321896'
-lifecycle_stage: active
+lifecycle_stage: deleted
 run_id: a29c07cebd824e20ae2868e88835ba0c
 run_name: dashing-shoat-752
 source_name: ''

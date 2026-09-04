@@ -1,0 +1,14 @@
+artifact_uri: file:///C:\Users\sebastien.bocquet\PycharmProjects\vimseo\docs\runnable_examples\model_runs\mlflow_archive\visualize_model_result/550884670975321896/f3e527437d10413fba722483256afb7e/artifacts
+end_time: 1788472356473
+entry_point_name: ''
+experiment_id: '550884670975321896'
+lifecycle_stage: active
+run_id: f3e527437d10413fba722483256afb7e
+run_name: delicate-asp-821
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1788472355925
+status: 3
+tags: []
+user_id: unknown

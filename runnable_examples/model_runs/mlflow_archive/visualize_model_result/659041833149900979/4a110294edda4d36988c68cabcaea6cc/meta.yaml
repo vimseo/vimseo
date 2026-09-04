@@ -1,8 +1,9 @@
 artifact_uri: file:///C:\Users\sebastien.bocquet\PycharmProjects\vimseo\docs\runnable_examples\model_runs\mlflow_archive\visualize_model_result/659041833149900979/4a110294edda4d36988c68cabcaea6cc/artifacts
+deleted_time: 1788468882702
 end_time: 1788264866831
 entry_point_name: ''
 experiment_id: '659041833149900979'
-lifecycle_stage: active
+lifecycle_stage: deleted
 run_id: 4a110294edda4d36988c68cabcaea6cc
 run_name: flawless-ape-441
 source_name: ''

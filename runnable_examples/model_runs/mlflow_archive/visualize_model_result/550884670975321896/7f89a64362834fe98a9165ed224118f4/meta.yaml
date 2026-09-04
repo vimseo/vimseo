@@ -1,8 +1,9 @@
 artifact_uri: file:///C:\Users\sebastien.bocquet\PycharmProjects\vimseo\docs\runnable_examples\model_runs\mlflow_archive\visualize_model_result/550884670975321896/7f89a64362834fe98a9165ed224118f4/artifacts
+deleted_time: 1788468882690
 end_time: 1788264868295
 entry_point_name: ''
 experiment_id: '550884670975321896'
-lifecycle_stage: active
+lifecycle_stage: deleted
 run_id: 7f89a64362834fe98a9165ed224118f4
 run_name: nebulous-duck-401
 source_name: ''
