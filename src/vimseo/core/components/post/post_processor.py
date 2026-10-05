@@ -35,6 +35,7 @@ from vimseo.core.model_metadata import MetaDataNames
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
+    from collections.abc import Mapping
 
     from numpy import ndarray
 
@@ -50,17 +51,22 @@ class PostProcessor(ExternalSoftwareComponent):
     _run method to be overloaded.
     """
 
-    del_jobdir: bool
-    """Whether to delete the job directory after post-processing."""
-
-    DELETE_JOB_DIR: bool = False
-    """If True deletes the Abaqus job directory after post-processing."""
-
     _OUTPUTS_TO_RESAMPLE: ClassVar[Iterable[str]] = []
     """List of names of curves outputs to be resampled into a specific size."""
 
     _RESAMPLING_OUTPUT_SIZE = 100
     """Number of points to have on resampled curves."""
+
+    POSTPROCESS_DESPITE_FAULTY_RUN: ClassVar[bool] = False
+    """Whether to still attempt postprocessing when the RUN stage reported an error.
+
+    When False (default, legacy behavior), the postprocessor returns NaN outputs
+    without attempting any real postprocessing as soon as RUN reports an error.
+    When True, the postprocessor instead calls :meth:`_can_postprocess` to check
+    whether the job directory contains enough to work with, and only falls back
+    to NaN outputs if it doesn't. This lets models opt in individually, so
+    existing models can be migrated to the new behavior progressively.
+    """
 
     def __init__(
         self,
@@ -82,6 +88,16 @@ class PostProcessor(ExternalSoftwareComponent):
 
     def _run(self, input_data):
         raise NotImplementedError
+
+    def _can_postprocess(self) -> bool:
+        """Whether the job directory contains what postprocessing needs (e.g. a
+        result file).
+
+        Base implementation assumes it does; solver-specific subclasses should
+        override this (e.g. checking for an ODB file for Abaqus). Used by
+        :attr:`POSTPROCESS_DESPITE_FAULTY_RUN`.
+        """
+        return True
 
     def plot_output_data(self, data, x_data, y_data, save_path, save, show, fig_id):
         """Plot output data of post-processor.
@@ -110,6 +126,7 @@ class PostProcessor(ExternalSoftwareComponent):
             plt.show()
 
     def evaluate_modulus_10_50(
+        # TODO Florent review these weird numeric methods
         self,
         strain_history: ndarray,
         stress_history: ndarray,
@@ -160,18 +177,23 @@ class PostProcessor(ExternalSoftwareComponent):
             method="average",
         )
 
-    def _generate_nan_outputs(self):
+    def _generate_nan_outputs(self, existing_data: Mapping[str, ndarray] | None = None):
         """Generates dummy outputs for all outputs expected by the output grammar of this
-        component.
+        component, that are not already present in ``existing_data``.
 
-        This is useful in case of any error in the model workflow, to get valid dummy
-        outputs that pass the output grammar.
+        Args:
+            existing_data: Output values already computed, keyed by output name. Keys
+                present here are kept as-is. If None, every output-grammar key is filled.
         """
 
         jsondata = self.output_grammar.schema
         output_data = {}
 
         for key in jsondata["properties"]:
+            if existing_data is not None and key in existing_data:
+                output_data[key] = existing_data[key]
+                continue
+
             var_type = jsondata["properties"][key]["items"].get("type")
             if var_type == "number" or var_type == "integer" or var_type == "array":
                 output_data.update({key: array([nan])})
@@ -184,6 +206,15 @@ class PostProcessor(ExternalSoftwareComponent):
                 )
                 raise TypeError(msg)
 
+        return output_data
+
+    def _generate_failed_output_data(self) -> dict[str, ndarray]:
+        """Dummy NaN-filled, resampled output data with the error code set, used
+        when postprocessing failed or could not be attempted at all.
+        """
+        output_data = self._generate_nan_outputs()
+        output_data = self._resample_curve_outputs(output_data)
+        output_data[MetaDataNames.error_code] = array([1])
         return output_data
 
     def _resample_curve_outputs(

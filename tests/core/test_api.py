@@ -86,6 +86,7 @@ def test_available_models(tmp_wd):
         "MockModelWithMaterial",
         "MockExternalSoftware",
         "MockModelSleep",
+        "MockFaultyRunPost",
     }
 
 

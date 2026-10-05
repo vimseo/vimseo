@@ -30,6 +30,8 @@ from vimseo.utilities.curves import Curve
 from vimseo.utilities.curves import CurveSet
 from vimseo.utilities.plotting_utils import COLORS
 from vimseo.utilities.plotting_utils import DASHES
+from vimseo.utilities.plotting_utils import LINE_WIDTH
+from vimseo.utilities.plotting_utils import MARKER_SIZE
 from vimseo.utilities.plotting_utils import _set_ordinate_axis
 from vimseo.utilities.plotting_utils import superpose_curves
 
@@ -126,7 +128,7 @@ def test_check_abscissa_names_mismatch_raises():
 
 
 def test_line_style_width_override():
-    """A prescribed line width overrides the plotting library default."""
+    """A prescribed line width overrides the default width."""
     x = linspace(0, 1, 5)
     traces = [Trace(y="y0", style=LineStyle(width=4.0))]
     curve_set = _curve_set(x, {"y0": x}, traces=traces)
@@ -136,14 +138,15 @@ def test_line_style_width_override():
     assert fig.data[0].line.width == pytest.approx(4.0)
 
 
-def test_line_style_width_default_is_unset():
-    """Without a prescribed width, the plotting library default is used."""
+def test_line_style_width_and_marker_size_defaults():
+    """Without a prescribed width, the VIMSEO default width and marker size apply."""
     x = linspace(0, 1, 5)
     curve_set = _curve_set(x, {"y0": x})
 
     fig = superpose_curves(curve_set, show=False)
 
-    assert fig.data[0].line.width is None
+    assert fig.data[0].line.width == pytest.approx(LINE_WIDTH)
+    assert fig.data[0].marker.size == pytest.approx(MARKER_SIZE)
 
 
 def test_set_ordinate_axis_no_colors_is_a_noop():
