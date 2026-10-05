@@ -83,6 +83,33 @@ class PostProcessor(ExternalSoftwareComponent):
     def _run(self, input_data):
         raise NotImplementedError
 
+    def _execute(self) -> None:
+        """Run ``_run`` and reject any output key absent from ``output_grammar``.
+
+        GEMSEO's own ``BaseDiscipline._execute`` silently drops output keys that
+        aren't declared in ``output_grammar`` (``IO.update_output_data``), before
+        ``output_grammar.validate()`` ever runs, so a stray or misnamed key from
+        ``_run`` would otherwise go unnoticed. This mirrors GEMSEO's
+        ``BaseDiscipline._execute`` but inserts that check between ``_run`` and
+        ``update_output_data``. Keep in sync with GEMSEO if it changes.
+        """
+        if self.input_grammar.to_namespaced:
+            input_data = self.io.get_input_data(with_namespaces=False)
+        else:
+            input_data = self.io.data
+        output_data = self._run(input_data=input_data)
+        if output_data is not None:
+            extra_outputs = output_data.keys() - self.output_grammar.names
+            if extra_outputs:
+                msg = (
+                    f"{self.__class__.__name__} produced outputs not declared in "
+                    f"the output grammar: {sorted(extra_outputs)}."
+                )
+                if self._check_subprocess:
+                    raise ValueError(msg)
+                LOGGER.warning(msg)
+            self.io.update_output_data(output_data)
+
     def plot_output_data(self, data, x_data, y_data, save_path, save, show, fig_id):
         """Plot output data of post-processor.
 
