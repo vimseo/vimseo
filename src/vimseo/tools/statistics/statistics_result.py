@@ -16,21 +16,43 @@
 from __future__ import annotations
 
 from collections import OrderedDict
+from collections.abc import Mapping
 from dataclasses import dataclass
 from json import dumps
+from typing import TYPE_CHECKING
+from typing import ClassVar
 
 from gemseo.uncertainty.statistics.base_statistics import BaseStatistics
 from gemseo.utils.string_tools import MultiLineString
 from pandas import DataFrame
 from prettytable import PrettyTable
+from pydantic import Field
 
 from vimseo.tools.base_result import BaseResult
+from vimseo.tools.result_visualization import BaseVisualizationSettings
+from vimseo.tools.result_visualization import flatten_numbers
+from vimseo.tools.result_visualization import mapping_to_dataframe
 from vimseo.utilities.json_grammar_utils import EnhancedJSONEncoder
+
+if TYPE_CHECKING:
+    from vimseo.tools.result_visualization import Figure
+
+
+class StatisticsVisualizationSettings(BaseVisualizationSettings):
+    variable_names: tuple[str, ...] = Field(
+        default=(),
+        description="The names of the variables whose fitting criteria are shown. "
+        "If empty, use all the variables of the analysis.",
+    )
 
 
 @dataclass
 class StatisticsResult(BaseResult):
     """The result of a statistics analysis."""
+
+    _VISUALIZATION_SETTINGS: ClassVar[type[StatisticsVisualizationSettings]] = (
+        StatisticsVisualizationSettings
+    )
 
     analysis: BaseStatistics | None = None
     """The statistics analysis."""
@@ -62,3 +84,59 @@ class StatisticsResult(BaseResult):
         text.add("Statistics indicators:")
         text.add(repr(self.statistics))
         return str(text)
+
+    def _create_figures(
+        self, settings: StatisticsVisualizationSettings
+    ) -> dict[str, Figure]:
+        if not hasattr(self.analysis, "plot_criteria"):
+            return {}
+
+        figures = {}
+        for name in settings.variable_names or self.analysis.distributions:
+            figures[f"criteria_{name}"] = self.analysis.plot_criteria(
+                variable=name,
+                title="Criteria of statistics.",
+                save=False,
+                show=False,
+                fig_size=(12.0, 6.0),
+            )
+        return figures
+
+    def _create_tables(self) -> dict[str, DataFrame]:
+        tables = {}
+        if isinstance(self.statistics, DataFrame):
+            tables["statistics"] = self.statistics
+        elif self.statistics:
+            table = mapping_to_dataframe(self.statistics)
+            if table is not None:
+                # A row per variable and a column per statistic.
+                tables["statistics"] = table
+
+        if self.best_fitting_distributions:
+            tables["best_fitting_distributions"] = mapping_to_dataframe(
+                self.best_fitting_distributions
+            )
+
+        if hasattr(self.analysis, "get_criteria"):
+            criteria = {}
+            for name in self.analysis.distributions:
+                try:
+                    values, _ = self.analysis.get_criteria(name)
+                except (KeyError, IndexError, TypeError):
+                    continue
+                criteria[name] = values
+            table = mapping_to_dataframe(criteria)
+            if table is not None:
+                criterion = getattr(self.analysis, "fitting_criterion", "criterion")
+                tables[f"fitting_criteria_{criterion}"] = table
+        return tables
+
+    def get_key_values(self) -> dict[str, float]:
+        if not isinstance(self.statistics, Mapping):
+            return {}
+        names = {"mean": "mean", "compute_standard_deviation": "standard_deviation"}
+        return flatten_numbers({
+            name: self.statistics[key]
+            for key, name in names.items()
+            if key in self.statistics
+        })

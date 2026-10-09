@@ -121,7 +121,7 @@ print(validation.result.element_wise_metrics)
 # components are considered as scalar inputs. So for the input space
 # ``x1`` and ``x3`` with ``x1`` a scalar, and ``x3`` a vector of length 3,
 # the input variables shown in the plots are ``x1``, ``x3[0]``, ``x3[1]``, ``x3[2]``
-validation.plot_results(
-    validation.result, metric_name="RelativeErrorMetric", output_name="y4", show=True
+validation.result.visualize(
+    metric_names=["RelativeErrorMetric"], output_names=["y4"], show=True
 )
 validation.save_results()

@@ -106,6 +106,9 @@ class CustomDOETool(BaseAnalysisTool):
         **options,
     ) -> DOEResult:
         model = options["model"]
+        self.result.metadata.model = getattr(model, "description", None)
+        # The figures of the model, for the visualization of the result.
+        self.result.plots = list(getattr(model, "plots", []))
         input_dataset = resolve_io_groups(
             options["input_dataset"], model=model, input_names=options["input_names"]
         )

@@ -46,10 +46,8 @@ class ReaderFileGemseoDataset(BaseReaderFile):
 
     _STREAMLIT_SETTINGS = StreamlitReaderFileGemseoDatasetSettings
 
-    def __init__(
-        self,
-    ):
-        super().__init__()
+    def __init__(self, **options):
+        super().__init__(**options)
         self.result = DatasetResult()
 
     def get_file_extension(self):

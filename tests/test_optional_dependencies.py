@@ -28,6 +28,7 @@ a module of ``vimseo.tools`` would raise nothing -- the tool would simply vanish
 
 from __future__ import annotations
 
+import importlib
 import importlib.metadata
 import importlib.util
 from pathlib import Path
@@ -148,6 +149,9 @@ def test_tan_open_hole_execution_needs_mesh_extra(tmp_wd):
     Its ``PostFieldExtraction`` step reads the flux field it just wrote back with
     pyvista (line extraction), so ``execute()`` -- unlike ``create_model()`` --
     requires the ``mesh`` extra.
+
+    The test runs in an empty directory: a cache of the model left in the current
+    directory would bypass the execution.
     """
     from vimseo.api import create_model
 
@@ -170,6 +174,18 @@ def test_import_optional_reports_the_extra_to_install():
 def test_directory_archive_needs_no_extra():
     """Check that the default archive backend is available on a core install."""
     assert get_archive_class("DirectoryArchive") is DirectoryArchive
+
+
+@pytest.mark.fast
+def test_tool_result_visualization_needs_no_extra():
+    """Check that the tool results can be loaded and visualized on a core install,
+    from the Python API and from the command line ``visualize_tool_result``."""
+    for module_name in (
+        "vimseo.tools.result_visualization",
+        "vimseo.storage_management.tool_archive.uri",
+        "vimseo.tools.visualize_tool_result",
+    ):
+        importlib.import_module(module_name)
 
 
 @pytest.mark.fast

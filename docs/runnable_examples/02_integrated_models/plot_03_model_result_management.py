@@ -184,6 +184,13 @@ model = create_model(
 model.cache = None
 
 # %%
+# The archive manager queries the database through its own MLflow client. The functions of
+# the MLflow API used below (``mlflow.search_runs()``, ``delete_run()``) rely instead on a
+# tracking uri shared by the whole Python process, which must be set explicitly to the uri of the
+# archive of the model:
+mlflow.set_tracking_uri(model.archive_manager.uri)
+
+# %%
 # All runs for the default and specific (specified below as ``my_experiment``) experiment name
 # are first deleted:
 runs = mlflow.search_runs(
@@ -211,7 +218,7 @@ model.execute({"height": atleast_1d(60.0)})
 #    ``mlflow ui --backend-store-uri file:\\\\\\C:\\Users\\sebastien.bocquet\\PycharmProjects\\vimseo\\tests\\storage_management\\my_experiment``
 #  - Or under Linux:
 #    ``mlflow ui --backend-store-uri file:////home/sebastien.bocquet/PycharmProjects/vims_only/doc_src/_examples/02-integrated_models/mlflow_archive``
-# The uri can be retrieved with ``model._storage_manager.uri``.
+# The uri can be retrieved with ``model.archive_manager.uri``.
 #
 # The mapping from model raw results (input, output, metadata) and MLflow result tracking framework is done as follows:
 #  - all numbers among the input and output data (including arrays of size one, from which the number is extracted),
@@ -234,6 +241,12 @@ assert len(runs) == 1
 runs
 
 # %%
+# Among the metadata, each simulation is identified by its ``run_id``, stored as the
+# tag ``run_id``. When the simulation is run by a tool, like a DOE, the tag
+# ``tool_run_id`` identifies the tool run. Since the results of the tools are archived
+# too, a tool run and its simulations can be found from one another: see the examples
+# of tool result management.
+#
 # Metadata could also be used in the query, for instance ``tags.user = "a_user"``.
 # Note that the result returned by ``get_result()`` has the following format:
 # ``{"inputs": input_data, "output": output_data}``.

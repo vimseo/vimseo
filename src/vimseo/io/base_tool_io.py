@@ -35,7 +35,7 @@ class BaseToolFileIO(metaclass=GoogleDocstringInheritanceMeta):
 
     _EXTENSION: ClassVar[str]
 
-    # TODO by default use save_result/load_result based on pickle format
+    # TODO by default use save_result/load_result based on HDF5 format
     @abstractmethod
     def read(self, file_name: str | Path, directory_path: str | Path = "") -> Any:
         """Read a result."""
@@ -57,6 +57,10 @@ class BaseToolFileIO(metaclass=GoogleDocstringInheritanceMeta):
         metadata.settings = data["metadata"]["settings"]
         metadata.misc = data["metadata"]["misc"]
         metadata.report = data["metadata"]["report"]
+        metadata.tool_run_id = data["metadata"]["tool_run_id"]
+        metadata.parent_tool_run_id = data["metadata"]["parent_tool_run_id"]
+        metadata.child_tool_run_ids = tuple(data["metadata"]["child_tool_run_ids"])
+        metadata.simulation_run_ids = tuple(data["metadata"]["simulation_run_ids"])
         model = data["metadata"]["model"]
         if model is None:
             metadata.model = None

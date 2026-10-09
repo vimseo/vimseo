@@ -37,6 +37,7 @@ from vimseo.utilities.generate_validation_reference import (
     generate_reference_from_parameter_space,
 )
 from vimseo.utilities.model_data import MetricVariableType
+from vimseo.utilities.test_utils import check_result_visualization
 
 TARGET_YOUNG_MODULUS = 2.2e5
 
@@ -264,7 +265,9 @@ def test_plots_on_scalars(tmp_wd):
     """Check that a calibration step based on scalar outputs can be plotted."""
     calibration_step, _target_model = calibration_step_on_scalars(2)
 
-    calibration_step.plot_results(calibration_step.result, show=False, save=True)
+    figures = calibration_step.result.visualize(
+        directory_path=calibration_step.working_directory, save=True
+    )
     assert (
         calibration_step.working_directory
         / "simulated_versus_reference_reaction_forces_load_case_Cantilever.png"
@@ -278,10 +281,11 @@ def test_plots_on_scalars(tmp_wd):
     assert (
         calibration_step.working_directory / "opt_history_view_x_xstar.png"
     ).is_file()
-    assert (
-        calibration_step.working_directory
-        / "simulated_versus_reference_reaction_forces_load_case_Cantilever_bars.html"
-    ).is_file()
+    key = "Cantilever_simulated_versus_reference_reaction_forces_bars"
+    assert key in figures
+    assert (calibration_step.working_directory / f"{key}.html").is_file()
+    assert "prior_versus_posterior_parameters" in figures
+    assert "optimization_history_objective" in figures
 
 
 def test_serialization(tmp_wd):
@@ -291,3 +295,12 @@ def test_serialization(tmp_wd):
     result.to_hdf5("result.hdf5")
     serialized_result = CalibrationStepResult.from_hdf5("result.hdf5")
     assert_results_equal(result, serialized_result)
+
+
+def test_result_visualization(tmp_wd):
+    """Check that a calibration step result can be visualized once loaded from a
+    file."""
+    calibration_step, _ = calibration_step_on_scalars(2)
+    check_result_visualization(calibration_step.result, "visualization")
+    tables = calibration_step.result.tabulate()
+    assert list(tables["parameters"].columns) == ["prior", "posterior"]

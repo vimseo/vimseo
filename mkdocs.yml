@@ -106,6 +106,7 @@ nav:
     - Build and select a surrogate model: generated/runnable_examples/10_surrogate_modelling
     - Propagate uncertainties through a model: generated/runnable_examples/11_uncertainty_quantification
     - Use Bayesian inference to estimate the probability distribution of samples: generated/runnable_examples/12_bayesian_calibration
+    - Manage the results of the tools: generated/runnable_examples/13_tool_result_management
   - Run a study: how_to/run_a_study.md
   - Integrate new models: how_to/model_integration.md
   - Define a Space of Parameters: how_to/parameter_space/parameter_space.md
@@ -132,6 +133,18 @@ nav:
     - Conference abstracts:
         - ASME 2025: explanations/asme2025/abstract.md
         - ECCOMAS 2024: explanations/eccomas2024/abstract.md
+- Requirements:
+    - Overview: requirements/index.md
+    - Models: requirements/REQ-MOD.md
+    - Tools: requirements/REQ-TOOL.md
+    - Results: requirements/REQ-RES.md
+    - Storage and traceability: requirements/REQ-STO.md
+    - Serialization: requirements/REQ-SER.md
+    - Deployment: requirements/REQ-DEP.md
+    - Workflows: requirements/REQ-WF.md
+    - User interfaces: requirements/REQ-UX.md
+    - Non-functional: requirements/REQ-NFR.md
+    - Specifications (SPDD): specs/index.md
 
 markdown_extensions:
 - admonition

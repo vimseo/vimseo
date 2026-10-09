@@ -21,29 +21,64 @@ from collections.abc import Mapping
 from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
+from typing import ClassVar
 
 from gemseo.datasets.io_dataset import IODataset
 from numpy import mean
 from numpy import ndarray
 from pandas import DataFrame
+from pydantic import Field
 
 from vimseo.tools.base_tool import BaseResult
+from vimseo.tools.result_visualization import BaseVisualizationSettings
+from vimseo.tools.result_visualization import create_figure
+from vimseo.tools.result_visualization import flatten_numbers
 from vimseo.tools.validation.validation_point_result import ValidationPointResult
 from vimseo.utilities.datasets import GROUP_SEPARATORS
 from vimseo.utilities.datasets import dataframe_to_dataset
+from vimseo.utilities.datasets import dataset_to_dataframe
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
 
     from gemseo.datasets.dataset import Dataset
 
+    from vimseo.tools.result_visualization import Figure
+
 
 LOGGER = logging.getLogger(__name__)
+
+
+class ValidationCaseVisualizationSettings(BaseVisualizationSettings):
+    metric_names: tuple[str, ...] = Field(
+        default=(),
+        description="The names of the error metrics to visualize. "
+        "If empty, use all the metrics of the validation case.",
+    )
+    output_names: tuple[str, ...] = Field(
+        default=(),
+        description="The names of the outputs to visualize. "
+        "If empty, use all the outputs of the validation case.",
+    )
+    input_names: tuple[str, ...] = Field(
+        default=(),
+        description="The names of the inputs shown in the plots. "
+        "If empty, use all the inputs.",
+    )
+    threshold: float | None = Field(
+        default=None,
+        description="The threshold used as mid-point for the color bar of the "
+        "parallel coordinates plot.",
+    )
 
 
 @dataclass
 class ValidationCaseResult(BaseResult):
     """The result of a validation case."""
+
+    _VISUALIZATION_SETTINGS: ClassVar[type[ValidationCaseVisualizationSettings]] = (
+        ValidationCaseVisualizationSettings
+    )
 
     element_wise_metrics: IODataset | None = None
 
@@ -135,3 +170,82 @@ class ValidationCaseResult(BaseResult):
                         f"{output_name}{GROUP_SEPARATORS[0]}{metric_name}{GROUP_SEPARATORS[1]}"
                     ]
                 )
+
+    def _create_figures(
+        self, settings: ValidationCaseVisualizationSettings
+    ) -> dict[str, Figure]:
+        if self.element_wise_metrics is None or not self.integrated_metrics:
+            return {}
+
+        from vimseo.tools.post_tools.error_scatter_matrix_plot import ErrorScatterMatrix
+        from vimseo.tools.post_tools.metric_bar_plot import IntegratedMetricBars
+        from vimseo.tools.post_tools.parallel_coordinates_plot import (
+            ParallelCoordinates,
+        )
+        from vimseo.tools.post_tools.predict_vs_true_plot import PredictVsTrue
+
+        figures = {}
+        metric_names = settings.metric_names or tuple(self.integrated_metrics)
+        for metric_name in metric_names:
+            output_names = settings.output_names or tuple(
+                self.integrated_metrics[metric_name]
+            )
+            for output_name in output_names:
+                variable_names = (
+                    [*settings.input_names, output_name] if settings.input_names else []
+                )
+                df = self.element_wise_metrics.get_view(
+                    group_names=[IODataset.INPUT_GROUP, metric_name],
+                    variable_names=variable_names,
+                ).copy()
+                df.columns = df.get_columns(as_tuple=False)
+                suffix = f"{metric_name}_{output_name}"
+                figures[f"parallel_coordinates_{suffix}"] = create_figure(
+                    ParallelCoordinates,
+                    df,
+                    metric_name,
+                    output_name,
+                    threshold=settings.threshold,
+                )
+
+                # These plots expect variable names with group suffixes.
+                df = dataset_to_dataframe(
+                    self.element_wise_metrics,
+                    variable_names=variable_names,
+                    suffix_by_group=True,
+                )
+                figures[f"error_scatter_matrix_{suffix}"] = create_figure(
+                    ErrorScatterMatrix, df, metric_name, output_name
+                )
+                figures[f"predict_vs_true_{suffix}"] = create_figure(
+                    PredictVsTrue, df, metric_name, output_name
+                )
+
+            figures[f"integrated_metric_bars_{metric_name}"] = create_figure(
+                IntegratedMetricBars, self.integrated_metrics, metric_name
+            )
+        return figures
+
+    def get_key_values(self) -> dict[str, float]:
+        key_values = flatten_numbers(self.integrated_metrics or {})
+        if self.element_wise_metrics is None or not self.integrated_metrics:
+            return key_values
+
+        # The metrics of each validation point, e.g. "AreaMetric.y.point_0".
+        for metric_name, output_names in self.integrated_metrics.items():
+            if metric_name not in self.element_wise_metrics.group_names:
+                continue
+            variable_names = self.element_wise_metrics.get_variable_names(metric_name)
+            for output_name in output_names:
+                if output_name not in variable_names:
+                    continue
+                values = self.element_wise_metrics.get_view(
+                    group_names=metric_name, variable_names=output_name
+                ).to_numpy()
+                key_values.update(
+                    flatten_numbers({
+                        f"{metric_name}.{output_name}.point_{i}": value
+                        for i, value in enumerate(values[:, 0])
+                    })
+                )
+        return key_values

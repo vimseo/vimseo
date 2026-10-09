@@ -51,7 +51,7 @@ def wait_for_file(file_path: Path, timeout: float | None = None) -> None:
 def load_results(parent_dir_path: str | Path, file_format="hdf5"):
     """Load results based on a parent directory.
 
-    All paths to ``.pickle`` file extensions found in the subdirectories
+    All paths to the files of format ``file_format`` found in the subdirectories
     of the parent directory are returned.
     """
     pattern = Path(parent_dir_path) / "**" / f"*.{file_format}"

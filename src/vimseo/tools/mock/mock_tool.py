@@ -15,6 +15,9 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
+from typing import Any
+
 from vimseo.tools.base_composite_tool import BaseCompositeTool
 from vimseo.tools.base_settings import BaseInputs
 from vimseo.tools.base_settings import BaseSettings
@@ -22,10 +25,11 @@ from vimseo.tools.base_tool import BaseResult
 from vimseo.tools.base_tool import BaseTool
 
 
+@dataclass
 class MockToolResult(BaseResult):
     """A mock result."""
 
-    mock_data = None
+    mock_data: Any = None
 
 
 class MySettings(BaseSettings):

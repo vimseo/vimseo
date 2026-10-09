@@ -16,7 +16,6 @@
 from __future__ import annotations
 
 import logging
-from pathlib import Path
 from typing import TYPE_CHECKING
 
 from gemseo.algos.parameter_space import ParameterSpace
@@ -35,9 +34,7 @@ from vimseo.tools.post_tools.sensitivity_plot_factory import SensitivityPlotFact
 from vimseo.tools.sensitivity.sensitivity_result import SensitivityResult
 
 if TYPE_CHECKING:
-    from collections.abc import Mapping
-
-    from plotly.graph_objs import Figure
+    from pathlib import Path
 
 
 LOGGER = logging.getLogger(__name__)
@@ -181,84 +178,3 @@ class SensitivityTool(BaseAnalysisTool):
     def get_available_sensitivity_analyses():
         """Get the available sensitivity analysis."""
         return get_available_sensitivity_analyses()
-
-    def plot_results(
-        self,
-        result: SensitivityResult,
-        output_names=(),
-        standardize=False,
-        directory_path: str | Path = "",
-        save=False,
-        show=True,
-    ) -> Mapping[str, Figure]:
-        """
-
-        Args:
-            output_names: The names of the output variable whose sensitivity parameters are
-             shown.
-
-        Returns:
-            The sensitivity plot.
-
-        """
-        output_names = (
-            result.metadata.settings["output_names"]
-            if len(output_names) == 0
-            else output_names
-        )
-        directory_path = (
-            self.working_directory if directory_path == "" else Path(directory_path)
-        )
-
-        figures = {}
-
-        if (
-            result.metadata.settings["sensitivity_algo"] == "Morris"
-            or result.metadata.settings["sensitivity_algo"] == "MorrisAnalysis"
-        ):
-            figures["radar_plot"] = result.analysis.plot_radar(
-                outputs=output_names,
-                standardize=standardize,
-                show=show,
-                save=save,
-                directory_path=directory_path,
-            ).figures[0]
-            figures["bar_plot"] = result.analysis.plot_bar(
-                outputs=output_names,
-                standardize=standardize,
-                show=show,
-                save=save,
-                directory_path=directory_path,
-                file_format="html",
-            ).figures[0]
-
-            final_names = []
-            for name in output_names:
-                if result.variable_dimensions[name] > 1:
-                    final_names.extend(
-                        (name, i) for i in range(result.variable_dimensions[name])
-                    )
-                else:
-                    final_names.append(name)
-
-            # gemseo's standard mu*/sigma scatter plot keys its indices by
-            # whole input-variable name and assumes one scalar value per name,
-            # so it cannot mix a vector-valued input (several components) with
-            # a scalar one on the same chart; restrict it to scalar inputs
-            # (already fully covered by the radar and bar plots above).
-            scalar_input_names = [
-                name
-                for name in result.analysis.input_names
-                if result.variable_dimensions[name] == 1
-            ]
-            for name in final_names:
-                figures["standard_plot"] = result.analysis.plot(
-                    output=name,
-                    input_names=scalar_input_names,
-                    show=show,
-                    save=save,
-                    file_path=directory_path / f"standard_plot_{name}",
-                    file_format="png",
-                )
-
-        return figures

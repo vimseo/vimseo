@@ -21,28 +21,42 @@ import json
 from collections import OrderedDict
 from dataclasses import dataclass
 from dataclasses import field
+from enum import Enum
 from pathlib import Path
 
 import h5py
 import numpy as np
+import openturns as ot
 import pandas as pd
 import pytest
+from gemseo.algos.design_space import DesignSpace
+from gemseo.algos.parameter_space import ParameterSpace
 from gemseo.datasets.dataset import Dataset
 from gemseo.datasets.io_dataset import IODataset
+from pydantic import BaseModel
 
 from vimseo.core.load_case import LoadCase
 from vimseo.core.model_description import ModelDescription
+from vimseo.material.material import Material
+from vimseo.material.material_property import MaterialProperty
+from vimseo.material.material_relation import MaterialRelation
 from vimseo.tools.base_result import BaseResult
 from vimseo.tools.base_result import assert_results_equal
 from vimseo.tools.bayes.bayes_analysis_result import BayesAnalysisResult
+from vimseo.tools.io.material_result import MaterialResult
 from vimseo.tools.metadata import ToolResultMetadata
 from vimseo.tools.sensitivity.sensitivity_result import SensitivityResult
 from vimseo.tools.serializer import deserialize_value
 from vimseo.tools.serializer import serialize_value
+from vimseo.tools.space.random_variable_interface import add_random_variable_interface
+from vimseo.tools.space.space_tool_result import SpaceToolResult
 from vimseo.tools.statistics.statistics_result import StatisticsResult
 from vimseo.tools.validation.validation_point_result import ValidationPointResult
 from vimseo.tools.validation_case.validation_case_result import ValidationCaseResult
 from vimseo.utilities.datasets import assert_frame_equal_unordered
+from vimseo.utilities.distribution import DistributionParameters
+from vimseo.utilities.distribution import DistributionSettings
+from vimseo.utilities.distribution import InterfacedDistributionSettings
 
 
 @pytest.fixture
@@ -153,6 +167,27 @@ class TestDataFrames:
         df = pd.DataFrame({"a": [1.0, 2.0], "b": [3.0, 4.0]})
         result = ValidationPointResult(measured_data=df)
         rt = roundtrip(result, tmp_hdf5)
+        pd.testing.assert_frame_equal(rt.measured_data, df)
+
+    def test_range_index_is_kept(self, tmp_hdf5):
+        """Check that the index is read back with the type it had, in both ways of
+        the comparison: a RangeIndex is not equivalent to an Index of integers."""
+        df = pd.DataFrame({"a": [1.0, 2.0, 3.0]})
+        assert isinstance(df.index, pd.RangeIndex)
+        result = ValidationPointResult(measured_data=df)
+        rt = roundtrip(result, tmp_hdf5)
+        assert isinstance(rt.measured_data.index, pd.RangeIndex)
+        pd.testing.assert_frame_equal(rt.measured_data, df)
+        pd.testing.assert_frame_equal(df, rt.measured_data)
+
+    def test_other_indexes_are_kept(self, tmp_hdf5):
+        df = pd.DataFrame({"a": [1.0, 2.0]}, index=[10, 20])
+        rt = roundtrip(ValidationPointResult(measured_data=df), tmp_hdf5)
+        pd.testing.assert_frame_equal(rt.measured_data, df)
+        pd.testing.assert_frame_equal(df, rt.measured_data)
+
+        df = pd.DataFrame({"a": [1.0, 2.0]}, index=["u", "v"])
+        rt = roundtrip(ValidationPointResult(measured_data=df), tmp_hdf5)
         pd.testing.assert_frame_equal(rt.measured_data, df)
 
     def test_dataframe_column_names_preserved(self, tmp_hdf5):
@@ -296,6 +331,424 @@ class TestDictsAndNestedStructures:
 
 
 # ---------------------------------------------------------------------------
+# Tests — types that used to fall back to pickle, now serialized in clear
+# ---------------------------------------------------------------------------
+
+
+class _Color(str, Enum):
+    """A str-subclassing enum, like the ``StrEnum`` classes used in vimseo."""
+
+    RED = "red"
+    BLUE = "blue"
+
+
+class _Status(Enum):
+    """A plain (non-str) enum."""
+
+    OK = 1
+    FAILED = 2
+
+
+class _InnerModel(BaseModel):
+    """A pydantic model nested inside another one, for codec tests below."""
+
+    value: float = 0.0
+
+
+class _OuterModel(BaseModel):
+    """A pydantic model whose field holds another pydantic model."""
+
+    name: str = ""
+    inner: _InnerModel = _InnerModel()
+
+
+class TestClearCodecs:
+    def test_str_enum_roundtrip(self, tmp_hdf5):
+        @dataclass
+        class ResultWithEnum(BaseResult):
+            color: _Color | None = None
+
+        result = ResultWithEnum(color=_Color.BLUE)
+        rt = roundtrip(result, tmp_hdf5)
+        assert rt.color is _Color.BLUE
+        assert isinstance(rt.color, _Color)
+
+    def test_plain_enum_roundtrip(self, tmp_hdf5):
+        @dataclass
+        class ResultWithEnum(BaseResult):
+            status: _Status | None = None
+
+        result = ResultWithEnum(status=_Status.FAILED)
+        rt = roundtrip(result, tmp_hdf5)
+        assert rt.status is _Status.FAILED
+
+    def test_path_roundtrip(self, tmp_hdf5):
+        @dataclass
+        class ResultWithPath(BaseResult):
+            path: Path | None = None
+
+        result = ResultWithPath(path=Path("some") / "nested" / "file.txt")
+        rt = roundtrip(result, tmp_hdf5)
+        assert rt.path == Path("some") / "nested" / "file.txt"
+        assert isinstance(rt.path, Path)
+
+    def test_datetime_roundtrip(self, tmp_hdf5):
+        from datetime import datetime
+
+        @dataclass
+        class ResultWithDatetime(BaseResult):
+            timestamp: datetime | None = None
+
+        ts = datetime(2026, 1, 2, 3, 4, 5)
+        result = ResultWithDatetime(timestamp=ts)
+        rt = roundtrip(result, tmp_hdf5)
+        assert rt.timestamp == ts
+
+    def test_date_roundtrip(self, tmp_hdf5):
+        from datetime import date
+
+        @dataclass
+        class ResultWithDate(BaseResult):
+            day: date | None = None
+
+        result = ResultWithDate(day=date(2026, 1, 2))
+        rt = roundtrip(result, tmp_hdf5)
+        assert rt.day == date(2026, 1, 2)
+
+    def test_complex_roundtrip(self, tmp_hdf5):
+        @dataclass
+        class ResultWithComplex(BaseResult):
+            value: complex | None = None
+
+        result = ResultWithComplex(value=1.5 - 2.5j)
+        rt = roundtrip(result, tmp_hdf5)
+        assert rt.value == pytest.approx(1.5 - 2.5j)
+
+    def test_bytes_roundtrip(self, tmp_hdf5):
+        @dataclass
+        class ResultWithBytes(BaseResult):
+            data: bytes | None = None
+
+        result = ResultWithBytes(data=b"\x00\x01\xffvimseo")
+        rt = roundtrip(result, tmp_hdf5)
+        assert rt.data == b"\x00\x01\xffvimseo"
+
+    def test_set_roundtrip(self, tmp_hdf5):
+        @dataclass
+        class ResultWithSet(BaseResult):
+            names: set | None = None
+
+        result = ResultWithSet(names={"a", "b", "c"})
+        rt = roundtrip(result, tmp_hdf5)
+        assert rt.names == {"a", "b", "c"}
+        assert isinstance(rt.names, set)
+
+    def test_frozenset_roundtrip(self, tmp_hdf5):
+        @dataclass
+        class ResultWithFrozenset(BaseResult):
+            names: frozenset | None = None
+
+        result = ResultWithFrozenset(names=frozenset({"a", "b"}))
+        rt = roundtrip(result, tmp_hdf5)
+        assert rt.names == frozenset({"a", "b"})
+        assert isinstance(rt.names, frozenset)
+
+    def test_ordered_dict_preserves_type_and_order(self, tmp_hdf5):
+        od = OrderedDict([("z", 1.0), ("a", 2.0), ("m", 3.0)])
+
+        @dataclass
+        class ResultWithOrderedDict(BaseResult):
+            data: dict | None = None
+
+        result = ResultWithOrderedDict(data=od)
+        rt = roundtrip(result, tmp_hdf5)
+        assert isinstance(rt.data, OrderedDict)
+        assert list(rt.data.items()) == list(od.items())
+
+    def test_plain_dict_preserves_insertion_order(self, tmp_hdf5):
+        d = {"z": 1.0, "a": 2.0, "m": 3.0}
+
+        @dataclass
+        class ResultWithDict(BaseResult):
+            data: dict | None = None
+
+        result = ResultWithDict(data=d)
+        rt = roundtrip(result, tmp_hdf5)
+        assert type(rt.data) is dict
+        assert list(rt.data.items()) == list(d.items())
+
+    def test_dict_with_int_keys_roundtrip(self, tmp_hdf5):
+        d = {1: "one", 2: "two"}
+
+        @dataclass
+        class ResultWithIntKeys(BaseResult):
+            data: dict | None = None
+
+        result = ResultWithIntKeys(data=d)
+        rt = roundtrip(result, tmp_hdf5)
+        assert rt.data == d
+        assert all(isinstance(k, int) for k in rt.data)
+
+    def test_dict_with_tuple_keys_roundtrip(self, tmp_hdf5):
+        d = {(1, 2): "a", (3, 4): "b"}
+
+        @dataclass
+        class ResultWithTupleKeys(BaseResult):
+            data: dict | None = None
+
+        result = ResultWithTupleKeys(data=d)
+        rt = roundtrip(result, tmp_hdf5)
+        assert rt.data == d
+        assert all(isinstance(k, tuple) for k in rt.data)
+
+    def test_pydantic_model_roundtrip_is_not_pickled(self, tmp_hdf5):
+        """The concrete motivating case: DistributionSettings must be clear."""
+        from vimseo.utilities.distribution import DistributionSettings
+
+        settings = DistributionSettings(name="Normal", mu=1.0, sigma=0.05)
+
+        @dataclass
+        class ResultWithDistribution(BaseResult):
+            settings: DistributionSettings | None = None
+
+        result = ResultWithDistribution(settings=settings)
+        result.to_hdf5(tmp_hdf5)
+        with h5py.File(tmp_hdf5, "r") as f:
+            assert f["settings"].attrs["__type__"] == "pydantic"
+        rt = type(result).from_hdf5(tmp_hdf5)
+        assert rt.settings == settings
+        assert isinstance(rt.settings, DistributionSettings)
+
+    def test_interfaced_distribution_settings_roundtrip(self, tmp_hdf5):
+        from vimseo.utilities.distribution import InterfacedDistributionSettings
+
+        settings = InterfacedDistributionSettings(
+            name="Beta", parameters=(2.0, 3.0), lower_bound=0.0, upper_bound=1.0
+        )
+
+        @dataclass
+        class ResultWithInterfaced(BaseResult):
+            settings: InterfacedDistributionSettings | None = None
+
+        result = ResultWithInterfaced(settings=settings)
+        rt = roundtrip(result, tmp_hdf5)
+        assert rt.settings == settings
+
+    def test_distribution_parameters_roundtrip(self, tmp_hdf5):
+        from vimseo.utilities.distribution import DistributionParameters
+
+        params = DistributionParameters(name="Normal", mu=2.1e5, sigma=1e2)
+
+        @dataclass
+        class ResultWithParams(BaseResult):
+            distribution: DistributionParameters | None = None
+
+        result = ResultWithParams(distribution=params)
+        rt = roundtrip(result, tmp_hdf5)
+        assert rt.distribution == params
+
+    def test_nested_pydantic_model_roundtrip(self, tmp_hdf5):
+        """A BaseModel field holding another BaseModel must not be flattened."""
+
+        @dataclass
+        class ResultWithNestedModel(BaseResult):
+            outer: _OuterModel | None = None
+
+        result = ResultWithNestedModel(
+            outer=_OuterModel(name="x", inner=_InnerModel(value=3.5))
+        )
+        rt = roundtrip(result, tmp_hdf5)
+        assert rt.outer.name == "x"
+        assert isinstance(rt.outer.inner, _InnerModel)
+        assert rt.outer.inner.value == pytest.approx(3.5)
+
+
+# ---------------------------------------------------------------------------
+# Tests — ParameterSpace / DesignSpace, via the DistributionSettings attached
+# to each marginal (the concrete case that motivated this codec: "I don't see
+# the Distributions serialized").
+# ---------------------------------------------------------------------------
+
+
+def _settings_dumps(space: ParameterSpace) -> dict[str, dict]:
+    """Return, per uncertain variable, the ``model_dump()`` of its settings.
+
+    Comparing dumps rather than the settings objects themselves sidesteps a
+    pre-existing (unrelated to this codec) design choice of
+    ``add_distributions_from_dict``: it always reconstructs a
+    ``DistributionParameters`` instance, even when the original settings
+    were a plain ``DistributionSettings`` -- the same normalization already
+    happens on the deprecated JSON round-trip and in
+    ``Material.update_from_parameter_space``. The two classes share the same
+    fields, so comparing field values is the meaningful check.
+    """
+    return {
+        name: space.distributions[name].marginals[0].vimseo_settings.model_dump()
+        for name in space.uncertain_variables
+    }
+
+
+class TestParameterSpaceCodec:
+    def test_uncertain_only_roundtrip(self, tmp_hdf5):
+        """Several distribution kinds, including the DistributionSettings case
+        that was reported as missing."""
+        space = ParameterSpace()
+        add_random_variable_interface(
+            space, "x", DistributionSettings(name="Normal", mu=1.0, sigma=0.05)
+        )
+        add_random_variable_interface(
+            space, "y", DistributionSettings(name="Uniform", lower=-1.0, upper=2.0)
+        )
+        add_random_variable_interface(
+            space,
+            "t",
+            DistributionSettings(name="Triangular", lower=-1.0, upper=1.0, mode=0.0),
+        )
+        add_random_variable_interface(
+            space,
+            "w",
+            DistributionSettings(name="Weibull", location=0.0, scale=1.0, shape=2.0),
+        )
+        add_random_variable_interface(
+            space, "e", DistributionSettings(name="Exponential", loc=0.0, rate=1.5)
+        )
+        add_random_variable_interface(
+            space,
+            "b",
+            InterfacedDistributionSettings(name="Exponential", parameters=(1.0, 0.0)),
+        )
+
+        with h5py.File(tmp_hdf5, "w") as f:
+            serialize_value(f, "space", space)
+            # It must be described in clear, not pickled.
+            assert f["space"].attrs["__type__"] == "parameter_space"
+        with h5py.File(tmp_hdf5, "r") as f:
+            rt = deserialize_value(f, "space")
+
+        assert isinstance(rt, ParameterSpace)
+        assert set(rt.uncertain_variables) == set(space.uncertain_variables)
+        assert _settings_dumps(rt) == _settings_dumps(space)
+
+        # The reconstructed distributions are functional (correct parameters),
+        # not just labels: sample and compare against the original.
+        for name in space.uncertain_variables:
+            original = space.distributions[name].marginals[0]
+            rebuilt = rt.distributions[name].marginals[0]
+            np.testing.assert_allclose(
+                original.mean, rebuilt.mean, rtol=1e-8, atol=1e-12
+            )
+
+    def test_mixed_deterministic_and_uncertain_roundtrip(self, tmp_hdf5):
+        """The real-world mixed case: Material.to_parameter_space()."""
+        material = Material(
+            name="m",
+            material_relations=[
+                MaterialRelation(
+                    name="r",
+                    properties=[
+                        MaterialProperty(
+                            name="young_modulus",
+                            value=2.1e5,
+                            lower_bound=1.9e5,
+                            upper_bound=2.3e5,
+                            distribution=DistributionParameters(
+                                name="Normal", mu=2.1e5, sigma=1e2
+                            ),
+                        ),
+                        MaterialProperty(
+                            name="nu_p", value=0.3, lower_bound=0.2, upper_bound=0.4
+                        ),
+                    ],
+                )
+            ],
+        )
+        space = material.to_parameter_space(variable_names=["young_modulus", "nu_p"])
+
+        with h5py.File(tmp_hdf5, "w") as f:
+            serialize_value(f, "space", space)
+        with h5py.File(tmp_hdf5, "r") as f:
+            rt = deserialize_value(f, "space")
+
+        assert set(rt.variable_names) == {"young_modulus", "nu_p"}
+        assert rt.uncertain_variables == ["young_modulus"]
+        np.testing.assert_allclose(rt.get_current_value(["nu_p"]), [0.3])
+        np.testing.assert_allclose(rt.get_lower_bound("nu_p"), [0.2])
+        np.testing.assert_allclose(rt.get_upper_bound("nu_p"), [0.4])
+        assert _settings_dumps(rt) == _settings_dumps(space)
+
+    def test_design_space_roundtrip(self, tmp_hdf5):
+        """A plain DesignSpace (e.g. CalibrationStepResult.design_space)."""
+        space = DesignSpace()
+        space.add_variable(
+            "a", size=2, lower_bound=-1.0, upper_bound=1.0, value=[0.1, 0.2]
+        )
+        space.add_variable("b", lower_bound=0.0)
+
+        with h5py.File(tmp_hdf5, "w") as f:
+            serialize_value(f, "space", space)
+            assert f["space"].attrs["__type__"] == "design_space"
+        with h5py.File(tmp_hdf5, "r") as f:
+            rt = deserialize_value(f, "space")
+
+        assert type(rt) is DesignSpace
+        assert rt == space
+
+    def test_variable_without_vimseo_settings_falls_back_to_pickle(self, tmp_hdf5):
+        """A space built by bypassing vimseo's own API has no vimseo_settings.
+
+        The whole space falls back to a single pickle blob (gemseo does not
+        expose a public API to graft an already-built random variable back
+        into a space), and it must still round-trip exactly.
+        """
+        space = ParameterSpace()
+        space.add_random_variable("r", "OTNormalDistribution", mu=0.0, sigma=1.0)
+        space.add_variable("z", value=3.0)
+
+        with h5py.File(tmp_hdf5, "w") as f:
+            serialize_value(f, "space", space)
+            assert f["space"].attrs["__type__"] == "pickle"
+        with h5py.File(tmp_hdf5, "r") as f:
+            rt = deserialize_value(f, "space")
+
+        assert rt == space
+
+    def test_space_tool_result_full_roundtrip(self, tmp_hdf5):
+        space = ParameterSpace()
+        add_random_variable_interface(
+            space, "x", DistributionSettings(name="Normal", mu=1.0, sigma=0.05)
+        )
+        result = SpaceToolResult(parameter_space=space)
+        rt = roundtrip(result, tmp_hdf5)
+        assert isinstance(rt.parameter_space, ParameterSpace)
+        assert _settings_dumps(rt.parameter_space) == _settings_dumps(space)
+
+    def test_material_result_full_roundtrip(self, tmp_hdf5):
+        material = Material(
+            name="m",
+            material_relations=[
+                MaterialRelation(
+                    name="r",
+                    properties=[
+                        MaterialProperty(
+                            name="young_modulus",
+                            value=2.1e5,
+                            distribution=DistributionParameters(
+                                name="Normal", mu=2.1e5, sigma=1e2
+                            ),
+                        ),
+                    ],
+                )
+            ],
+        )
+        space = material.to_parameter_space()
+        result = MaterialResult(material=material, parameter_space=space)
+        rt = roundtrip(result, tmp_hdf5)
+
+        assert rt.material.name == "m"
+        assert _settings_dumps(rt.parameter_space) == _settings_dumps(space)
+
+
+# ---------------------------------------------------------------------------
 # Tests — non-serializable objects (pickle fallback)
 # ---------------------------------------------------------------------------
 
@@ -303,6 +756,81 @@ class TestDictsAndNestedStructures:
 class _FakeObject:
     def __init__(self):
         self.value = 42
+
+
+def _correlated_joint_distribution():
+    correlation = ot.CorrelationMatrix(2)
+    correlation[0, 1] = -0.25
+    return ot.JointDistribution(
+        [ot.Uniform(0.0, 3.0), ot.Uniform(1.0, 3.0)], ot.NormalCopula(correlation)
+    )
+
+
+def _has_pickle(group: h5py.Group) -> bool:
+    """Whether an HDF5 group contains a value serialized in pickle format."""
+    found = []
+
+    def visit(_, node):
+        if node.attrs.get("__type__") == "pickle":
+            found.append(node)
+
+    group.visititems(visit)
+    return bool(found)
+
+
+class TestOpenTurnsDistributions:
+    @pytest.mark.parametrize(
+        "distribution",
+        [
+            ot.Normal(1.0, 2.0),
+            ot.Uniform(0.0, 5.0),
+            ot.WeibullMin(2.0, 1.5, 0.0),
+            ot.TruncatedDistribution(ot.Normal(0.0, 1.0), -1.0, 2.0),
+            ot.TruncatedDistribution(
+                ot.Normal(0.0, 1.0), 1.0, ot.TruncatedDistribution.LOWER
+            ),
+            ot.ComposedDistribution([ot.Uniform(0.0, 5.0)] * 2),
+            _correlated_joint_distribution(),
+        ],
+    )
+    def test_roundtrip_in_clear(self, tmp_hdf5, distribution):
+        """A distribution is written in clear and built back identically."""
+        with h5py.File(tmp_hdf5, "w") as f:
+            serialize_value(f, "distribution", distribution)
+        with h5py.File(tmp_hdf5, "r") as f:
+            assert f["distribution"].attrs["__type__"] == "ot_distribution"
+            assert not _has_pickle(f)
+            rt = deserialize_value(f, "distribution")
+        assert str(rt) == str(distribution)
+        assert list(rt.getParameter()) == list(distribution.getParameter())
+
+    def test_list_of_marginals(self, tmp_hdf5):
+        marginals = [ot.Uniform(0.0, 5.0), ot.Normal(1.0, 2.0)]
+        with h5py.File(tmp_hdf5, "w") as f:
+            serialize_value(f, "marginals", marginals)
+        with h5py.File(tmp_hdf5, "r") as f:
+            assert not _has_pickle(f)
+            rt = deserialize_value(f, "marginals")
+        assert [str(m) for m in rt] == [str(m) for m in marginals]
+
+    def test_not_describable_falls_back_to_pickle(self, tmp_hdf5):
+        distribution = ot.UserDefined(ot.Sample([[0.0], [1.0], [3.0]]))
+        with h5py.File(tmp_hdf5, "w") as f:
+            serialize_value(f, "distribution", distribution)
+        with h5py.File(tmp_hdf5, "r") as f:
+            assert f["distribution"].attrs["__type__"] == "pickle"
+            rt = deserialize_value(f, "distribution")
+        assert str(rt) == str(distribution)
+
+    def test_bayes_prior_in_settings(self, tmp_hdf5):
+        """The prior of a Bayes analysis, stored in its settings, is in clear."""
+        prior = _correlated_joint_distribution()
+        result = BayesAnalysisResult()
+        result.metadata.settings = {"likelihood_dist": "Normal", "prior_dist": prior}
+        rt = roundtrip(result, tmp_hdf5)
+        with h5py.File(tmp_hdf5, "r") as f:
+            assert not _has_pickle(f["metadata"])
+        assert str(rt.metadata.settings["prior_dist"]) == str(prior)
 
 
 class TestPickleFallback:

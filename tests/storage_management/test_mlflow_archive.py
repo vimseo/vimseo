@@ -24,9 +24,10 @@ from numpy.testing import assert_array_equal
 from vimseo.api import create_model
 from vimseo.core.model_metadata import MetaDataNames
 from vimseo.core.model_settings import IntegratedModelSettings
+from vimseo.storage_management.base_storage_manager import PersistencyPolicy
 
 # The MlflowArchive backend is shipped by the "mlflow" extra.
-pytest.importorskip("mlflow")
+mlflow = pytest.importorskip("mlflow")
 
 
 def test_result_decoding(tmp_wd):
@@ -45,13 +46,7 @@ def test_result_decoding(tmp_wd):
 
     for name in model.get_input_data_names():
         assert_array_equal(model.get_input_data()[name], model_result["inputs"][name])
-    # directory_archive_job field is not relevant for Mlflow archive.
-    tested_names = [
-        name
-        for name in model.get_output_data_names()
-        if name != MetaDataNames.directory_archive_job
-    ]
-    for name in tested_names:
+    for name in model.get_output_data_names():
         assert_array_equal(model.get_output_data()[name], model_result["outputs"][name])
 
 
@@ -73,20 +68,10 @@ def test_cache_from_archive(tmp_wd):
         by_group=False
     )
     dataset = model.cache.to_dataset(categorize=False).to_dict_of_arrays(by_group=False)
-    # TODO Incoherency: directory_archive_job is not filled by the model,
-    #  but is filled by method ``get_result()``
-    #  of MlflowArchive. It creates a mismatch between cache outputs
-    #  (in which directory_archive_job is filled
-    #  through ``get_result()`` and the model outputs when the cache is not used.
     tested_names = [
         name
         for name in expected_dataset
-        if name
-        not in [
-            MetaDataNames.date,
-            MetaDataNames.cpu_time,
-            MetaDataNames.directory_archive_job,
-        ]
+        if name not in [MetaDataNames.date, MetaDataNames.cpu_time]
     ]
     for name in tested_names:
         assert_array_equal(expected_dataset[name], dataset[name])
@@ -113,4 +98,195 @@ def test_copy_persistent_files(tmp_wd):
     result = model.archive_manager.get_result()
     assert result["outputs"][MetaDataNames.directory_archive_job] == str(
         model.archive_manager.job_directory
+    )
+
+
+def test_directory_archive_job_is_known_before_publication(tmp_wd):
+    """Check that the metadata of a model output already holds the artifact directory.
+
+    The run is created before the job is executed, not when its results are
+    published, so the outputs returned by ``execute`` match the archive.
+    """
+    model = create_model(
+        "MockModelPersistent",
+        "LC1",
+        model_options=IntegratedModelSettings(archive_manager="MlflowArchive"),
+    )
+    model.cache = None
+    outputs = model.execute()
+
+    directory = str(model.archive_manager.job_directory)
+    assert directory != ""
+    assert outputs[MetaDataNames.directory_archive_job][0] == directory
+
+
+def test_run_is_finished_after_execution(tmp_wd):
+    """Check that a run is closed once the results are published."""
+    model = create_model(
+        "MockModelPersistent",
+        "LC1",
+        model_options=IntegratedModelSettings(archive_manager="MlflowArchive"),
+    )
+    model.cache = None
+    model.execute()
+    run = model.archive_manager._mlflow_client.get_run(
+        model.archive_manager._current_run_id
+    )
+    assert run.info.status == "FINISHED"
+
+
+def test_each_execution_creates_its_own_run(tmp_wd):
+    model = create_model(
+        "MockModelPersistent",
+        "LC1",
+        model_options=IntegratedModelSettings(archive_manager="MlflowArchive"),
+    )
+    model.cache = None
+    model.execute({"x1": atleast_1d(1.0), "x2": atleast_1d(2.0)})
+    first_run_id = model.archive_manager._current_run_id
+    model.execute({"x1": atleast_1d(3.0), "x2": atleast_1d(4.0)})
+    assert model.archive_manager._current_run_id != first_run_id
+    assert len(model.archive_manager.get_archived_results()) == 2
+
+
+def test_delete_policy_deletes_the_current_run(tmp_wd):
+    """Check that a deleting persistency policy deletes the current run.
+
+    The run of the previous execution must be kept.
+    """
+    kept = create_model(
+        "MockModelPersistent",
+        "LC1",
+        model_options=IntegratedModelSettings(archive_manager="MlflowArchive"),
+    )
+    kept.cache = None
+    kept.execute()
+    kept_run_id = kept.archive_manager._current_run_id
+
+    deleted = create_model(
+        "MockModelPersistent",
+        "LC1",
+        model_options=IntegratedModelSettings(
+            archive_manager="MlflowArchive",
+            directory_archive_persistency=PersistencyPolicy.DELETE_ALWAYS,
+        ),
+    )
+    deleted.cache = None
+    deleted.execute()
+
+    # The run of the first model is still there, and no run was left behind
+    # by the second one.
+    results = kept.archive_manager.get_archived_results()
+    assert len(results) == 1
+    assert (
+        kept.archive_manager._mlflow_client.get_run(kept_run_id).info.lifecycle_stage
+        == "active"
+    )
+    client = kept.archive_manager._mlflow_client
+    experiment_id = client.get_experiment_by_name(
+        kept.archive_manager.experiment_name
+    ).experiment_id
+    assert len(client.search_runs([experiment_id])) == 1
+
+
+def test_failed_execution_marks_the_run_as_failed(tmp_wd):
+    """Check that a job which raises does not leave a run in state RUNNING."""
+    model = create_model(
+        "MockModelPersistent",
+        "LC1",
+        model_options=IntegratedModelSettings(archive_manager="MlflowArchive"),
+    )
+    model.cache = None
+
+    def raise_error(*args, **kwargs):
+        msg = "boom"
+        raise RuntimeError(msg)
+
+    model._chain.execute = raise_error
+    with pytest.raises(RuntimeError, match="boom"):
+        model.execute()
+
+    run_id = model.archive_manager._current_run_id
+    assert run_id != ""
+    assert model.archive_manager._mlflow_client.get_run(run_id).info.status == "FAILED"
+    # A failed run has no results: it must not be returned by the archive.
+    assert len(model.archive_manager.get_archived_results()) == 0
+
+
+def test_archives_with_different_uris_do_not_interfere(tmp_wd):
+    """Check that an archive is not disturbed by another one created after it.
+
+    Each archive must only rely on its own tracking uri, and not on a state of
+    MLflow shared by the whole process (the last created archive would win).
+    """
+    models = []
+    for root in ["archive_A", "archive_B"]:
+        model = create_model(
+            "MockModelFields",
+            "LC1",
+            model_options=IntegratedModelSettings(
+                archive_manager="MlflowArchive", directory_archive_root=root
+            ),
+        )
+        model.cache = None
+        models.append(model)
+    model_a, model_b = models
+    assert model_a.archive_manager.uri != model_b.archive_manager.uri
+
+    # Persistent files are copied as artifacts, and results are read back, in the
+    # store of the archive of the model, whichever archive was created last.
+    model_a.execute()
+    model_b.execute()
+    for model in models:
+        assert len(model.archive_manager.get_archived_results()) == 1
+        artifacts = list(model.archive_manager.job_directory.iterdir())
+        assert len(artifacts) > 0
+    assert "archive_A" in str(model_a.archive_manager.job_directory)
+    assert "archive_B" in str(model_b.archive_manager.job_directory)
+
+
+def test_archive_does_not_change_the_global_tracking_uri(tmp_wd):
+    """Check that creating an archive leaves the tracking uri of the process alone.
+
+    A script which uses the MLflow API directly must set the uri itself, with
+    ``mlflow.set_tracking_uri(archive_manager.uri)``.
+    """
+    uri_before = mlflow.get_tracking_uri()
+    model = create_model(
+        "MockModelPersistent",
+        "LC1",
+        model_options=IntegratedModelSettings(archive_manager="MlflowArchive"),
+    )
+    model.cache = None
+    model.execute()
+    assert mlflow.get_tracking_uri() == uri_before
+
+    mlflow.set_tracking_uri(model.archive_manager.uri)
+    experiment = mlflow.get_experiment_by_name(model.archive_manager.experiment_name)
+    assert len(mlflow.search_runs(experiment_ids=[experiment.experiment_id])) == 1
+
+
+def test_run_ids_are_stored_in_the_run(tmp_wd):
+    """Check that the identifiers of the simulation are kept in the MLflow run.
+
+    The ``run_id`` of VIMSEO is not the one of MLflow.
+    """
+    model = create_model(
+        "MockModelPersistent",
+        "LC1",
+        model_options=IntegratedModelSettings(archive_manager="MlflowArchive"),
+    )
+    model.cache = None
+    outputs = model.execute()
+
+    run = model.archive_manager._mlflow_client.get_run(
+        model.archive_manager._current_run_id
+    )
+    assert run.data.tags[MetaDataNames.run_id] == outputs[MetaDataNames.run_id][0]
+    assert run.data.tags[MetaDataNames.run_id] != run.info.run_id
+    assert run.data.tags[MetaDataNames.tool_run_id] == ""
+
+    result = model.archive_manager.get_result()
+    assert (
+        result["outputs"][MetaDataNames.run_id][0] == outputs[MetaDataNames.run_id][0]
     )

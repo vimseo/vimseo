@@ -33,6 +33,7 @@ from vimseo.tools.surrogate.surrogate import LOO
 from vimseo.tools.surrogate.surrogate import SurrogateTool
 from vimseo.tools.surrogate.surrogate_result import SurrogateResult
 from vimseo.utilities.datasets import DatasetAddFromModel
+from vimseo.utilities.test_utils import check_result_visualization
 
 EXPECTED_PATTERNS_IN_RESULTS = [
     "Surrogate model: MockModel.LC1.LinearRegressor",
@@ -211,7 +212,7 @@ def test_load_and_plot_mock_model(tmp_wd, mock_model_surrogate):
     results = BaseTool.load_results(
         mock_model_surrogate.working_directory / "SurrogateTool_result.hdf5"
     )
-    mock_model_surrogate.plot_results(results, save=True, show=False)
+    results.visualize(directory_path=mock_model_surrogate.working_directory, save=True)
     assert list(mock_model_surrogate.working_directory.glob("surrogate_*.png"))
 
 
@@ -220,7 +221,7 @@ def test_plot_without_save_writes_no_file(tmp_wd, mock_model_surrogate):
     results = BaseTool.load_results(
         mock_model_surrogate.working_directory / "SurrogateTool_result.hdf5"
     )
-    mock_model_surrogate.plot_results(results, show=False)
+    results.visualize(directory_path=mock_model_surrogate.working_directory)
     assert not list(mock_model_surrogate.working_directory.glob("surrogate_*.png"))
 
 
@@ -293,3 +294,11 @@ def test_serialization(tmp_wd, mock_dataset):
     result.to_hdf5("result.hdf5")
     serialized_result = SurrogateResult.from_hdf5("result.hdf5")
     assert_results_equal(result, serialized_result)
+
+
+def test_result_visualization(tmp_wd, mock_model_surrogate):
+    """Check that a surrogate result can be visualized once loaded from a file."""
+    check_result_visualization(mock_model_surrogate.result, "visualization")
+    tables = mock_model_surrogate.result.tabulate()
+    assert "MSEMeasure" in tables["qualities"].index
+    assert "selection_qualities" in tables

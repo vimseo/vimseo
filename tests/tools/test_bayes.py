@@ -17,10 +17,10 @@ from __future__ import annotations
 
 import re
 from collections.abc import Mapping
+from pathlib import Path
 
 import pytest
 from matplotlib.figure import Figure
-from matplotlib.pyplot import Axes
 from numpy import array
 from numpy import column_stack
 from numpy import inf
@@ -35,11 +35,15 @@ from openturns import Dirac
 from openturns import Uniform
 from pandas import DataFrame
 
+from vimseo.storage_management.tool_archive.directory_tool_archive import (
+    DirectoryToolArchive,
+)
 from vimseo.tools.base_result import assert_results_equal
 from vimseo.tools.bayes.bayes_analysis import BayesInputs
 from vimseo.tools.bayes.bayes_analysis import BayesTool
 from vimseo.tools.bayes.bayes_analysis_result import BayesAnalysisResult
 from vimseo.utilities.datasets import to_dataset
+from vimseo.utilities.test_utils import check_result_visualization
 
 random.seed(1)  # ruff: ignore[numpy-legacy-random]
 
@@ -223,11 +227,37 @@ def test_instanciation_prior(
     assert analysis.result.raw_samples.shape[2] == dim
 
 
-def test_return_type(tmp_wd, bayes_analysis):
-    """Check the return type of plot_burnin."""
-    assert isinstance(
-        bayes_analysis.plot_burnin(result=bayes_analysis.result, show=False), Figure
+def test_plot_mcmc_chains(tmp_wd, bayes_analysis):
+    """Check that the MCMC chains are plotted from the result, without the tool,
+    before the post-processing."""
+    bayes_analysis.result.to_hdf5("result.hdf5")
+    result = BayesAnalysisResult.from_hdf5("result.hdf5")
+    assert isinstance(result.plot_mcmc_chains(), Figure)
+    assert list(result.visualize()) == ["mcmc_chains"]
+
+
+@pytest.mark.parametrize(
+    ("prior", "frozen_variables", "expected"),
+    [
+        (ComposedDistribution([Uniform(0, 5)] * 2), {}, ("mu_0", "sigma_0")),
+        (
+            ComposedDistribution([Uniform(0, 5)]),
+            {"frozen_index": [0], "frozen_values": [2.0]},
+            ("sigma_0",),
+        ),
+    ],
+)
+def test_parameter_names(tmp_wd, model, data, prior, frozen_variables, expected):
+    """Check that the names of the free parameters are stored in the result."""
+    analysis = BayesTool()
+    analysis.execute(
+        likelihood_dist=model,
+        prior_dist=prior,
+        data=data,
+        n_mcmc=2,
+        frozen_variables=frozen_variables,
     )
+    assert analysis.result.parameter_names == expected
 
 
 def test_execution_results(tmp_wd, processed_analysis):
@@ -295,18 +325,6 @@ def test_maximum_size_posterior_predictive(tmp_wd, processed_analysis):
         processed_analysis.build_posterior_predictive(2001)
 
 
-def test_plot_posterior_predictive(tmp_wd, processed_analysis):
-    """Check that error is raised when no path is provided."""
-
-    with pytest.raises(
-        ValueError,
-        match=re.escape("There is no directory path provided."),
-    ):
-        processed_analysis.plot_predictive_distribution(
-            name="X", n_disc=200, save=True, show=False
-        )
-
-
 @pytest.mark.parametrize("plot_directory", ["", "foo"])
 def test_plot_results_return_type(tmp_wd, model, prior, data, plot_directory):
     """Check that plot_results output is a dictionary."""
@@ -319,34 +337,58 @@ def test_plot_results_return_type(tmp_wd, model, prior, data, plot_directory):
         nb_samples_posterior=2,
     )
     assert analysis.working_directory.absolute().exists()
-    plot_checks = analysis.plot_results(
-        directory_path=plot_directory, save=True, show=False
-    )
+    plot_checks = analysis.result.visualize(directory_path=plot_directory, save=True)
     assert isinstance(plot_checks, Mapping)
-    assert "posterior_samples" in plot_checks
+    assert list(plot_checks) == [
+        "mcmc_chains",
+        "posterior_samples",
+        "posterior_predictive",
+    ]
     assert "posterior_predictive" in plot_checks
     assert isinstance(plot_checks["posterior_samples"], Figure)
-    for fig in plot_checks["posterior_predictive"]:
-        assert isinstance(fig, Axes)
+    assert isinstance(plot_checks["posterior_predictive"], Figure)
+    directory = Path(plot_directory or Path.cwd())
+    assert (directory / "posterior_samples.png").is_file()
+    assert (directory / "posterior_predictive.png").is_file()
 
 
-def test_plot_posterior_distributio_return_type(tmp_wd, processed_analysis):
-    """Check that plot_posterior_distribution output is a figure."""
-    assert isinstance(
-        processed_analysis.plot_posterior_distribution(
-            processed_analysis.result, show=False
-        ),
-        Figure,
+def test_plot_posterior_distribution(tmp_wd, processed_analysis):
+    """Check that the posterior distribution is plotted with the parameter names."""
+    figure = processed_analysis.result.plot_posterior_distribution()
+    assert isinstance(figure, Figure)
+    assert figure.axes[0].get_xlabel() == "mu_0"
+
+
+def test_plot_predictive_distribution(tmp_wd, processed_analysis):
+    """Check that the posterior predictive distribution is plotted versus the data."""
+    figure = processed_analysis.result.plot_predictive_distribution(
+        n_disc=200, variable_name="X"
     )
+    assert isinstance(figure, Figure)
+    assert len(figure.axes) == 2
+    assert figure.axes[1].get_xlabel() == "X"
 
 
-def test_plot_predictive_distribution_return_type(tmp_wd, processed_analysis):
-    """Check that plot_predictive_distribution output is a figure."""
-    res_plot = processed_analysis.plot_predictive_distribution(
-        name="X", n_disc=200, show=False
+def test_post_republishes_the_result(tmp_wd, model, prior, data):
+    """Check that the post-processing is archived with the result of the tool run."""
+    analysis = BayesTool(archive_manager="DirectoryArchive", archive_root="archive")
+    analysis.execute(likelihood_dist=model, prior_dist=prior, data=data, n_mcmc=50)
+    analysis.post(1, n_mcmc=50, nb_samples_ml=5, nb_samples_posterior=2)
+    result = DirectoryToolArchive("archive").get_tool_result(
+        analysis.result.metadata.tool_run_id
     )
-    assert isinstance(res_plot[0], Axes)
-    assert isinstance(res_plot[1], Axes)
+    assert result.processed_samples is not None
+    assert result.metadata.misc["post"] == {
+        "burnin": 1,
+        "n_mcmc": 50,
+        "nb_samples_ml": 5,
+        "nb_samples_posterior": 2,
+    }
+    assert set(result.visualize()) == {
+        "mcmc_chains",
+        "posterior_samples",
+        "posterior_predictive",
+    }
 
 
 def test_serialization(tmp_wd, bayes_analysis):
@@ -391,3 +433,21 @@ def test_data_not_a_single_scalar_variable(user_data):
     """Check that data that are not the sample of a single scalar variable raise."""
     with pytest.raises(ValueError, match="must hold a single scalar variable"):
         BayesInputs(data=user_data)
+
+
+def test_result_visualization(tmp_wd, processed_analysis):
+    """Check that a Bayes result can be visualized once loaded from a file."""
+    check_result_visualization(processed_analysis.result, "visualization")
+    tables = processed_analysis.result.tabulate()
+    assert set(tables["criteria"].index) == {"lppd", "ml"}
+    assert "median" in tables["posterior"].columns
+
+
+def test_key_values(tmp_wd, processed_analysis):
+    key_values = processed_analysis.result.get_key_values()
+    assert set(key_values) == {
+        "lppd",
+        "ml",
+        "posterior_mean.mu_0",
+        "posterior_mean.sigma_0",
+    }

@@ -265,4 +265,5 @@ class CpuTimeCompromiseCase(Plotter):
             )
         if show:
             fig.show()
+        self.result.figure = fig
         return fig

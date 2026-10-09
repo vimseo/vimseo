@@ -24,10 +24,6 @@ from vimseo.tools.design_value.design_value_tool import DesignValueTool
 
 
 def test_design_value(tmp_wd):
-    # model = create_model("BendingTestAnalytical", "ThreePoints")
-    # space_result = SpaceToolResult()
-    # space_result.parameter_space = model.material.to_parameter_space()
-    # SpaceToolFileIO().write(space_result, "ElasticIsotropic_material_space")
 
     tool = DesignValueTool()
     tool.execute(

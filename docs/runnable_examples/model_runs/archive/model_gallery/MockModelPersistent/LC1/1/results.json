@@ -44,6 +44,8 @@
     "directory_archive_root": "C:\\Users\\sebastien.bocquet\\PycharmProjects\\vims\\docs\\runnable_examples\\model_runs\\archive\\model_gallery",
     "directory_archive_job": "..\\model_runs\\archive\\model_gallery\\MockModelPersistent\\LC1\\1",
     "directory_scratch_root": "C:\\Users\\sebastien.bocquet\\PycharmProjects\\vims\\docs\\runnable_examples\\model_runs\\scratch\\model_gallery",
-    "directory_scratch_job": "..\\model_runs\\scratch\\model_gallery\\MockModelPersistent\\LC1\\1"
+    "directory_scratch_job": "..\\model_runs\\scratch\\model_gallery\\MockModelPersistent\\LC1\\1",
+    "run_id": "a82f0f1becc240c19e9f29daaad8be79",
+    "tool_run_id": ""
   }
 }

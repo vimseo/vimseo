@@ -17,13 +17,11 @@
 
 from __future__ import annotations
 
-from pathlib import Path
 from typing import TYPE_CHECKING
 
 import pandas as pd
 from gemseo.datasets.dataset import Dataset
 from gemseo.datasets.io_dataset import IODataset
-from gemseo.post.dataset.scatter_plot_matrix import ScatterMatrix
 from gemseo.utils.directory_creator import DirectoryNamingMethod
 from gemseo.utils.metrics.dataset_metric import DatasetMetric
 from gemseo.utils.metrics.metric_factory import MetricFactory
@@ -34,16 +32,14 @@ from vimseo.config.global_configuration import _configuration as config
 from vimseo.core.model_metadata import MetaDataNames
 from vimseo.tools.base_analysis_tool import BaseAnalysisTool
 from vimseo.tools.doe.custom_doe import CustomDOESettings
-from vimseo.tools.post_tools.verification_plots import ErrorMetricHistogramPlotter
 from vimseo.tools.verification.verification_result import CASE_DESCRIPTION_TYPE
 from vimseo.tools.verification.verification_result import VerificationResult
-from vimseo.utilities.datasets import get_nb_input_variables
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
     from collections.abc import Mapping
+    from pathlib import Path
 
-    from plotly.graph_objs import Figure
 
 REFERENCE_PREFIX = "Ref"
 
@@ -156,12 +152,14 @@ class BaseVerification(BaseAnalysisTool):
         root_directory: str | Path = config.root_directory,
         directory_naming_method: DirectoryNamingMethod = DirectoryNamingMethod.NUMBERED,
         working_directory: str | Path = config.working_directory,
+        **options,
     ):
         super().__init__(
             subtools=subtools,
             root_directory=root_directory,
             directory_naming_method=directory_naming_method,
             working_directory=working_directory,
+            **options,
         )
         self._output_names = []
         self.result = VerificationResult()
@@ -273,75 +271,6 @@ class BaseVerification(BaseAnalysisTool):
             [doe_dataset, element_wise_metrics],
             axis=1,
         ).get_view(group_names=group_names)
-
-    def plot_results(
-        self,
-        result: VerificationResult,
-        metric_name,
-        output_name: str,
-        save=False,
-        show=True,
-        directory_path: str | Path = "",
-        file_format="html",
-    ) -> Mapping[str, Figure]:
-        """Plot a line plot of simulated versus reference results, and a bar plot of
-        metrics values.
-
-        Args:
-            metric_name: The name of the metric to visualize.
-            output_name: The name of the output variable to visualize.
-            file_format: The format to which plots are generated.
-        """
-        working_directory = (
-            self.working_directory if directory_path == "" else Path(directory_path)
-        )
-
-        figures = {}
-
-        if metric_name:
-            ds = prepare_overall_dataset(
-                result,
-                [metric_name],
-                result.simulation_and_reference.get_variable_names(
-                    IODataset.OUTPUT_GROUP
-                ),
-                renamer=comparison_renaming,
-                add_output_data=True,
-            )
-        else:
-            ds = result.element_wise_metrics
-
-        if get_nb_input_variables(result.element_wise_metrics) > 1:
-            scatter_matrix = ScatterMatrix(
-                ds,
-                variable_names=result.element_wise_metrics.get_variable_names(
-                    group_name=IODataset.INPUT_GROUP
-                ),
-                kde=False,
-            )
-            fig = scatter_matrix.execute(
-                save=save,
-                show=show,
-                file_format="png",
-                directory_path=(
-                    self.working_directory
-                    if directory_path == ""
-                    else Path(directory_path)
-                ),
-                file_name="scatter_matrix",
-            )[0]
-            figures["input_scatter_matrix"] = fig
-
-        histogram = ErrorMetricHistogramPlotter()
-        histogram.working_directory = (
-            working_directory if directory_path == "" else Path(directory_path)
-        )
-        histogram.execute(
-            result.element_wise_metrics, metric_name, output_name, show=show, save=save
-        )
-        figures["error_metric_histogram"] = histogram.result.figure
-
-        return figures
 
     # TODO this method is temporary until metadata variables contain only the
     #  cpu time. Then, if ``output_names`` setting is left to default value,

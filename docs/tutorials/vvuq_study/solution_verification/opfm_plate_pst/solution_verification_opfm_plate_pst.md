@@ -74,5 +74,5 @@ Raw model input and output data are also available:
 {{ read_csv('raw_opfm_plate_pst.csv') }}
 
 These figures and other information about the model can be explored interactively in a dashboard.
-The dashboard can be opened by typing ``dashboard_verification`` in a console where VIMSEO environment is activated.
-The second tab allows to explore code verification and the third tab is for solution verification exploration.
+The dashboard can be opened by typing ``dashboard_tool_result`` in a console where VIMSEO environment is activated.
+Once the result is loaded, its values and its figures are shown in two tabs.

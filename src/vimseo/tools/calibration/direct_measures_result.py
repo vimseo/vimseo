@@ -16,12 +16,14 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from dataclasses import dataclass
 
 from numpy import ndarray
 
 from vimseo.tools.base_result import BaseResult
 
 
+@dataclass
 class DirectMeasuresResult(BaseResult):
     """The result of a ``DirectMeasures`` tool."""
 

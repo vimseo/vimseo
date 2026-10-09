@@ -34,6 +34,7 @@ from vimseo.tools.verification.verification_vs_data import CodeVerificationAgain
 from vimseo.utilities.datasets import Variable
 from vimseo.utilities.datasets import dataset_to_dataframe
 from vimseo.utilities.datasets import generate_dataset
+from vimseo.utilities.test_utils import check_result_visualization
 
 BIAS = 0.5
 
@@ -163,19 +164,18 @@ def test_plot(tmp_wd, verificator):
     )
     output_name = "dplt_at_force_location"
     metric_name = "SquaredErrorMetric"
-    verificator.plot_results(
-        result,
-        metric_name,
-        output_name,
+    figures = result.visualize(
+        directory_path=verificator.working_directory,
+        metric_names=[metric_name],
+        output_names=[output_name],
         save=True,
-        show=False,
     )
-    assert (
-        verificator.working_directory
-        / f"scatter_matrix_{metric_name}_{output_name}.html"
-    )
-    assert verificator.working_directory / f"integrated_{metric_name}_bars.html"
-    assert (
-        verificator.working_directory
-        / f"metric_histogram_{metric_name}_{output_name}.html"
-    )
+    key = f"error_metric_histogram_{metric_name}_{output_name}"
+    assert key in figures
+    assert (verificator.working_directory / f"{key}.html").is_file()
+
+
+def test_result_visualization(tmp_wd, verificator):
+    """Check that a verification result can be visualized once loaded from a file."""
+    check_result_visualization(verificator.result, "visualization")
+    assert "integrated_metrics" in verificator.result.tabulate()

@@ -18,7 +18,6 @@ from __future__ import annotations
 import dataclasses
 import json
 import logging
-import pickle
 from dataclasses import asdict
 from dataclasses import dataclass
 from dataclasses import field
@@ -28,6 +27,8 @@ from math import isclose
 from math import isnan
 from pathlib import Path
 from typing import TYPE_CHECKING
+from typing import Any
+from typing import ClassVar
 
 import h5py
 import matplotlib.figure
@@ -37,12 +38,23 @@ from docstring_inheritance import GoogleDocstringInheritanceMeta
 from gemseo.datasets.dataset import Dataset
 
 from vimseo.tools.metadata import ToolResultMetadata
+from vimseo.tools.result_visualization import BaseVisualizationSettings
+from vimseo.tools.result_visualization import fields_to_dataframes
+from vimseo.tools.result_visualization import flatten_figures
+from vimseo.tools.result_visualization import save_figures
+from vimseo.tools.result_visualization import settings_to_dataframe
+from vimseo.tools.result_visualization import show_figures
 from vimseo.tools.serializer import deserialize_value
 from vimseo.tools.serializer import serialize_value
 from vimseo.utilities.datasets import assert_frame_equal_unordered
 
 if TYPE_CHECKING:
+    from collections.abc import Mapping
     from io import IOBase
+
+    from pandas import DataFrame
+
+    from vimseo.tools.result_visualization import Figure
 
 LOGGER = logging.getLogger(__name__)
 
@@ -53,18 +65,141 @@ class BaseResult(metaclass=GoogleDocstringInheritanceMeta):
 
     This result is the object that flows through a workflow of tools.
     It is self-supporting and carries information on how to process it through the
-    :attr:`.ToolResultMetadata.settings`. The result can be written on disk in binary format
-    (``pickle``) and its metadata can also be written on disk in a readable format
+    :attr:`.ToolResultMetadata.settings`. The result can be written on disk in ``HDF5``
+    format and its metadata can also be written on disk in a readable format
     (``json``).
+
+    A result is visualized without the tool which produced it, for instance after
+    being loaded from an archive: :meth:`visualize` returns its figures and
+    :meth:`tabulate` its numerical values.
     """
+
+    _VISUALIZATION_SETTINGS: ClassVar[type[BaseVisualizationSettings]] = (
+        BaseVisualizationSettings
+    )
+    """The settings of :meth:`visualize`."""
 
     metadata: ToolResultMetadata = field(default_factory=ToolResultMetadata)
     """ToolResultMetadata attached to a result."""
 
-    def to_pickle(self, file_path: str | Path):
-        """Save result instance to disk."""
-        with Path(file_path).open("wb") as f:
-            pickle.dump(self, f)
+    def visualize(
+        self,
+        settings: BaseVisualizationSettings | None = None,
+        directory_path: str | Path = "",
+        save: bool = False,
+        show: bool = False,
+        file_format: str = "html",
+        **options: Any,
+    ) -> dict[str, Figure]:
+        """Create the figures of the result.
+
+        Args:
+            settings: The settings of the visualization.
+                If ``None``, use the default settings, which show everything.
+            directory_path: The path to the directory where the figures are saved.
+                If empty, use the current working directory.
+            save: Whether to save the figures, in files named after their keys.
+            show: Whether to show the figures.
+            file_format: The format of the plotly figures, ``"html"`` or an image
+                format. The matplotlib figures are saved in ``"png"`` when the format
+                is ``"html"``.
+            **options: The settings of the visualization, overriding ``settings``.
+
+        Returns:
+            The figures.
+        """
+        figures = flatten_figures(
+            self._create_figures(self.get_visualization_settings(settings, **options))
+        )
+        if not figures:
+            LOGGER.debug(f"There is no figure to visualize {type(self).__name__}.")
+        if save:
+            save_figures(figures, directory_path or Path.cwd(), file_format)
+        if show:
+            show_figures(figures)
+        return figures
+
+    @classmethod
+    def get_visualization_settings(
+        cls, settings: BaseVisualizationSettings | None = None, **options: Any
+    ) -> BaseVisualizationSettings:
+        """Return the settings of the visualization.
+
+        Args:
+            settings: The settings of the visualization.
+                If ``None``, use the default settings.
+            **options: The settings of the visualization, overriding ``settings``.
+
+        Returns:
+            The validated settings.
+        """
+        settings_class = cls._VISUALIZATION_SETTINGS
+        if settings is None:
+            return settings_class(**options)
+        return settings_class(**{**settings.model_dump(), **options})
+
+    def get_key_values(self) -> dict[str, float]:
+        """Return the few numbers summarizing the result.
+
+        They are for instance the integrated metrics of a validation, or the
+        criteria of a Bayesian analysis. They are logged as metrics by an MLflow
+        archive of the tool results, so that the tool runs can be sorted, filtered
+        and compared on them, and written in the summary of a directory archive.
+
+        Returns:
+            The finite numbers, bound to names whose levels are separated by dots,
+            e.g. ``"RelativeErrorMetric.reaction_forces"``.
+        """
+        return {}
+
+    def get_visualization_choices(self) -> dict[str, list[str]]:
+        """Return the values available for the settings of the visualization.
+
+        It is meant for the settings selecting names, e.g. variable names, so that a
+        user interface can propose them.
+
+        Returns:
+            The names available for some settings, bound to the names of the settings.
+        """
+        return {}
+
+    def _create_figures(
+        self, settings: BaseVisualizationSettings
+    ) -> Mapping[str, Figure | Mapping]:
+        """Create the figures of the result, without saving nor showing them.
+
+        Args:
+            settings: The settings of the visualization.
+
+        Returns:
+            The figures, possibly nested in mappings.
+        """
+        return {}
+
+    def tabulate(self) -> dict[str, DataFrame]:
+        """Return the numerical values of the result as tables.
+
+        Returns:
+            The tables, including a table ``"settings"`` with the settings of the tool
+            when there are some.
+        """
+        tables = self._create_tables()
+        settings = settings_to_dataframe(self.metadata.settings)
+        if settings is not None:
+            tables["settings"] = settings
+        return tables
+
+    def _create_tables(self) -> dict[str, DataFrame]:
+        """Create the tables of the numerical values of the result.
+
+        By default, the fields which are tables, datasets or mappings with a tabular
+        structure give a table named after the field,
+        and the scalar fields are gathered in a table named ``"scalars"``.
+
+        Returns:
+            The tables.
+        """
+        return fields_to_dataframes(self)
 
     # TODO add an entry point to open myhdf5?
     def to_hdf5(self, path: str | Path) -> None:

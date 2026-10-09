@@ -68,8 +68,16 @@ class VimseoSettings(
         "results are exported under this path.",
     )
 
-    archive_manager: str = Field(
-        default="DirectoryArchive", description="The archive manager"
+    run_archive_manager: str = Field(
+        default="DirectoryArchive",
+        description="The archive manager of the simulations.",
+    )
+
+    tool_archive_manager: str | None = Field(
+        default=None,
+        description="The archive manager of the results of the tools. If not set, it "
+        "is the ``run_archive_manager``. Set it to ``none`` to disable the archive of "
+        "the tool results.",
     )
 
     database: DatabaseConfiguration = Field(

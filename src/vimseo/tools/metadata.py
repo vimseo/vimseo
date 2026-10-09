@@ -45,3 +45,25 @@ class ToolResultMetadata(BaseMetadata):
 
     model: ModelDescription | None = None
     """A description of the model under analysis."""
+
+    tool_run_id: str = ""
+    """The unique identifier of the tool run which produced the result.
+
+    The simulations executed by this run have it as their ``tool_run_id`` metadata,
+    except those retrieved from the model cache (see
+    :attr:`.simulation_run_ids`)."""
+
+    parent_tool_run_id: str = ""
+    """The identifier of the run of the tool which executed this tool, if any."""
+
+    child_tool_run_ids: tuple[str, ...] = ()
+    """The identifiers of the runs of the tools executed by this tool."""
+
+    simulation_run_ids: tuple[str, ...] = ()
+    """The ``run_id`` of the simulations used by the tool run, and by the tools it
+    executed, in order of first use.
+
+    It includes the simulations retrieved from the model cache, which were created
+    by another run, and so it is the reference to find the simulations of a tool
+    result. A tuple is used rather than a list because it is much faster to write
+    to HDF5 when it has thousands of items."""

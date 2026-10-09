@@ -101,6 +101,10 @@
       "upper_bounds": null
     },
     "report": {},
-    "model": null
+    "model": null,
+    "tool_run_id": "645cb388a63d4a0d8cc2287bdb45d541",
+    "parent_tool_run_id": "",
+    "child_tool_run_ids": [],
+    "simulation_run_ids": []
   }
 }

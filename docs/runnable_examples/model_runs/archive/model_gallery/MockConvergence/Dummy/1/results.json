@@ -27,6 +27,8 @@
     "directory_archive_root": "C:\\Users\\sebastien.bocquet\\PycharmProjects\\vims\\docs\\runnable_examples\\model_runs\\archive\\model_gallery",
     "directory_archive_job": "..\\model_runs\\archive\\model_gallery\\MockConvergence\\Dummy\\1",
     "directory_scratch_root": "C:\\Users\\sebastien.bocquet\\PycharmProjects\\vims\\docs\\runnable_examples\\model_runs\\scratch\\model_gallery",
-    "directory_scratch_job": ""
+    "directory_scratch_job": "",
+    "run_id": "2f1f86d8d840407aa5646957415851ec",
+    "tool_run_id": ""
   }
 }

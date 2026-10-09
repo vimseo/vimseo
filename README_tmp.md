@@ -207,7 +207,8 @@ tool.execute(
 )
 tool.execute()
 tool.save_results()
-tool.plot_results(tool.result, show=True)
+# The numerical values of the result, as tables:
+tool.result.tabulate()
 ```
 
 The database GUI is then opened to explore the results:

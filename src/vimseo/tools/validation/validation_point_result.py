@@ -20,20 +20,42 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from dataclasses import field
 from json import dumps
+from typing import TYPE_CHECKING
+from typing import ClassVar
 
 from gemseo.datasets.dataset import Dataset
+from gemseo.datasets.io_dataset import IODataset
 from gemseo.utils.string_tools import MultiLineString
 from numpy import ndarray
+from pydantic import Field
 
 from vimseo.tools.base_tool import BaseResult
+from vimseo.tools.result_visualization import BaseVisualizationSettings
+from vimseo.tools.result_visualization import create_figure
+from vimseo.tools.result_visualization import flatten_numbers
 from vimseo.utilities.json_grammar_utils import EnhancedJSONEncoder
 
+if TYPE_CHECKING:
+    from vimseo.tools.result_visualization import Figure
+
 LOGGER = logging.getLogger(__name__)
+
+
+class ValidationPointVisualizationSettings(BaseVisualizationSettings):
+    output_names: tuple[str, ...] = Field(
+        default=(),
+        description="The names of the outputs whose simulated and measured "
+        "distributions are compared. If empty, use all the measured outputs.",
+    )
 
 
 @dataclass
 class ValidationPointResult(BaseResult):
     """The result of a validation point."""
+
+    _VISUALIZATION_SETTINGS: ClassVar[type[ValidationPointVisualizationSettings]] = (
+        ValidationPointVisualizationSettings
+    )
 
     nominal_data: Mapping[str, float | int | ndarray] | None = None
 
@@ -70,3 +92,51 @@ class ValidationPointResult(BaseResult):
         text.add("Simulated data:")
         text.add(repr(self.simulated_data))
         return str(text)
+
+    def get_output_names(self) -> list[str]:
+        """Return the names of the outputs compared to measured data."""
+        names = self.metadata.report.get("measured_output_names")
+        if names:
+            return list(names)
+        if self.simulated_data is None:
+            return []
+        return self.simulated_data.get_variable_names(IODataset.OUTPUT_GROUP)
+
+    def _create_figures(
+        self, settings: ValidationPointVisualizationSettings
+    ) -> dict[str, Figure]:
+        if self.measured_data is None or self.simulated_data is None:
+            return {}
+
+        from statsmodels.graphics.gofplots import qqplot_2samples
+
+        from vimseo.tools.post_tools.distribution_comparison_plot import (
+            DistributionComparison,
+        )
+
+        figures = {}
+        for output_name in settings.output_names or self.get_output_names():
+            for comparison_type in ["PDF", "CDF"]:
+                figures[f"{comparison_type}_comparison_{output_name}"] = create_figure(
+                    DistributionComparison,
+                    self,
+                    output_name,
+                    comparison_type,
+                    show_type_b_uncertainties=True,
+                )
+
+            figures[f"qq_plot_{output_name}"] = qqplot_2samples(
+                self.measured_data.to_dict_of_arrays(by_group=False)[
+                    output_name
+                ].ravel(),
+                self.simulated_data.to_dict_of_arrays(by_group=False)[
+                    output_name
+                ].ravel(),
+                ylabel="Simulated",
+                xlabel="Reference",
+                line="45",
+            )
+        return figures
+
+    def get_key_values(self) -> dict[str, float]:
+        return flatten_numbers(self.integrated_metrics or {})

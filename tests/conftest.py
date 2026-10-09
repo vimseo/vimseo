@@ -18,6 +18,9 @@ from __future__ import annotations
 import subprocess
 from pathlib import Path
 
+import pytest
+
+from vimseo.config.global_configuration import _configuration as config
 from vimseo.utilities.pytest_conftest import *  # ruff: ignore[unused-import, undefined-local-with-import-star]
 from vimseo.utilities.pytest_conftest import (
     pytest_sessionfinish as _fortran_sessionfinish,
@@ -80,3 +83,17 @@ def pytest_sessionfinish(session, exitstatus):
         else:
             print(message)
         session.exitstatus = 1
+
+
+@pytest.fixture(autouse=True)
+def no_tool_archive():
+    """Disable the archive of the tool results, so that a test does not write into the
+    directory it runs in.
+
+    A test of the archive enables it by passing ``archive_manager`` to the tool,
+    which takes precedence over the configuration.
+    """
+    previous = config.tool_archive_manager
+    config.tool_archive_manager = "none"
+    yield
+    config.tool_archive_manager = previous

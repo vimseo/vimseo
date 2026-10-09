@@ -22,6 +22,8 @@
     "directory_archive_root": "C:\\Users\\sebastien.bocquet\\PycharmProjects\\vims\\docs\\runnable_examples\\model_runs\\archive\\model_gallery",
     "directory_archive_job": "..\\model_runs\\archive\\model_gallery\\MockModelFields\\LC1\\1",
     "directory_scratch_root": "C:\\Users\\sebastien.bocquet\\PycharmProjects\\vims\\docs\\runnable_examples\\model_runs\\scratch\\model_gallery",
-    "directory_scratch_job": "..\\model_runs\\scratch\\model_gallery\\MockModelFields\\LC1\\1"
+    "directory_scratch_job": "..\\model_runs\\scratch\\model_gallery\\MockModelFields\\LC1\\1",
+    "run_id": "5bfbbbdbcf1945aa8c4c2ea754fc3d7d",
+    "tool_run_id": ""
   }
 }

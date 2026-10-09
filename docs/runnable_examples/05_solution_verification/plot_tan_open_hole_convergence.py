@@ -198,13 +198,13 @@ print(
 # %%
 # The convergence-fit plot shows the sampled stress, the fitted power law and the
 # converged-value estimates at a null element size:
-figures = verificator.plot_results(
-    verificator.result,
-    save=False,
-    show=True,
-    directory_path=verificator.working_directory,
-)
+figures = verificator.result.visualize(show=True)
 figures["convergence_fit"]
+
+# %%
+# The extrapolated value, the convergence order, the grid convergence indices and
+# their error bands are gathered in a table:
+verificator.result.tabulate()["extrapolation"]
 
 # %%
 # A sawtooth quantity
@@ -247,12 +247,7 @@ print(
 # informative: it overlays the power-law fit (with its fitted order and residual)
 # and the model-free median of the finest grids (with its uncertainty band) on
 # the sawtooth data:
-figures_peak = verificator_peak.plot_results(
-    verificator_peak.result,
-    save=False,
-    show=True,
-    directory_path=verificator_peak.working_directory,
-)
+figures_peak = verificator_peak.result.visualize(show=True)
 figures_peak["convergence_fit"]
 
 # %%
@@ -336,12 +331,7 @@ for native_output in ("sigma_xx_r", "sigma_xx_d0"):
 # plots are flat, side by side (``sigma_xx_r`` on the left, ``sigma_xx_d0`` on the
 # right):
 native_figures = {
-    name: verificator.plot_results(
-        verificator.result,
-        save=False,
-        show=True,
-        directory_path=verificator.working_directory,
-    )
+    name: verificator.result.visualize(show=True)
     for name, verificator in native_verificators.items()
 }
 side_by_side(

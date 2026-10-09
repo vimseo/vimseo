@@ -155,15 +155,15 @@ analysis_l.result
 # %%
 # Then, we determine the burnin for each MCMC sampling.
 # First for the Normal model:
-analysis_n.plot_burnin(analysis_n.result, save=False, show=True)
+analysis_n.result.plot_mcmc_chains()
 
 # %%
 # Then, the Weibull Min model:
-analysis_w.plot_burnin(analysis_w.result, save=False, show=True)
+analysis_w.result.plot_mcmc_chains()
 
 # %%
 # And the Log Normal model:
-analysis_l.plot_burnin(analysis_l.result, save=False, show=True)
+analysis_l.result.plot_mcmc_chains()
 
 # %%
 # A value of 50 for the burnin
@@ -183,11 +183,11 @@ analysis_l.post(50, n_mcmc=N_MCMC, nb_samples_ml=10, nb_samples_posterior=5)
 # %% Next,
 # we generate the plots
 # for the Normal model,
-figs_n = analysis_n.plot_results()
+figs_n = analysis_n.result.visualize(show=True)
 # the Weibull Min model
-figs_w = analysis_w.plot_results()
+figs_w = analysis_w.result.visualize(show=True)
 # and the Log Normal model
-figs_l = analysis_l.plot_results()
+figs_l = analysis_l.result.visualize(show=True)
 
 
 # %%
@@ -302,8 +302,8 @@ analysis_l_b.save_results()
 # %%
 # Then,
 # we determine the burnin for each MCMC sampling:
-analysis_w_b.plot_burnin(analysis_w_b.result, save=True, show=True)
-analysis_l_b.plot_burnin(analysis_l_b.result, save=True, show=True)
+analysis_w_b.result.plot_mcmc_chains()
+analysis_l_b.result.plot_mcmc_chains()
 
 # Finally,
 # as earlier,
@@ -316,9 +316,9 @@ analysis_l_b.post(50)
 
 # %% and generate the plots
 # the Weibull Min model
-figs_w_b = analysis_w_b.plot_results()
+figs_w_b = analysis_w_b.result.visualize(show=True)
 # and the Log Normal model
-figs_l_b = analysis_l_b.plot_results()
+figs_l_b = analysis_l_b.result.visualize(show=True)
 
 # %%
 # First,

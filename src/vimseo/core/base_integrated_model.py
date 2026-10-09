@@ -34,6 +34,7 @@ from typing import TYPE_CHECKING
 from typing import ClassVar
 
 import numpy as np
+from gemseo import READ_ONLY_EMPTY_DICT
 from gemseo.caches.simple_cache import SimpleCache
 from gemseo.core.chains.chain import MDOChain
 from gemseo.core.discipline.base_discipline import CacheType
@@ -57,6 +58,9 @@ from vimseo.core.model_metadata import DEFAULT_METADATA
 from vimseo.core.model_metadata import MetaData
 from vimseo.core.model_metadata import MetaDataNames
 from vimseo.core.model_settings import IntegratedModelSettings
+from vimseo.core.run_context import current_tool_run
+from vimseo.core.run_context import new_run_id
+from vimseo.core.run_context import record_simulation_from_outputs
 from vimseo.material.material import Material
 from vimseo.material.material_registry import resolve_material
 from vimseo.storage_management import get_archive_class
@@ -72,6 +76,8 @@ if TYPE_CHECKING:
     from collections.abc import Sequence
 
     from gemseo.caches.hdf5_cache import HDF5Cache
+    from gemseo.core.discipline.discipline_data import DisciplineData
+    from gemseo.typing import StrKeyMapping
     from plotly.graph_objs import Figure
 
     from vimseo.core.components.external_software_component import BaseComponent
@@ -315,6 +321,9 @@ class IntegratedModel(GemseoDisciplineWrapper):
 
         self._run_time = np.nan
 
+        self._run_id = ""
+        self._tool_run_id = ""
+
         self._datetime = datetime.today()
 
         self._chain = MDOChain(components)
@@ -543,8 +552,23 @@ class IntegratedModel(GemseoDisciplineWrapper):
 
         return dataflow
 
+    def execute(
+        self,
+        input_data: StrKeyMapping = READ_ONLY_EMPTY_DICT,
+    ) -> DisciplineData:
+        output_data = super().execute(input_data)
+        # Done here and not in ``_run``, which is skipped when the outputs are
+        # retrieved from the cache: the simulation is used by the tool all the same.
+        record_simulation_from_outputs(output_data)
+        return output_data
+
     def _run(self, input_data):
         start_time = time()
+
+        # A new identifier for each simulation really run (not the cached ones).
+        self._run_id = new_run_id()
+        tool_run = current_tool_run()
+        self._tool_run_id = "" if tool_run is None else tool_run.tool_run_id
 
         if self._whether_use_scratch_dir():
             self._scratch_manager.create_job_directory()
@@ -560,15 +584,19 @@ class IntegratedModel(GemseoDisciplineWrapper):
         for discipline in self._chain.disciplines:
             discipline._job_directory = self._scratch_manager.job_directory
 
-        self._chain.execute(input_data)
-        output_data = self._chain.get_output_data()
+        try:
+            self._chain.execute(input_data)
+            output_data = self._chain.get_output_data()
 
-        end_time = time()
-        self._run_time = end_time - start_time
+            end_time = time()
+            self._run_time = end_time - start_time
 
-        # Collect field files, generate metadata and write the archive (results
-        # + persistent files); then enforce the scratch-persistency policy.
-        self.archive_outputs(output_data)
+            # Collect field files, generate metadata and write the archive (results
+            # + persistent files); then enforce the scratch-persistency policy.
+            self.archive_outputs(output_data)
+        except BaseException:
+            self._archive_manager.abort_job()
+            raise
         self._manage_persistency(output_data)
 
         return output_data
@@ -884,6 +912,8 @@ class IntegratedModel(GemseoDisciplineWrapper):
             MetaDataNames.directory_scratch_job: array([
                 str(self._scratch_manager.job_directory)
             ]),
+            MetaDataNames.run_id: array([self._run_id]),
+            MetaDataNames.tool_run_id: array([self._tool_run_id]),
         })
 
     def create_cache_from_archive(self, run_ids: Iterable[str] = ()) -> HDF5Cache:

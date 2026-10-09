@@ -37,6 +37,7 @@ from vimseo.tools.validation.validation_point_result import ValidationPointResul
 from vimseo.utilities.datasets import DatasetAddFromModel
 from vimseo.utilities.datasets import DatasetAddFromStatistics
 from vimseo.utilities.distribution import DistributionParameters
+from vimseo.utilities.test_utils import check_result_visualization
 
 
 @pytest.fixture
@@ -217,16 +218,13 @@ def test_plot_results(tmp_wd, validation_point):
     """Check that the plots associated to a ``ValidationPointResult`` are correctly
     generated."""
     validation_point_tool, _model, _ = validation_point
-    validation_point_tool.plot_results(
-        validation_point_tool.result, "y1", show=False, save=True
+    directory = validation_point_tool.working_directory
+    validation_point_tool.result.visualize(
+        directory_path=directory, output_names=["y1"], save=True
     )
-    assert (validation_point_tool.working_directory / "qq_plot_y1.png").is_file()
-    assert (
-        validation_point_tool.working_directory / "distribution_comparison_PDF_y1.html"
-    ).is_file()
-    assert (
-        validation_point_tool.working_directory / "distribution_comparison_CDF_y1.html"
-    ).is_file()
+    assert (directory / "qq_plot_y1.png").is_file()
+    assert (directory / "PDF_comparison_y1.html").is_file()
+    assert (directory / "CDF_comparison_y1.html").is_file()
 
 
 @pytest.mark.parametrize("master_value", [2])
@@ -299,3 +297,10 @@ def test_serialization(tmp_wd, validation_point):
     result.to_hdf5("result.hdf5")
     serialized_result = ValidationPointResult.from_hdf5("result.hdf5")
     assert_results_equal(result, serialized_result)
+
+
+def test_result_visualization(tmp_wd, validation_point):
+    """Check that a validation point result can be visualized once loaded from a
+    file."""
+    validation_point_tool, _, _ = validation_point
+    check_result_visualization(validation_point_tool.result, "visualization")

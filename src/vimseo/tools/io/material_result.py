@@ -15,12 +15,15 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 from gemseo.algos.parameter_space import ParameterSpace
 
 from vimseo.material.material import Material
 from vimseo.tools.base_result import BaseResult
 
 
+@dataclass
 class MaterialResult(BaseResult):
     material: Material | None = None
 

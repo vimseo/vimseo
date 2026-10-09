@@ -196,7 +196,7 @@ fig
 # For instance, the :class:`~.SpaceTool` provides a scatter matrix plot
 # where the diagonal blocks represent the histograms of the random variables
 # while the other blocks represents the value of a variable versus another.
-space_tool.plot_results(space_tool.result, save=False, show=True, n_samples=200)
+space_tool.result.visualize(show=True, n_samples=200)
 # Workaround for HTML rendering, instead of ``show=True``
 plt.show()
 
@@ -278,4 +278,4 @@ print(results)
 
 # %%
 # The fitted synthetic distribution can be plotted.
-statistic_tool.plot_results(results, variable=output_name, save=False, show=True)
+results.visualize(variable_names=[output_name], show=True)

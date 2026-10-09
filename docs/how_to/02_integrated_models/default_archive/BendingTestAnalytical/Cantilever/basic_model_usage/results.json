@@ -242,6 +242,8 @@
     "directory_archive_root": "C:\\Users\\sebastien.bocquet\\PycharmProjects\\vims\\docs\\how_to\\02_integrated_models\\default_archive",
     "directory_archive_job": "default_archive\\BendingTestAnalytical\\Cantilever\\basic_model_usage",
     "directory_scratch_root": "C:\\Users\\sebastien.bocquet\\PycharmProjects\\vims\\docs\\how_to\\02_integrated_models\\default_scratch",
-    "directory_scratch_job": ""
+    "directory_scratch_job": "",
+    "run_id": "85f82b97f086410b877437a6f2331b13",
+    "tool_run_id": ""
   }
 }

@@ -26,7 +26,6 @@ from gemseo.disciplines.surrogate import SurrogateDiscipline
 from gemseo.mlearning.core.quality.base_ml_algo_quality import BaseMLAlgoQuality
 from gemseo.mlearning.core.quality.factory import MLAlgoQualityFactory
 from gemseo.mlearning.core.selection import MLAlgoSelection
-from gemseo.post.mlearning.ml_regressor_quality_viewer import MLRegressorQualityViewer
 from gemseo.utils.directory_creator import DirectoryNamingMethod
 from pydantic import Field
 
@@ -43,8 +42,6 @@ from vimseo.utilities.datasets import resolve_io_groups
 if TYPE_CHECKING:
     from collections.abc import Iterable
     from pathlib import Path
-
-    from plotly.graph_objects import Figure
 
     from vimseo.tools.surrogate.surrogate_result import QualitiesType
 
@@ -349,46 +346,3 @@ class SurrogateTool(BaseAnalysisTool):
             )
 
         return candidate_qualities
-
-    def plot_results(
-        self,
-        result: SurrogateResult,
-        output_names: Iterable[str] = (),
-        directory_path: str | Path = "",
-        show: bool = True,
-        save: bool = False,
-        **options,
-    ) -> Mapping[str, Figure]:
-        """Plotting the results according to a specific plot.
-
-        Args:
-            output_names: The names of the outputs for which cross-validation is plotted.
-                If left to default value, all model output names are considered.
-        """
-
-        options.update({"show": show, "save": save})
-        if not output_names:
-            output_names = result.model.output_grammar.names
-
-        # TODO activate cross validation mode when available in GEMSEO.
-        # TODO add directory_path=self.working_directory when discrimination
-        #  of Dataset constructor and execute options is done.
-        viewer = MLRegressorQualityViewer(result.model.regression_model)
-
-        figures = {}
-        for output_name in output_names:
-            file_name = f"surrogate_{result.model.name}_learning_{output_name}"
-            # gemseo's own ``file_name`` is swallowed into the underlying
-            # ScatterMatrix/Scatter constructor's unused extra options rather
-            # than being honored, so it always saves under its own generated
-            # name; save the figure ourselves under vimseo's naming instead.
-            figure = viewer.plot_predictions_vs_observations(
-                output_name,
-                save=False,
-                show=show,
-            ).figures[0]
-            if save:
-                figure.savefig(self.working_directory / f"{file_name}.png")
-            figures[file_name] = figure
-
-        return figures

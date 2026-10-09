@@ -38,4 +38,4 @@ class IntegratedModelSettings(BaseArchiveSettings, DirectoryScratchSettings):
 
     cache_file_path: str | Path = ""
 
-    archive_manager: str = config.archive_manager
+    archive_manager: str = config.run_archive_manager

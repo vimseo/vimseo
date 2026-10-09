@@ -36,6 +36,10 @@
       "upper_bounds": null
     },
     "report": {},
-    "model": null
+    "model": null,
+    "tool_run_id": "f1c317b7708b4b4db42680edef77a1ae",
+    "parent_tool_run_id": "",
+    "child_tool_run_ids": [],
+    "simulation_run_ids": []
   }
 }

@@ -11,14 +11,14 @@
 
 ## Results for OpfmCube
 
-The results for the OpfmCube model are presented based on the sensitivity viewer dashboard,
-which can be obtained by typing ``dashboard_sensitivity`` in a console where VIMSEO is installed:
+The results for the OpfmCube model are presented based on the tool result dashboard,
+which can be obtained by typing ``dashboard_tool_result`` in a console where VIMSEO is installed:
 
 ## OpfmCube PST
 
 ### Layup $[30, 90, -30, 90, -30, -30, 90, -30, 90, 30]$
 
-We present the plots available in the ``dashboard_sensitivity``.
+We present the plots available in the ``dashboard_tool_result``.
 These plots are specialized for a Morris analysis.
 Other type of sensitivity analysis would be visualized through
 specific plots.

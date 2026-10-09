@@ -15,10 +15,14 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
+from dataclasses import field
+
 from gemseo.datasets.io_dataset import IODataset
 
 from vimseo.tools.base_result import BaseResult
 
 
+@dataclass
 class DatasetResult(BaseResult):
-    dataset: IODataset = IODataset()
+    dataset: IODataset = field(default_factory=IODataset)

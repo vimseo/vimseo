@@ -42,8 +42,9 @@ class ResultFileReaderTool(BaseReaderFile):
     def __init__(
         self,
         tool_name: str,
+        **options,
     ):
-        super().__init__()
+        super().__init__(**options)
         self.result = AnalysisToolsFactory().create(tool_name).result
 
     def get_file_extension(self):

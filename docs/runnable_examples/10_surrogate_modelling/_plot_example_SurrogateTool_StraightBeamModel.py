@@ -220,12 +220,7 @@ print(surrogate_tool.result)
 # %%
 # Predictions versus observations can be plotted:
 
-figures = surrogate_tool.plot_results(
-    surrogate_tool.result,
-    output_names=["reaction_forces"],
-    show=True,
-    save=False,
-)
+figures = surrogate_tool.result.visualize(output_names=["reaction_forces"], show=True)
 
 # %%
 # The user is invited to visit the |gemseo| documentation for a complete view of the

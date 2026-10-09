@@ -85,8 +85,14 @@ All analysis tools inherit from `BaseTool` ([base_tool.py](src/vimseo/tools/base
 
 - Class attributes `_INPUTS` (a `BaseInputs` subclass) and `_SETTINGS` (a `BaseSettings` subclass) define Pydantic models for validation.
 - `execute(inputs=..., settings=...)` accepts instances of those Pydantic models, or falls back to keyword arguments.
-- Results are stored in `tool.result` (a `BaseResult` subclass) and persisted via `tool.save_results()` to HDF5/pickle.
-- `plot_results(result, ...)` produces Plotly figures.
+- Results are stored in `tool.result` (a `BaseResult` subclass) and persisted via `tool.save_results()` to HDF5.
+- A result is visualized without its tool, e.g. once loaded from an archive:
+  `result.visualize(**settings)` returns its figures (Plotly or matplotlib) and
+  `result.tabulate()` its numerical values as DataFrames. A result class declares its
+  figures in `_create_figures()` and its settings in `_VISUALIZATION_SETTINGS`, whose
+  fields are flat and default to "everything". `BaseTool.plot_results` is deprecated.
+- `vimseo.api.load_tool_result(uri)` loads a result from a file, an archived tool run
+  directory or `tool-run:{tool_run_id}` ([tool_archive/uri.py](src/vimseo/storage_management/tool_archive/uri.py)).
 
 Available tool categories: DOE, sensitivity analysis, calibration, verification (solution + vs-data + vs-model), validation (point + case), surrogate modelling, statistics, Bayesian analysis, design value.
 
@@ -98,6 +104,20 @@ Available tool categories: DOE, sensitivity analysis, calibration, verification 
   ([configuration_settings.py:71](src/vimseo/config/configuration_settings.py)).
 - `"MlflowArchive"` — stores model runs in an MLflow tracking server. Requires the `mlflow`
   extra, and is imported lazily so that the model layer does not depend on mlflow.
+
+The **tool results** are archived separately, by `open_tool_archive()` in
+[tool_archive/__init__.py](src/vimseo/storage_management/tool_archive/__init__.py), selected
+by the `archive_manager` setting of a tool, else `config.tool_archive_manager`, else
+`config.run_archive_manager` (`"none"` disables it; the tests disable it in `conftest.py`):
+- `DirectoryToolArchive` — `{root}/tools/{tool_name}/{tool_run_id}/` holds the result HDF5
+  and a JSON summary.
+- `MlflowToolArchive` — one MLflow run per tool run in the experiment `tools`, the run of a
+  subtool nested in the run of its parent. The result HDF5 and the summary are artifacts,
+  the searchable fields are `vimseo.*` tags and the settings are params.
+
+A tool run is identified by its `tool_run_id` (`result.metadata.tool_run_id`); its simulations
+carry it too. `load_tool_result(uri)` reads a result from a file, a tool run directory,
+`tool-run:{tool_run_id}` or `runs:/{mlflow_run_id}`.
 
 Scratch storage is a separate mechanism: `DirectoryScratch`
 ([scratch_storage.py](src/vimseo/storage_management/scratch_storage.py)) is always used and
@@ -140,6 +160,7 @@ All settings classes inherit from `BaseSettings` (Pydantic `BaseModel` with `ext
 | `workflow_executor` | `vimseo.workflow.workflow_executor:main` |
 | `dashboard_database_viewer` | `vimseo.dashboards.database_viewer.db_viewer_entry_point:main` |
 | `dashboard_mlflow` | `vimseo.storage_management.mlflow_ui_entry_point:main` |
+| `visualize_tool_result` | `vimseo.tools.visualize_tool_result:main` |
 
 ### Test structure
 

@@ -139,8 +139,8 @@ step.result.prior_parameters
 
 # %%
 # The outputs can be compared to the reference data, before and after calibration:
-figs = step.plot_results(step.result, show=True, save=False)
-figs["Dummy"]["simulated_versus_reference_curve_y_history_versus_x_history"]
+figs = step.result.visualize(show=True)
+figs["Dummy_simulated_versus_reference_curve_y_history_versus_x_history"]
 
 # %%
 # The curves that have been defined as ``control_outputs`` can be retrieved as

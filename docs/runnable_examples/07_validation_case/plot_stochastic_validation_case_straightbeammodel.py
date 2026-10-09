@@ -56,7 +56,6 @@ from vimseo.tools.validation.validation_point import StochasticValidationPoint
 from vimseo.tools.validation.validation_point import StochasticValidationPointInputs
 from vimseo.tools.validation.validation_point import StochasticValidationPointSettings
 from vimseo.tools.validation.validation_point import read_nominal_values
-from vimseo.tools.validation_case.validation_case import DeterministicValidationCase
 from vimseo.tools.validation_case.validation_case_result import ValidationCaseResult
 from vimseo.utilities.datasets import SEP
 from vimseo.utilities.generate_validation_reference import Bias
@@ -204,14 +203,12 @@ case_result
 # A validation point result can be plotted to compare the measured and simulated
 # distributions of the quantity of interest.
 result = results[0]
-figs = StochasticValidationPoint().plot_results(
-    result, output_name="reaction_forces", show=True, save=False
-)
-figs["PDF_comparison"]
+figs = result.visualize(output_names=["reaction_forces"], show=True)
+figs["PDF_comparison_reaction_forces"]
 
 # %%
 # The comparison of the measured and simulated CDF:
-figs["CDF_comparison"]
+figs["CDF_comparison_reaction_forces"]
 
 
 # %%
@@ -220,24 +217,22 @@ figs["CDF_comparison"]
 # using integrated metrics such as the AreaMetric (or a metric of this family),
 # which output a scalar value for each validation point.
 # The plots are computed for a given output and metric:
-figs = DeterministicValidationCase().plot_results(
-    case_result,
-    metric_name="AbsoluteRelativeErrorP90",
-    output_name="reaction_forces",
+figs = case_result.visualize(
+    metric_names=["AbsoluteRelativeErrorP90"],
+    output_names=["reaction_forces"],
     show=True,
-    save=False,
 )
 # a parallel coordinates plot:
-figs["parallel_coordinates"]
+figs["parallel_coordinates_AbsoluteRelativeErrorP90_reaction_forces"]
 
 # %%
 # an error scatter matrix:
-figs["error_scatter_matrix"]
+figs["error_scatter_matrix_AbsoluteRelativeErrorP90_reaction_forces"]
 
 # %%
 # a predict-versus-true plot:
-figs["predict_vs_true"]
+figs["predict_vs_true_AbsoluteRelativeErrorP90_reaction_forces"]
 
 # %%
 # a bar plot of the integrated metrics:
-figs["integrated_metric_bars"]
+figs["integrated_metric_bars_AbsoluteRelativeErrorP90"]

@@ -25,12 +25,14 @@ class BaseReaderFile(BaseTool):
 
     _EXTENSION = ""
 
-    def __init__(
-        self,
-    ):
-        super().__init__(
-            working_directory=Path.cwd(),
-        )
+    def __init__(self, **options):
+        """
+        Args:
+            **options: The options of the tool. The working directory is the current
+                directory, unless ``working_directory`` is passed.
+        """
+        options.setdefault("working_directory", Path.cwd())
+        super().__init__(**options)
 
     def get_file_extension(self):
         """The extension of the file containing the data."""

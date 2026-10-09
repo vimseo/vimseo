@@ -19,10 +19,8 @@ import logging
 from collections import defaultdict
 from collections.abc import Mapping
 from copy import deepcopy
-from pathlib import Path
 from typing import TYPE_CHECKING
 
-import matplotlib.pyplot as plt
 from gemseo.algos.parameter_space import ParameterSpace
 from gemseo.datasets.io_dataset import IODataset
 from gemseo.utils.directory_creator import DirectoryNamingMethod
@@ -35,7 +33,6 @@ from pandas import DataFrame
 from pandas import read_csv
 from pydantic import ConfigDict
 from pydantic import Field
-from statsmodels.graphics.gofplots import qqplot_2samples
 from strenum import StrEnum
 
 from vimseo.config.global_configuration import _configuration as config
@@ -45,7 +42,6 @@ from vimseo.tools.base_composite_tool import BaseCompositeTool
 from vimseo.tools.base_settings import BaseInputs
 from vimseo.tools.doe.doe import DOESettings
 from vimseo.tools.doe.doe import DOETool
-from vimseo.tools.post_tools.distribution_comparison_plot import DistributionComparison
 from vimseo.tools.space.space_tool import update_space_from_statistics
 from vimseo.tools.statistics.statistics_tool import StatisticsInputs
 from vimseo.tools.statistics.statistics_tool import StatisticsSettings
@@ -59,8 +55,7 @@ from vimseo.utilities.encoded_to_numerical_vectors import decode_stringified_vec
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
-
-    from plotly.graph_objs import Figure
+    from pathlib import Path
 
 
 LOGGER = logging.getLogger(__name__)
@@ -280,64 +275,6 @@ class StochasticValidationPoint(BaseAnalysisTool):
 
         self.result.simulated_data = doe_dataset
         return self.result
-
-    def plot_results(
-        self,
-        result: ValidationPointResult,
-        output_name: str,
-        directory_path: str | Path = "",
-        save=False,
-        show=True,
-        file_format="html",
-    ) -> Mapping[str, Figure]:
-        """Plot a comparison of predicted versus measured distribution, and a Q-Q plot of
-        them.
-
-        Args:
-            result: The validation point result to visualize.
-            output_name: The name of the output variable to visualize.
-            file_format: The format to which plots are generated.
-        """
-        working_directory = (
-            self.working_directory if directory_path == "" else Path(directory_path)
-        )
-
-        figures = {}
-
-        plot = DistributionComparison(working_directory=working_directory)
-        for comparison_type in ["PDF", "CDF"]:
-            figures[f"{comparison_type}_comparison"] = plot.execute(
-                result,
-                output_name,
-                comparison_type,
-                show_type_b_uncertainties=True,
-                show=show,
-                save=save,
-            ).figure
-
-        data_ref = result.measured_data.to_dict_of_arrays(by_group=False)[
-            output_name
-        ].ravel()
-        data_sim = result.simulated_data.to_dict_of_arrays(by_group=False)[
-            output_name
-        ].ravel()
-
-        fig = qqplot_2samples(
-            data_ref,
-            data_sim,
-            ylabel="Simulated",
-            xlabel="Reference",
-            line="45",
-        )
-
-        if show:
-            plt.show()
-        if save:
-            plt.savefig(working_directory / f"qq_plot_{output_name}.png")
-
-        figures["qq_plot"] = fig
-
-        return figures
 
 
 class NominalValuesOutputType(StrEnum):

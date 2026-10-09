@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import functools
 import logging
+from typing import TYPE_CHECKING
 
 from pydantic import ConfigDict
 from pydantic import Field
@@ -24,6 +25,9 @@ from pydantic import Field
 from vimseo.tools.base_tool import BaseTool
 from vimseo.tools.base_tool import StreamlitToolConstructorSettings
 from vimseo.tools.base_tool import ToolConstructorSettings
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 LOGGER = logging.getLogger(__name__)
 
@@ -53,6 +57,17 @@ class BaseCompositeTool(BaseTool):
         options = BaseCompositeToolConstructorSettings(**options).model_dump()
         self._subtools = {tool.name: tool for tool in options.pop("subtools")}
         super().__init__(**options)
+        # The subtools are usually created without archive settings: they archive
+        # their results where their parent does.
+        for tool in self._subtools.values():
+            tool._inherit_archive_settings(self._archive_manager, self._archive_root)
+
+    def _inherit_archive_settings(
+        self, archive_manager: str | None, archive_root: str | Path
+    ) -> None:
+        super()._inherit_archive_settings(archive_manager, archive_root)
+        for tool in self._subtools.values():
+            tool._inherit_archive_settings(self._archive_manager, self._archive_root)
 
     def validate(f):  # ruff: ignore[invalid-first-argument-name-for-method]
         @functools.wraps(f)
@@ -63,8 +78,7 @@ class BaseCompositeTool(BaseTool):
                 tool._create_working_directory()
 
             options = self._pre_process_options(**options)
-            f(self, *args, **options)
-            self._set_options_to_results(options)
+            self._execute_and_archive(f, args, options)
             return self.result
 
         return decorated

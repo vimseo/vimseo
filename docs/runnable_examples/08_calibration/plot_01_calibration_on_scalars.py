@@ -180,8 +180,12 @@ imshow(
 # And specifically for scalar metrics, for each data sample (6 here),
 # a bar plot shows the agreement between
 # the simulated prior, posterior and reference output:
-figures = step.plot_results(step.result, save=False, show=True)
-figures["Cantilever"][f"simulated_versus_reference_{output_name}_bars"]
+figures = step.result.visualize(show=True)
+figures[f"Cantilever_simulated_versus_reference_{output_name}_bars"]
+
+# %%
+# The prior and posterior values of the parameters can be compared in a table:
+step.result.tabulate()["parameters"]
 
 # %%
 # The material before calibration:

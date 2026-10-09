@@ -31,16 +31,11 @@ from vimseo.config.global_configuration import _configuration as config
 from vimseo.tools.base_analysis_tool import BaseAnalysisTool
 from vimseo.tools.base_settings import BaseSettings
 from vimseo.tools.base_tool import BaseTool
-from vimseo.tools.post_tools.verification_case_plots import ConvergenceCase
-from vimseo.tools.post_tools.verification_case_plots import CpuTimeCompromiseCase
 from vimseo.tools.verification.verification_result import SolutionVerificationCaseResult
 from vimseo.tools.verification.verification_result import SolutionVerificationResult
 
 if TYPE_CHECKING:
-    from collections.abc import Mapping
     from pathlib import Path
-
-    from plotly.graph_objs import Figure
 
 
 class SolutionVerificationCaseSettings(BaseSettings):
@@ -69,11 +64,13 @@ class SolutionVerificationCase(BaseAnalysisTool):
         root_directory: str | Path = config.root_directory,
         directory_naming_method: DirectoryNamingMethod = DirectoryNamingMethod.NUMBERED,
         working_directory: str | Path = config.working_directory,
+        **options,
     ):
         super().__init__(
             root_directory=root_directory,
             directory_naming_method=directory_naming_method,
             working_directory=working_directory,
+            **options,
         )
         self.result = SolutionVerificationCaseResult()
 
@@ -122,65 +119,3 @@ class SolutionVerificationCase(BaseAnalysisTool):
         self.result.convergence_data = df
 
         return self.result
-
-    def plot_results(
-        self,
-        result: SolutionVerificationCaseResult,
-        output_name: str = "",
-        normalize_index_output: int | None = None,
-        dark_mode: bool = False,
-        directory_path: str | Path = "",
-        save=False,
-        show=True,
-    ) -> Mapping[str, Figure]:
-        """Superpose several convergence trajectories and CPU time versus the output
-        variable of interest.
-
-        Args:
-            result: The verification result to visualize.
-            output_name: The name of the output variable on which convergence is studied.
-            The output name stores as setting in the passed convergence result
-            is used by default.
-            normalize_index_output: The index of the CPU time (x-axis of the plot)
-            used to normalize the output of interest. It means that the output
-            of interest for each convergence trajectories is equal to one
-            at this location.
-            normalize_index_cpu_time: The index of the CPU time (x-axis of the plot)
-            used to normalize the CPU time values. It means that the CPU time
-            for each convergence trajectories is equal to one at this location.
-            dark_mode: Whether to use dark mode for the plots.
-        """
-        figs = {}
-        figs["convergence"] = ConvergenceCase(
-            working_directory=directory_path
-            if directory_path != ""
-            else self.working_directory
-        ).execute(
-            result.convergence_data,
-            result.metadata.misc["nb_meshes"],
-            result.metadata.misc["element_size_variable_name"],
-            (result.metadata.misc["output_name"] if output_name == "" else output_name),
-            normalize_index_output=normalize_index_output,
-            hovering_variables=result.metadata.misc["variable_names"],
-            dark_mode=dark_mode,
-            save=save,
-            show=show,
-        )
-
-        figs["cpu_time_compromise"] = CpuTimeCompromiseCase(
-            working_directory=directory_path
-            if directory_path != ""
-            else self.working_directory
-        ).execute(
-            result.convergence_data,
-            result.metadata.misc["nb_meshes"],
-            result.metadata.misc["element_size_variable_name"],
-            (result.metadata.misc["output_name"] if output_name == "" else output_name),
-            normalize_index_output=normalize_index_output,
-            hovering_variables=result.metadata.misc["variable_names"],
-            dark_mode=dark_mode,
-            save=save,
-            show=show,
-        )
-
-        return figs

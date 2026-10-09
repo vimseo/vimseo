@@ -24,6 +24,8 @@
     "directory_archive_root": "C:\\Users\\sebastien.bocquet\\PycharmProjects\\vims\\docs\\runnable_examples\\model_runs\\archive\\model_gallery",
     "directory_archive_job": "..\\model_runs\\archive\\model_gallery\\MockModelWithMaterial\\LC2\\1",
     "directory_scratch_root": "C:\\Users\\sebastien.bocquet\\PycharmProjects\\vims\\docs\\runnable_examples\\model_runs\\scratch\\model_gallery",
-    "directory_scratch_job": ""
+    "directory_scratch_job": "",
+    "run_id": "f96bb3645fa04b81bfd0c20e853913fd",
+    "tool_run_id": ""
   }
 }

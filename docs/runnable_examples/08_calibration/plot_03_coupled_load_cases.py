@@ -189,12 +189,12 @@ step.save_results()
 # %%
 # For scalar metrics, a bar plot shows the agreement between
 # the simulated and reference outputs. for the Cantilever load case:
-figures = step.plot_results(step.result, save=False, show=True)
-figures["Cantilever"][f"simulated_versus_reference_{output_name}_bars"]
+figures = step.result.visualize(show=True)
+figures[f"Cantilever_simulated_versus_reference_{output_name}_bars"]
 
 # %%
-# And fof the ThreePoints load case:
-figures["ThreePoints"][f"simulated_versus_reference_{output_name}_bars"]
+# And for the ThreePoints load case:
+figures[f"ThreePoints_simulated_versus_reference_{output_name}_bars"]
 
 # %%
 # We expect that the best compromise is the average value between the two

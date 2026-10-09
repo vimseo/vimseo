@@ -26,6 +26,7 @@ from vimseo.tools.space.space_tool import SpaceTool
 from vimseo.tools.space.space_tool import _get_fitted_distribution_parameters
 from vimseo.tools.space.space_tool import update_space_from_statistics
 from vimseo.tools.statistics.statistics_tool import StatisticsTool
+from vimseo.utilities.test_utils import check_result_visualization
 
 TOOL_PATH = Path(tools.__path__[0])
 
@@ -112,5 +113,18 @@ def test_save_and_load_json(tmp_wd):
     results = space_tool.load_results(
         space_tool.working_directory / "SpaceTool_result.json"
     )
-    space_tool.plot_results(results, save=True, show=False)
+    results.visualize(directory_path=space_tool.working_directory, save=True)
     assert (space_tool.working_directory / "scatter_matrix.png").is_file()
+
+
+def test_result_visualization(tmp_wd):
+    """Check that a space tool result can be visualized once loaded from a file."""
+    space_tool = SpaceTool()
+    space_tool.execute(
+        distribution_name="OTTriangularDistribution",
+        space_builder_name="FromCenterAndCov",
+        center_values={"x": 0.5, "y": 1.0},
+        cov=0.05,
+    )
+    check_result_visualization(space_tool.result, "visualization")
+    assert set(space_tool.result.tabulate()["parameter_space"].index) == {"x", "y"}

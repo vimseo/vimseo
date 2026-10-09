@@ -21,7 +21,7 @@ babel==2.18.0
     # via mkdocs-material
 backrefs==8.0
     # via mkdocs-material
-black==26.5.1
+black==26.10.0
     # via vimseo (pyproject.toml:doc)
 blinker==1.9.0
     # via
@@ -38,7 +38,7 @@ certifi==2026.7.22
     # via requests
 cffi==2.1.1
     # via cryptography
-charset-normalizer==3.5.1
+charset-normalizer==3.5.2
     # via requests
 click==8.5.0
     # via
@@ -55,7 +55,7 @@ cloudpickle==3.1.2
     #   mlflow-skinny
 colorama==0.4.6
     # via mkdocs-material
-composipy==1.6.0
+composipy==1.7.5
     # via vimseo (pyproject.toml)
 contourpy==1.4.0
     # via matplotlib
@@ -65,9 +65,9 @@ cryptography==46.0.7
     #   mlflow
 cycler==0.12.1
     # via matplotlib
-cyclopts==4.25.2
+cyclopts==5.1.1
     # via pyvista
-databricks-sdk==0.139.0
+databricks-sdk==0.146.0
     # via
     #   mlflow-skinny
     #   mlflow-tracing
@@ -89,7 +89,7 @@ et-xmlfile==2.0.0
     # via openpyxl
 executing==2.2.1
     # via stack-data
-fastapi==0.141.1
+fastapi==0.142.2
     # via mlflow-skinny
 fastjsonschema==2.21.2
     # via
@@ -103,7 +103,7 @@ flask==3.1.3
     #   mlflow
 flask-cors==6.0.5
     # via mlflow
-fonttools==4.65.0
+fonttools==4.66.1
     # via matplotlib
 gemseo==6.3.3
     # via
@@ -119,15 +119,15 @@ ghp-import==2.1.0
     #   properdocs
 gitdb==4.0.12
     # via gitpython
-gitpython==3.1.62
+gitpython==3.2.0
     # via
     #   mlflow-skinny
     #   streamlit
-google-auth==2.58.0
+google-auth==2.59.1
     # via databricks-sdk
 graphene==3.4.3
     # via mlflow
-graphql-core==3.2.12
+graphql-core==3.2.13
     # via
     #   graphene
     #   graphql-relay
@@ -135,8 +135,6 @@ graphql-relay==3.2.0
     # via graphene
 graphviz==0.21
     # via gemseo
-greenlet==3.5.6
-    # via sqlalchemy
 griffe-fieldz==0.5.0
     # via vimseo (pyproject.toml:doc)
 griffe-inherited-docstrings==1.1.3
@@ -152,7 +150,7 @@ h11==0.16.0
     # via uvicorn
 h5py==3.14.0
     # via gemseo
-idna==3.19
+idna==3.20
     # via
     #   anyio
     #   email-validator
@@ -194,13 +192,15 @@ jsonschema-specifications==2025.9.1
     # via jsonschema
 jupyter-core==5.9.1
     # via nbformat
+kaleido==0.2.1
+    # via vimseo (pyproject.toml)
 kiwisolver==1.5.1
     # via matplotlib
 latexcodec==3.0.1
     # via pybtex
-mako==1.4.1
+mako==1.4.3
     # via alembic
-markdown==3.10.3
+markdown==3.11
     # via
     #   mkdocs
     #   mkdocs-autorefs
@@ -212,7 +212,7 @@ markdown-exec==1.12.3
     # via vimseo (pyproject.toml:doc)
 markdown-it-py==4.2.0
     # via rich
-markupsafe==3.0.3
+markupsafe==3.0.4
     # via
     #   flask
     #   jinja2
@@ -291,7 +291,7 @@ mkdocstrings==1.0.6
     # via
     #   vimseo (pyproject.toml:doc)
     #   mkdocstrings-python
-mkdocstrings-python==2.0.8
+mkdocstrings-python==2.0.9
     # via mkdocstrings
 ml-dtypes==0.6.0
     # via
@@ -346,21 +346,22 @@ numpy==2.3.3
     #   streamlit
 openpyxl==3.1.5
     # via gemseo
-opentelemetry-api==1.44.0
+opentelemetry-api==1.45.0
     # via
+    #   fastapi
     #   mlflow-skinny
     #   mlflow-tracing
     #   opentelemetry-sdk
     #   opentelemetry-semantic-conventions
-opentelemetry-proto==1.44.0
+opentelemetry-proto==1.45.0
     # via
     #   mlflow-skinny
     #   mlflow-tracing
-opentelemetry-sdk==1.44.0
+opentelemetry-sdk==1.45.0
     # via
     #   mlflow-skinny
     #   mlflow-tracing
-opentelemetry-semantic-conventions==0.65b0
+opentelemetry-semantic-conventions==0.66b0
     # via opentelemetry-sdk
 openturns==1.24
     # via
@@ -412,7 +413,7 @@ pillow==11.3.0
     #   matplotlib
     #   pyvista
     #   streamlit
-platformdirs==4.11.8
+platformdirs==4.12.3
     # via
     #   black
     #   jupyter-core
@@ -493,14 +494,14 @@ pygments==2.21.0
     #   rich-rst
 pygments-ansi-color==0.3.0
     # via markdown-exec
-pymdown-extensions==12.0
+pymdown-extensions==12.1
     # via
     #   markdown-exec
     #   mkdocs-material
     #   mkdocstrings
 pypandoc==1.17
     # via mkdocs-bibtex
-pyparsing==3.3.2
+pyparsing==3.3.3
     # via
     #   matplotlib
     #   mike
@@ -510,13 +511,13 @@ python-dateutil==2.9.0.post0
     #   graphene
     #   matplotlib
     #   pandas
-python-dotenv==1.2.3
+python-dotenv==1.2.4
     # via
     #   mlflow-skinny
     #   pydantic-settings
 pytokens==0.4.1
     # via black
-pytz==2026.3.post1
+pytz==2026.5
     # via pandas
 pyvista==0.49.0
     # via vimseo (pyproject.toml)
@@ -564,9 +565,9 @@ rich==15.0.0
     #   cyclopts
     #   meshio
     #   rich-rst
-rich-rst==2.1.0
+rich-rst==2.2.0
     # via cyclopts
-rpds-py==2026.6.3
+rpds-py==2026.9.1
     # via
     #   jsonschema
     #   referencing
@@ -595,7 +596,7 @@ smmap==5.0.3
     # via gitdb
 spgl1==0.0.3
     # via gemseo
-sqlalchemy==2.0.53
+sqlalchemy==2.1.3
     # via
     #   alembic
     #   mlflow
@@ -603,7 +604,7 @@ sqlparse==0.6.0
     # via mlflow-skinny
 stack-data==0.6.3
     # via ipython
-starlette==1.6.0
+starlette==1.7.0
     # via fastapi
 statsmodels==0.14.5
     # via vimseo (pyproject.toml)
@@ -625,11 +626,11 @@ tenacity==9.1.4
     # via
     #   plotly
     #   streamlit
-threadpoolctl==3.6.0
+threadpoolctl==3.7.0
     # via scikit-learn
 toml==0.10.2
     # via streamlit
-tornado==6.5.9
+tornado==6.5.10
     # via streamlit
 tqdm==4.67.1
     # via
@@ -669,21 +670,21 @@ typing-inspection==0.4.4
     #   fastapi
     #   pydantic
     #   pydantic-settings
-tzdata==2026.4
+tzdata==2026.5
     # via pandas
-urllib3==2.7.0
+urllib3==2.8.0
     # via
     #   databricks-sdk
     #   docker
     #   requests
     #   responses
-uvicorn==0.53.0
+uvicorn==0.54.0
     # via mlflow-skinny
 validators==0.35.0
     # via mkdocs-bibtex
 verspec==0.1.0
     # via mike
-vtk==9.7.0
+vtk==9.7.1
     # via pyvista
 watchdog==6.0.0
     # via
@@ -692,11 +693,11 @@ watchdog==6.0.0
     #   streamlit
 wcmatch==11.0.1
     # via mkdocs-include-markdown-plugin
-wcwidth==0.8.3
+wcwidth==0.9.2
     # via
     #   prettytable
     #   prompt-toolkit
-werkzeug==3.1.8
+werkzeug==3.1.9
     # via
     #   flask
     #   flask-cors
@@ -704,5 +705,5 @@ xdsmjs==2.0.0
     # via gemseo
 xxhash==3.5.0
     # via gemseo
-zipp==4.1.0
+zipp==4.1.1
     # via importlib-metadata

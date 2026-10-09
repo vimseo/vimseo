@@ -75,35 +75,38 @@ def calibration_on_curves(mesh: str):
 def test_calibration_on_curves(tmp_wd):
     """Check that a calibration step based on curves can be executed."""
     calibration_step, x_target = calibration_on_curves("x_history")
-    calibration_step.plot_results(calibration_step.result, show=False, save=True)
+    calibration_step.result.visualize(
+        directory_path=calibration_step.working_directory, save=True
+    )
     assert calibration_step.result.posterior_parameters["x"] == pytest.approx(x_target)
 
 
 def test_calibration_monotonic_decreasing_axis(tmp_wd):
     """Test calibration with a monotonic decreasing axis."""
     calibration_step, x_target = calibration_on_curves("x_history")
-    calibration_step.plot_results(calibration_step.result, show=False, save=True)
+    calibration_step.result.visualize(
+        directory_path=calibration_step.working_directory, save=True
+    )
     assert calibration_step.result.posterior_parameters["x"] == pytest.approx(x_target)
 
 
 def test_plots_on_curves(tmp_wd):
     """Check that a calibration step based on curves can be plotted."""
     calibration_step, _ = calibration_on_curves("x_history")
-    calibration_step.plot_results(calibration_step.result, show=False, save=True)
-    assert (
-        calibration_step.working_directory
-        / "simulated_versus_reference_dplt_load_case_Cantilever.png"
+    figures = calibration_step.result.visualize(
+        directory_path=calibration_step.working_directory, save=True
     )
-    assert (
-        calibration_step.working_directory
-        / "simulated_versus_reference_dplt_versus_dplt_grid_load_case_Cantilever.html"
-    )
+    key = "Dummy_simulated_versus_reference_curve_y_history_versus_x_history"
+    assert key in figures
+    assert (calibration_step.working_directory / f"{key}.html").is_file()
 
 
 def test_calibration_default_axis(tmp_wd):
     """Check that a calibration step based on curves can be executed with the default axis."""
     calibration_step, x_target = calibration_on_curves("")
-    calibration_step.plot_results(calibration_step.result, show=False, save=True)
+    calibration_step.result.visualize(
+        directory_path=calibration_step.working_directory, save=True
+    )
     assert calibration_step.result.posterior_parameters["x"] == pytest.approx(x_target)
 
 

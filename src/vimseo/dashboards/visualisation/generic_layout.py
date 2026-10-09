@@ -49,9 +49,9 @@ def generate_layout(main_title):
     st.set_page_config(
         layout="wide",
         page_title=main_title,
-        page_icon="vims_logo_small.png",
+        page_icon="vimseo_icon.png",
     )
-    st.image("vims_logo.png", width=200)
+    st.image("vimseo_logo.png", width=200)
     banner_display(IDENTITY_COLORS["purple"])
     st.text("")
     st.sidebar.image("logo_IRT_Saint_Exupery_RVB.png", width=200)

@@ -16,7 +16,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from pathlib import Path
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from gemseo.utils.directory_creator import DirectoryNamingMethod
@@ -31,7 +31,11 @@ from vimseo.tools.base_settings import BaseSettings
 from vimseo.tools.base_tool import BaseResult
 
 if TYPE_CHECKING:
+    from pathlib import Path
+
     from plotly.graph_objs import Figure
+
+    from vimseo.tools.result_visualization import BaseVisualizationSettings
 
 
 class ModelCreationSettings(BaseSettings):
@@ -40,8 +44,19 @@ class ModelCreationSettings(BaseSettings):
     default_inputs: Mapping[str, list[float]] = {}
 
 
-class ModelResult(BaseResult):
+@dataclass
+class ModelCreationResult(BaseResult):
+    """The result of a :class:`.ModelCreationTool`."""
+
     model: IntegratedModel | None = None
+    """The created model."""
+
+    def _create_figures(
+        self, settings: BaseVisualizationSettings
+    ) -> Mapping[str, Figure]:
+        if self.model is None:
+            return {}
+        return self.model.plot_results(save=False, show=False)
 
 
 class ModelCreationTool(BaseAnalysisTool):
@@ -62,29 +77,12 @@ class ModelCreationTool(BaseAnalysisTool):
             working_directory=working_directory,
             **options,
         )
-        self.result = ModelResult()
+        self.result = ModelCreationResult()
 
     @BaseCompositeTool.validate
-    def execute(self, settings=ModelCreationSettings, **options) -> ModelResult:
+    def execute(self, settings=ModelCreationSettings, **options) -> ModelCreationResult:
         model = create_model(options["name"], options["load_case"])
         model.default_input_data.update({
             name: array(value) for name, value in options["default_inputs"].items()
         })
         self.result.model = model
-
-    def plot_results(
-        self,
-        result: ModelResult,
-        directory_path: str | Path = "",
-        save=False,
-        show=True,
-        **options,
-    ) -> Mapping[str, Figure]:
-        working_directory = (
-            self.working_directory if directory_path == "" else Path(directory_path)
-        )
-        return self.result.model.plot_results(
-            directory_path=working_directory,
-            save=save,
-            show=show,
-        )

@@ -99,26 +99,24 @@ print(validation_tool.result.integrated_metrics)
 
 # %%
 # Validation results can be visualized as:
-figs = validation_tool.plot_results(
-    validation_tool.result,
-    "RelativeErrorMetric",
-    "reaction_forces",
-    save=False,
+figs = validation_tool.result.visualize(
+    metric_names=["RelativeErrorMetric"],
+    output_names=["reaction_forces"],
     show=True,
 )
 
 # %%
 # a parallel coordinates plot:
-figs["parallel_coordinates"]
+figs["parallel_coordinates_RelativeErrorMetric_reaction_forces"]
 
 # %%
 # an error scatter matrix:
-figs["error_scatter_matrix"]
+figs["error_scatter_matrix_RelativeErrorMetric_reaction_forces"]
 
 # %%
 # a predict-versus-true plot:
-figs["predict_vs_true"]
+figs["predict_vs_true_RelativeErrorMetric_reaction_forces"]
 
 # %%
 # a bar plot of the integrated metrics:
-figs["integrated_metric_bars"]
+figs["integrated_metric_bars_RelativeErrorMetric"]

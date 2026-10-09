@@ -30,6 +30,7 @@ from vimseo.utilities.model_data import decapsulate_length_one_array
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
+    from collections.abc import Sequence
     from pathlib import Path
 
     from vimseo.storage_management.base_storage_manager import PersistencyPolicy
@@ -50,6 +51,26 @@ ArchiveResultType = Mapping[str, Mapping[str, ndarray | Number | str]]
   If the data is a length-one array, the array item is directly considered.
 - 'metadata' to a dictionary mapping metadata variable names to the metadata value.
 """
+
+
+def _order_results(
+    run_ids: Sequence[str], found: Mapping[str, ModelDataType], location: object
+) -> list[ModelDataType]:
+    """Return the results found for some ``run_id``, in their order.
+
+    Args:
+        run_ids: The ``run_id`` of the simulations.
+        found: The results found, bound to their ``run_id``.
+        location: The location of the archive, for the error message.
+
+    Raises:
+        KeyError: If a simulation was not found.
+    """
+    missing = [run_id for run_id in run_ids if run_id not in found]
+    if missing:
+        msg = f"No simulation with run_id {missing} in the archive {location}."
+        raise KeyError(msg)
+    return [found[run_id] for run_id in run_ids]
 
 
 class BaseArchiveManager(BaseStorageManager):
@@ -131,6 +152,31 @@ class BaseArchiveManager(BaseStorageManager):
     @abstractmethod
     def get_result(self, archive_id: str | Path) -> ModelDataType:
         """Get an archived result."""
+
+    @abstractmethod
+    def get_results_by_run_id(self, run_ids: Iterable[str]) -> list[ModelDataType]:
+        """Return the archived results of simulations from their ``run_id``.
+
+        The ``run_id`` of a simulation is a metadata of its result. It is also the
+        identifier listed in the ``simulation_run_ids`` of the metadata of a tool
+        result. The whole archive is searched, whatever the experiment.
+
+        Args:
+            run_ids: The ``run_id`` of the simulations.
+
+        Returns:
+            The results, in the order of ``run_ids``.
+
+        Raises:
+            KeyError: If a simulation is not in the archive.
+        """
+
+    def abort_job(self):
+        """Release what :meth:`create_job_directory` allocated, after a job failure.
+
+        Called when the job raised before its results could be published. Does
+        nothing by default: the job directory of a directory archive is left as is.
+        """
 
     def set_experiment(self, experiment_name: str):
         """Set an experiment."""

@@ -226,6 +226,8 @@
     "directory_archive_root": "C:\\Users\\sebastien.bocquet\\PycharmProjects\\vims\\docs\\runnable_examples\\model_runs\\archive\\model_gallery",
     "directory_archive_job": "..\\model_runs\\archive\\model_gallery\\MockCurvesXRange\\Dummy\\1",
     "directory_scratch_root": "C:\\Users\\sebastien.bocquet\\PycharmProjects\\vims\\docs\\runnable_examples\\model_runs\\scratch\\model_gallery",
-    "directory_scratch_job": ""
+    "directory_scratch_job": "",
+    "run_id": "e8a7a437048b48f18f380e9bb7a75d45",
+    "tool_run_id": ""
   }
 }

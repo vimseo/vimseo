@@ -27,6 +27,7 @@ from vimseo.tools.statistics.statistics_tool import StatisticsTool
 from vimseo.tools.statistics.statistics_tool import compute_ecdf
 from vimseo.utilities.datasets import DatasetAddFromStatistics
 from vimseo.utilities.distribution import DistributionParameters
+from vimseo.utilities.test_utils import check_result_visualization
 
 
 def test_fitting_default_options(tmp_wd):
@@ -71,8 +72,10 @@ def test_save_and_load_pickle(tmp_wd):
         inputs=StatisticsInputs(dataset=dataset),
         settings=StatisticsSettings(tested_distributions=[distribution_name]),
     )
-    tool.plot_results(result, save=True, show=False, variable="x")
-    assert (tool.working_directory / "x_Uniform_criteria.png").is_file()
+    result.visualize(
+        directory_path=tool.working_directory, save=True, variable_names=["x"]
+    )
+    assert (tool.working_directory / "criteria_x.png").is_file()
 
 
 def test_from_uniform_sample(tmp_wd):
@@ -103,3 +106,23 @@ def test_compute_ecdf():
     ecdf = compute_ecdf(dataset, prefix="p")
     assert "p_x_x" in ecdf.variable_names
     assert "p_x_y" in ecdf.variable_names
+
+
+def test_result_visualization(tmp_wd):
+    """Check that a statistics result can be visualized once loaded from a file."""
+    dataset = Dataset()
+    DatasetAddFromStatistics().add_group(
+        dataset,
+        IODataset.INPUT_GROUP,
+        ["x"],
+        {"x": DistributionParameters(name="Uniform", lower=-0.5, upper=0.5)},
+        100,
+    )
+    result = StatisticsTool().execute(
+        inputs=StatisticsInputs(dataset=dataset),
+        settings=StatisticsSettings(tested_distributions=["Uniform"]),
+    )
+    check_result_visualization(result, "visualization")
+    tables = result.tabulate()
+    assert "x" in tables["statistics"].index
+    assert "mean" in tables["statistics"].columns

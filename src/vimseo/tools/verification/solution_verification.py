@@ -77,7 +77,6 @@ reliable the estimate is.
 from __future__ import annotations
 
 import logging
-from pathlib import Path
 from typing import TYPE_CHECKING
 from typing import ClassVar
 
@@ -101,13 +100,6 @@ from vimseo.tools.base_composite_tool import BaseCompositeTool
 from vimseo.tools.base_settings import BaseInputs
 from vimseo.tools.doe.custom_doe import CustomDOESettings
 from vimseo.tools.doe.custom_doe import CustomDOETool
-from vimseo.tools.post_tools.verification_plots import ConvergenceCrossValidationPlotter
-from vimseo.tools.post_tools.verification_plots import ConvergenceFitPlotter
-from vimseo.tools.post_tools.verification_plots import ErrorVersusElementSizePlotter
-from vimseo.tools.post_tools.verification_plots import RelativeErrorVersusCpuTimePlotter
-from vimseo.tools.post_tools.verification_plots import (
-    RelativeErrorVersusElementSizePlotter,
-)
 from vimseo.tools.verification.base_verification import BaseVerification
 from vimseo.tools.verification.solution_verification_indicators import compute_gci
 from vimseo.tools.verification.solution_verification_indicators import compute_median
@@ -126,12 +118,10 @@ from vimseo.tools.verification.verification_result import CASE_DESCRIPTION_TYPE
 from vimseo.tools.verification.verification_result import SolutionVerificationResult
 from vimseo.utilities.datasets import DatasetInput
 from vimseo.utilities.datasets import resolve_io_groups
-from vimseo.utilities.file_utils import camel_case_to_snake_case
 
 if TYPE_CHECKING:
-    from collections.abc import Mapping
+    from pathlib import Path
 
-    from plotly.graph_objs import Figure
 
 LOGGER = logging.getLogger(__name__)
 
@@ -258,12 +248,14 @@ class DiscretizationSolutionVerification(BaseVerification):
         root_directory: str | Path = config.root_directory,
         directory_naming_method: DirectoryNamingMethod = DirectoryNamingMethod.NUMBERED,
         working_directory: str | Path = config.working_directory,
+        **options,
     ):
         super().__init__(
             subtools=[CustomDOETool()],
             root_directory=root_directory,
             directory_naming_method=directory_naming_method,
             working_directory=working_directory,
+            **options,
         )
         self.result = SolutionVerificationResult()
 
@@ -534,42 +526,3 @@ class DiscretizationSolutionVerification(BaseVerification):
         self.result.cross_validation = cross_validation_result
 
         return self.result
-
-    def plot_results(
-        self,
-        result: SolutionVerificationResult,
-        save=False,
-        show=True,
-        directory_path: str | Path = "",
-        file_format="html",
-    ) -> Mapping[str, Figure]:
-        """Superpose on a line plot the simulated output versus the element size, for all
-        the cross validation folds. Secondly, plot in log-log the error of the output
-        compared to the Richardson extrapolation, versus the element size.
-
-        Args:
-            result: The verification result to visualize.
-            file_format: The format to which plots are generated.
-        """
-        figs = {}
-        plots = [
-            ConvergenceCrossValidationPlotter(),
-            ConvergenceFitPlotter(),
-            ErrorVersusElementSizePlotter(),
-            RelativeErrorVersusElementSizePlotter(),
-        ]
-        if MetaDataNames.cpu_time in result.simulation_and_reference.get_variable_names(
-            group_name=IODataset.OUTPUT_GROUP
-        ):
-            plots.append(RelativeErrorVersusCpuTimePlotter())
-
-        for plot in plots:
-            plot.working_directory = (
-                self.working_directory if directory_path == "" else Path(directory_path)
-            )
-            figs[camel_case_to_snake_case(plot.__class__.__name__)] = plot.execute(
-                result,
-                show=show,
-                save=save,
-            ).figure
-        return figs

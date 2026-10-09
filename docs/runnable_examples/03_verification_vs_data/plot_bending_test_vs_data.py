@@ -102,22 +102,25 @@ verificator.result.integrated_metrics
 verificator.save_results()
 
 # %%
-# The saved results can be loaded in a dedicated dashboard to be explored.
-# The dashboard is opened by typing ``dashboard_verification`` in a terminal,
-# and selecting the tab ``Comparison case``.
+# The saved results can be loaded in a dashboard to be explored.
+# The dashboard is opened by typing ``dashboard_tool_result`` in a terminal.
+# The figures and the tables can also be written in a directory by typing
+# ``visualize_tool_result --uri path/to/the/result.hdf5``.
 
 # %%
 # The results can also be plotted from the Python API.
 # It shows the scatter matrix of the inputs:
-figures = verificator.plot_results(
-    verificator.result,
-    "RelativeErrorMetric",
-    "reaction_forces",
-    save=False,
+figures = verificator.result.visualize(
+    metric_names=["RelativeErrorMetric"],
+    output_names=["reaction_forces"],
     show=True,
-    directory_path=verificator.working_directory,
 )
 
 # %%
 # and an histogram of the errors:
-figures["error_metric_histogram"]
+figures["error_metric_histogram_RelativeErrorMetric_reaction_forces"]
+
+# %%
+# The numerical values of the result are available as tables,
+# like the integrated metrics:
+verificator.result.tabulate()["integrated_metrics"]

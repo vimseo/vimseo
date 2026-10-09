@@ -194,21 +194,24 @@ validation_point_tool.save_results(prefix=f"batch_{batch}")
 
 # %%
 # The results can be plotted:
-figures = validation_point_tool.plot_results(
-    validation_point_tool.result, "reaction_forces", show=True, save=True
+figures = validation_point_tool.result.visualize(
+    directory_path=validation_point_tool.working_directory,
+    output_names=["reaction_forces"],
+    show=True,
+    save=True,
 )
 
 # %%
 # The Q-Q plot of the measured and simulated distributions:
-figures["qq_plot"]
+figures["qq_plot_reaction_forces"]
 
 # %%
 # The comparison of the measured and simulated PDF:
-figures["PDF_comparison"]
+figures["PDF_comparison_reaction_forces"]
 
 # %%
 # The comparison of the measured and simulated CDF:
-figures["CDF_comparison"]
+figures["CDF_comparison_reaction_forces"]
 
 # %%
 # The saved result can be visualised in a dashboard by typing in a terminal
@@ -218,11 +221,11 @@ figures["CDF_comparison"]
 # %%
 # The simulated input space can be exported to disk, to be visualized with
 # ``dashboard_space``.
-# In pickle format:
+# In HDF5 format:
 space_tool_result = SpaceToolResult(
     parameter_space=validation_point_tool.simulated_input_space
 )
-space_tool_result.to_pickle("simulated_input_space")
+space_tool_result.to_hdf5("simulated_input_space.hdf5")
 
 # %%
 # Or in json format:

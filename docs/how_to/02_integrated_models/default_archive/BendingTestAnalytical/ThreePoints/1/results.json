@@ -244,6 +244,8 @@
     "directory_archive_root": "C:\\Users\\sebastien.bocquet\\PycharmProjects\\vims\\docs\\how_to\\02_integrated_models\\default_archive",
     "directory_archive_job": "default_archive\\BendingTestAnalytical\\ThreePoints\\1",
     "directory_scratch_root": "C:\\Users\\sebastien.bocquet\\PycharmProjects\\vims\\docs\\how_to\\02_integrated_models\\default_scratch",
-    "directory_scratch_job": ""
+    "directory_scratch_job": "",
+    "run_id": "a64942e2169f4682ba3b5c2986c3e3da",
+    "tool_run_id": ""
   }
 }

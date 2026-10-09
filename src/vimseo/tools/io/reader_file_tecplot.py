@@ -164,10 +164,8 @@ class ReaderFileTecplot(BaseReaderFile):
 
     _SETTINGS = ReaderFileTecplotSettings
 
-    def __init__(
-        self,
-    ):
-        super().__init__()
+    def __init__(self, **options):
+        super().__init__(**options)
         self.result = FieldResult()
 
     @BaseTool.validate

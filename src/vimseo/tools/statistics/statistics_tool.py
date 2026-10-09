@@ -16,7 +16,6 @@
 from __future__ import annotations
 
 from collections import OrderedDict
-from pathlib import Path
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -25,7 +24,6 @@ from gemseo.datasets.dataset import Dataset
 from gemseo.uncertainty import create_statistics
 from gemseo.uncertainty.statistics.parametric_statistics import ParametricStatistics
 from gemseo.utils.directory_creator import DirectoryNamingMethod
-from gemseo.utils.matplotlib_figure import save_show_figure
 from numpy import random
 from numpy import vstack
 from pydantic import Field
@@ -42,10 +40,9 @@ from vimseo.utilities.datasets import dataset_to_dataframe
 from vimseo.utilities.datasets import get_scalar_names
 
 if TYPE_CHECKING:
-    from collections.abc import Mapping
+    from pathlib import Path
 
     from pandas import DataFrame
-    from plotly.graph_objs import Figure
 
 
 class StatisticsInputs(BaseInputs):
@@ -276,42 +273,6 @@ class StatisticsTool(BaseAnalysisTool):
                     print(e)
 
         return pd.DataFrame.from_dict(results) if as_df else results
-
-    def plot_results(
-        self,
-        result: StatisticsResult,
-        save=False,
-        show=True,
-        directory_path: str | Path = "",
-        variable=None,
-    ) -> Mapping[str, Figure]:
-        """Plot criteria for a given variable name.
-
-        Args:
-            variable: The name of the variable whose statistics are shown.
-        """
-        # Stock gemseo always saves to a fixed "criteria.pdf", overwriting the
-        # previous variable's plot; save it ourselves under a name that
-        # distinguishes the variable and its selected distribution instead.
-        directory = (
-            self.working_directory if directory_path == "" else Path(directory_path)
-        )
-        figure = result.analysis.plot_criteria(
-            variable=variable,
-            title="Criteria of statistics.",
-            save=False,
-            show=False,
-            directory=directory,
-            fig_size=(12.0, 6.0),
-        )
-        file_path = (
-            directory
-            / f"{variable}_{result.analysis.distributions[variable].name}_criteria.png"
-            if save
-            else ""
-        )
-        save_show_figure(figure, show, file_path)
-        return figure
 
 
 def compute_ecdf(input_data: Dataset, prefix: str = "") -> Dataset:

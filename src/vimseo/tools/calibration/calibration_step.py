@@ -20,7 +20,6 @@ from collections import defaultdict
 from collections.abc import Mapping
 from copy import deepcopy
 from dataclasses import dataclass
-from pathlib import Path
 from typing import TYPE_CHECKING
 
 import pandas as pd
@@ -28,18 +27,14 @@ from gemseo.algos.design_space import DesignSpace
 from gemseo.algos.opt.base_optimizer_settings import BaseOptimizerSettings
 from gemseo.algos.opt.nlopt.settings.nlopt_cobyla_settings import NLOPT_COBYLA_Settings
 from gemseo.algos.parameter_space import ParameterSpace
-from gemseo.datasets.dataset import Dataset
 from gemseo.datasets.io_dataset import IODataset
-from gemseo.post.dataset.bars import BarPlot
 from gemseo.utils.directory_creator import DirectoryNamingMethod
 from gemseo_calibration.metrics.factory import CalibrationMetricFactory
 from gemseo_calibration.scenario import CalibrationScenario
-from numpy import array
 from numpy import atleast_1d
 from numpy import inf
 from numpy import linspace
 from numpy import ndarray
-from pandas import DataFrame
 from pydantic import ConfigDict
 from pydantic import Field
 from pydantic import ValidationError
@@ -55,7 +50,10 @@ from vimseo.tools.base_settings import BaseSettings
 from vimseo.tools.calibration.calibration_metrics import SBPISE
 from vimseo.tools.calibration.calibration_metrics import CalibrationMetricSettings
 from vimseo.tools.calibration.calibration_step_result import CalibrationStepResult
-from vimseo.tools.post_tools.calibration_plots import CalibrationCurves
+from vimseo.tools.calibration.calibration_step_result import get_metric_curve_names
+from vimseo.tools.calibration.calibration_step_result import get_metric_scalar_names
+from vimseo.tools.calibration.calibration_step_result import get_name
+from vimseo.tools.calibration.calibration_step_result import get_namespace
 from vimseo.utilities.datasets import DatasetInput
 from vimseo.utilities.datasets import resolve_io_groups
 from vimseo.utilities.model_data import MetricVariableType
@@ -63,8 +61,8 @@ from vimseo.utilities.model_data import decapsulate_length_one_array
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
+    from pathlib import Path
 
-    from plotly.graph_objs import Figure
 
 LOGGER = logging.getLogger(__name__)
 
@@ -88,15 +86,6 @@ class MetricVariable:
 def add_namespace(name: str, prefix: str) -> str:
     """Return the namespaced name following GEMSEO convention."""
     return f"{prefix}:{name}"
-
-
-def get_name(namespaced_name: str) -> str:
-    """Return the name from a namespaced name."""
-    return namespaced_name.split(":")[1]
-
-
-def get_namespace(namespaced_name: str) -> str:
-    return namespaced_name.split(":")[0]
 
 
 class CalibrationStepInputs(BaseInputs):
@@ -181,22 +170,14 @@ class CalibrationStep(BaseAnalysisTool):
     ) -> list[tuple[str]]:
         """Return the names of ``x`` and ``y`` for each curve contained in
         ``metric_variables``."""
-        return [
-            (metric_variable.mesh, metric_variable.name)
-            for metric_variable in metric_variable_names
-            if metric_variable.type == MetricVariableType.CURVE
-        ]
+        return get_metric_curve_names(metric_variable_names)
 
     def get_metric_scalar_names(
         self,
         metric_variable_names: Iterable[str],
     ) -> list[tuple[str]]:
         """Return the names of the scalars contained in ``metric_variables``."""
-        return [
-            metric_variable.name
-            for metric_variable in metric_variable_names
-            if metric_variable.type == MetricVariableType.SCALAR
-        ]
+        return get_metric_scalar_names(metric_variable_names)
 
     @BaseCompositeTool.validate
     def execute(
@@ -562,76 +543,3 @@ class CalibrationStep(BaseAnalysisTool):
                         )
                     )
                 })
-
-    def plot_results(
-        self,
-        result: CalibrationStepResult,
-        directory_path: str | Path = "",
-        save=False,
-        show=True,
-        font_size: int = 12,
-    ) -> Mapping[str, Figure]:
-
-        figures = defaultdict(dict)
-        working_directory = (
-            self.working_directory if directory_path == "" else Path(directory_path)
-        )
-
-        for namespaced_name in self.get_metric_scalar_names(result.metric_variables):
-            load_case = get_namespace(namespaced_name)
-            name = get_name(namespaced_name)
-            category = ["prior", "posterior", "reference"]
-            df = DataFrame.from_dict({
-                category: array(data_source[namespaced_name]).flatten()
-                for category, data_source in zip(
-                    category,
-                    [
-                        result.prior_model_data,
-                        result.posterior_model_data,
-                        result.reference_data,
-                    ],
-                    strict=False,
-                )
-            })
-            df = df.T
-            df.columns = [str(c) for c in df.columns]
-            plot = BarPlot(Dataset.from_dataframe(df))
-            plot.title = (
-                f"Simulated versus reference for output {name} "
-                f"and load case {load_case}"
-            )
-            plot.font_size = font_size
-            plot.labels = category
-            figures[load_case].update({
-                f"simulated_versus_reference_{name}_bars": plot.execute(
-                    save=True,
-                    show=False,
-                    file_format="html",
-                    directory_path=working_directory,
-                    file_name=f"simulated_versus_reference_{name}_load_case_{load_case}_bars",
-                )[0]
-            })
-
-        plot = CalibrationCurves(working_directory=working_directory)
-        for abscissa_name, namespaced_name in self.get_metric_curve_names(
-            result.metric_variables
-        ):
-            load_case = get_namespace(namespaced_name)
-            name = get_name(namespaced_name)
-            plot.execute(
-                result.curve_data.posterior_dataframes[load_case],
-                result.curve_data.prior_dataframes[load_case],
-                result.curve_data.reference_dataframes[load_case],
-                get_name(abscissa_name),
-                name,
-                load_case=load_case,
-                font_size=font_size,
-                show=show,
-                save=save,
-            )
-
-            figures[load_case].update({
-                f"simulated_versus_reference_curve_{name}_versus_{get_name(abscissa_name)}": plot.result.figure
-            })
-
-        return figures

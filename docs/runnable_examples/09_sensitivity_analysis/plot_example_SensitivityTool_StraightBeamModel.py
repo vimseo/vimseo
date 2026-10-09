@@ -135,12 +135,14 @@ print(tool.result)
 # Standard plots for each type of sensitivity analysis can be shown.
 # Here, for a Morris analysis, a radar plot of the indices,
 # and a ($\sigma$, $\mu_{star}$) plot:
-fig_sensitivity_reaction_forces = tool.plot_results(
-    tool.result,
-    output_names=output_names,
-    show=True,
-    save=False,
+fig_sensitivity_reaction_forces = tool.result.visualize(
+    output_names=output_names, show=True
 )
 
 # And an interactive bar plot of the indices:
 fig_sensitivity_reaction_forces["bar_plot"]
+
+# %%
+# The values of the sensitivity indices are available as tables,
+# with a row per input and a column per output:
+tool.result.tabulate()["indices_mu_star"]

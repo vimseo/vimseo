@@ -17,7 +17,6 @@ from __future__ import annotations
 
 import json
 import logging
-from collections import defaultdict
 from pathlib import Path
 from typing import BinaryIO
 from typing import TextIO
@@ -26,10 +25,9 @@ from gemseo.algos.parameter_space import ParameterSpace
 
 from vimseo.io.base_tool_io import BaseToolFileIO
 from vimseo.lib_vimseo.solver_utilities import EnhancedJSONEncoderModelWrapper
-from vimseo.tools.space.random_variable_interface import OPTIONS_PER_DISTRIBUTION
+from vimseo.tools.space.random_variable_interface import add_distributions_from_dict
+from vimseo.tools.space.random_variable_interface import distributions_to_dict
 from vimseo.tools.space.space_tool_result import SpaceToolResult
-from vimseo.utilities.distribution import DistributionParameters
-from vimseo.utilities.distribution import InterfacedDistributionSettings
 
 LOGGER = logging.getLogger(__name__)
 
@@ -73,79 +71,9 @@ class SpaceToolFileIO(BaseToolFileIO):
 
     @classmethod
     def create_parameter_space(cls, data):
-        from vimseo.tools.space.random_variable_interface import (
-            add_random_variable_interface,
-        )
-
         parameter_space = ParameterSpace()
-
-        for variable_name, options in data["parameter_space"].items():
-            # TODO bad design: the kind of distribution interface is inferred
-            #  from the option keys.
-            size = options.pop("size")
-            if "parameters" in options and len(options["parameters"]) > 0:
-                if size > 1:
-                    msg = "Vector is not handled."
-                    raise ValueError(msg)
-                settings = InterfacedDistributionSettings(
-                    name=options["name"], parameters=tuple(options["parameters"])
-                )
-            else:
-                settings = DistributionParameters(**options)
-            add_random_variable_interface(
-                parameter_space,
-                variable_name,
-                size=size,
-                settings=settings,
-            )
-
+        add_distributions_from_dict(parameter_space, data["parameter_space"])
         return parameter_space
-
-    def _serialize_distribution_parameters(self, parameter_space: ParameterSpace):
-        distribution_parameters = {}
-        for variable_name, distribution in parameter_space.distributions.items():
-            distribution_parameters[variable_name] = defaultdict(list)
-            for marginal in distribution.marginals:
-                settings = marginal.vimseo_settings.model_dump()
-                ot_distribution_name = f"OT{settings['name']}Distribution"
-                expected_keys = OPTIONS_PER_DISTRIBUTION.get(ot_distribution_name, ())
-                if expected_keys == () or not set(expected_keys).issubset(
-                    set(settings.keys())
-                ):
-                    if distribution.dimension > 1:
-                        msg = (
-                            f"Distribution {marginal} has the "
-                            f"``InterfacedDistribution`` interface, and has dimension "
-                            f"{distribution.dimension}. Only scalar variable is handled."
-                        )
-                        raise ValueError(msg)
-                    # distribution interface is with parameters. We only handle
-                    # scalar variables in this case:
-                    distribution_parameters[variable_name] = settings
-                else:
-                    for k in expected_keys:
-                        if distribution.dimension == 1:
-                            distribution_parameters[variable_name][k] = settings[k]
-                        else:
-                            distribution_parameters[variable_name][k].append(
-                                settings[k]
-                            )
-                    distribution_parameters[variable_name]["name"] = settings["name"]
-                    # Truncation bounds are cross-cutting: not part of
-                    # OPTIONS_PER_DISTRIBUTION, forwarded separately here and in
-                    # random_variable_interface.add_random_variable_interface so a
-                    # truncated distribution round-trips through the JSON.
-                    for bound in ("lower_bound", "upper_bound"):
-                        value = settings.get(bound)
-                        if value is None:
-                            continue
-                        if distribution.dimension == 1:
-                            distribution_parameters[variable_name][bound] = value
-                        else:
-                            distribution_parameters[variable_name][bound].append(value)
-            distribution_parameters[variable_name]["size"] = distribution.dimension
-
-        return distribution_parameters
 
     def write(
         self,
@@ -154,9 +82,7 @@ class SpaceToolFileIO(BaseToolFileIO):
         directory_path: str | Path = "",
     ) -> dict:
         data = {
-            "parameter_space": self._serialize_distribution_parameters(
-                result.parameter_space
-            ),
+            "parameter_space": distributions_to_dict(result.parameter_space),
             "metadata": result.metadata,
         }
         json_data = json.dumps(

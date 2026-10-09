@@ -24,7 +24,6 @@ from gemseo.datasets.io_dataset import IODataset
 from gemseo.utils.directory_creator import DirectoryNamingMethod
 from gemseo.utils.metrics.dataset_metric import DatasetMetric
 from gemseo.utils.metrics.metric_factory import MetricFactory
-from numpy import atleast_1d
 from numpy import hstack
 from numpy import isnan
 from numpy import vstack
@@ -38,22 +37,14 @@ from vimseo.tools.base_analysis_tool import BaseAnalysisTool
 from vimseo.tools.base_composite_tool import BaseCompositeTool
 from vimseo.tools.base_settings import BaseInputs
 from vimseo.tools.doe.custom_doe import CustomDOETool
-from vimseo.tools.post_tools.error_scatter_matrix_plot import ErrorScatterMatrix
-from vimseo.tools.post_tools.metric_bar_plot import IntegratedMetricBars
-from vimseo.tools.post_tools.parallel_coordinates_plot import ParallelCoordinates
-from vimseo.tools.post_tools.predict_vs_true_plot import PredictVsTrue
 from vimseo.tools.validation_case.validation_case_result import ValidationCaseResult
 from vimseo.tools.verification.base_verification import BaseCodeVerificationSettings
 from vimseo.utilities.datasets import DatasetInput
-from vimseo.utilities.datasets import dataset_to_dataframe
 from vimseo.utilities.datasets import encode_vector
 from vimseo.utilities.datasets import resolve_io_groups
 
 if TYPE_CHECKING:
-    from collections.abc import Mapping
     from collections.abc import Sequence
-
-    from plotly.graph_objs import Figure
 
 
 class DeterministicValidationCaseSettings(BaseCodeVerificationSettings):
@@ -155,47 +146,85 @@ class DeterministicValidationCase(BaseAnalysisTool):
 
         self.__orig_cache_path = Path(model._cache_file_path)
 
-        all_output_data = []
+        # The NaN padding the vectors of the reference data is removed, so that the
+        # size of a vector input can change from a sample to another. The samples
+        # sharing the same vector inputs share a cache file, and are simulated together
+        # by the DOE tool, which needs inputs of the same size for all its samples.
+        sample_indices_per_cache = defaultdict(list)
+        input_data_per_sample = []
         for i in range(len(reference_data)):
             input_data = {
                 k: v[i][~isnan(v[i])]
                 for k, v in all_input_data.items()
                 if k in input_names
             }
+            input_data_per_sample.append(input_data)
 
             vector_names = [name for name, data in input_data.items() if len(data) > 1]
             suffix = "".join([
                 f"{name}_{encode_vector(input_data[name])}__" for name in vector_names
             ])
             suffix = suffix[:-2]
-            new_cache_path = (
+            cache_path = (
                 f"{str(self.__orig_cache_path).split(self.__orig_cache_path.suffix)[0]}_"
                 f"{suffix}{self.__orig_cache_path.suffix}"
             )
-            model.reset_cache(new_cache_path)
+            sample_indices_per_cache[cache_path].append(i)
 
-            all_output_data.append({
-                k: v for k, v in model.execute(input_data).items() if k in output_names
-            })
-
-        data = [
-            hstack([atleast_1d(v) for v in output_data.values()])
-            for output_data in all_output_data
-        ]
+        doe_tool = self._subtools["CustomDOETool"]
+        output_data_per_sample = [None] * len(reference_data)
+        simulation_run_ids = {}
+        for cache_path, sample_indices in sample_indices_per_cache.items():
+            model.reset_cache(cache_path)
+            first_input_data = input_data_per_sample[sample_indices[0]]
+            input_dataset = IODataset.from_array(
+                data=vstack([
+                    hstack(list(input_data_per_sample[i].values()))
+                    for i in sample_indices
+                ]),
+                variable_names=list(first_input_data),
+                variable_names_to_n_components={
+                    name: len(data) for name, data in first_input_data.items()
+                },
+                variable_names_to_group_names=dict.fromkeys(
+                    first_input_data, IODataset.INPUT_GROUP
+                ),
+            )
+            group_dataset = doe_tool.execute(
+                model=model, input_dataset=input_dataset, output_names=output_names
+            ).dataset
+            simulation_run_ids.update(
+                dict.fromkeys(doe_tool.result.metadata.simulation_run_ids)
+            )
+            output_data = group_dataset.get_view(
+                group_names=IODataset.OUTPUT_GROUP, variable_names=output_names
+            ).to_numpy()
+            for i, sample_output_data in zip(sample_indices, output_data, strict=True):
+                output_data_per_sample[i] = sample_output_data
 
         # only works for numerical outputs. If a string is considered, data is entirely
         # converted to string
         # TODO check that the outputs are numerical
         doe_dataset = IODataset.from_array(
-            data=vstack(data),
-            variable_names=list(all_output_data[0].keys()),
+            data=vstack(output_data_per_sample),
+            variable_names=output_names,
             variable_names_to_group_names=dict.fromkeys(
-                list(all_output_data[0].keys()), IODataset.OUTPUT_GROUP
+                output_names, IODataset.OUTPUT_GROUP
             ),
             variable_names_to_n_components={
-                k: len(atleast_1d(v)) for k, v in all_output_data[0].items()
+                name: group_dataset.variable_names_to_n_components[name]
+                for name in output_names
             },
         )
+
+        if len(sample_indices_per_cache) > 1:
+            # The DOE tool holds the result of its last execution only: it is
+            # given all the samples, so that its exported result is complete. Each
+            # execution is archived with its own samples.
+            doe_tool.result.dataset = self.__gather_samples(
+                reference_data, input_names, doe_dataset
+            )
+            doe_tool.result.metadata.simulation_run_ids = tuple(simulation_run_ids)
 
         error_dataset = Dataset()
         error_dataset.add_group(
@@ -258,93 +287,36 @@ class DeterministicValidationCase(BaseAnalysisTool):
 
         return self.result
 
-    def plot_results(
-        self,
-        result: ValidationCaseResult,
-        metric_name: str,
-        output_name: str,
-        input_names: Sequence[str] = (),
-        directory_path: str | Path = "",
-        save=False,
-        show=True,
-        threshold=None,
-    ) -> Mapping[str, Figure]:
-        """Plot a line plot of simulated versus reference results, and a bar plot of
-        metrics values.
+    @staticmethod
+    def __gather_samples(
+        reference_data: IODataset, input_names: Sequence[str], doe_dataset: IODataset
+    ) -> IODataset:
+        """Return the inputs and the outputs of all the samples.
 
         Args:
-            metric_name: The name of the error metric to visualize.
-            output_name: The name of the output variable to visualize.
-            threshold: The threshold used a mid-point for the parallel coordinates plot
-                color bar.
+            reference_data: The reference data, whose vector inputs are padded with NaN.
+            input_names: The names of the inputs.
+            doe_dataset: The outputs of the samples, in the order of the reference data.
+
+        Returns:
+            The inputs of the reference data, padded with NaN, and the outputs.
         """
-        working_directory = (
-            self.working_directory if directory_path == "" else Path(directory_path)
+        dataset = IODataset()
+        dataset.add_group(
+            group_name=IODataset.INPUT_GROUP,
+            data=reference_data.get_view(
+                variable_names=input_names, group_names=IODataset.INPUT_GROUP
+            ).to_numpy(),
+            variable_names=input_names,
+            variable_names_to_n_components={
+                name: reference_data.variable_names_to_n_components[name]
+                for name in input_names
+            },
         )
-
-        figs = {}
-
-        variable_names = [] if not input_names else [*input_names, output_name]
-        df = result.element_wise_metrics.get_view(
-            group_names=[IODataset.INPUT_GROUP, metric_name],
-            variable_names=variable_names,
-        ).copy()
-        df.columns = df.get_columns(as_tuple=False)
-
-        figs["parallel_coordinates"] = (
-            ParallelCoordinates(working_directory=working_directory)
-            .execute(
-                df,
-                metric_name,
-                output_name,
-                save=save,
-                show=show,
-                threshold=threshold,
-            )
-            .figure
+        dataset.add_group(
+            group_name=IODataset.OUTPUT_GROUP,
+            data=doe_dataset.get_view(group_names=IODataset.OUTPUT_GROUP).to_numpy(),
+            variable_names=doe_dataset.get_variable_names(IODataset.OUTPUT_GROUP),
+            variable_names_to_n_components=doe_dataset.variable_names_to_n_components,
         )
-
-        # Weird inteface: the following plots expect variable names with group suffixes.
-        # TODO: document the expected name convention of the dataframe columns.
-        df = dataset_to_dataframe(
-            result.element_wise_metrics,
-            variable_names=variable_names,
-            suffix_by_group=True,
-        )
-
-        figs["error_scatter_matrix"] = (
-            ErrorScatterMatrix(working_directory=working_directory)
-            .execute(
-                df,
-                metric_name,
-                output_name,
-                save=save,
-                show=show,
-            )
-            .figure
-        )
-
-        figs["predict_vs_true"] = (
-            PredictVsTrue(working_directory=working_directory)
-            .execute(
-                df,
-                metric_name,
-                output_name,
-                save=save,
-                show=show,
-            )
-            .figure
-        )
-
-        figs["integrated_metric_bars"] = (
-            IntegratedMetricBars(working_directory=working_directory)
-            .execute(
-                result.integrated_metrics,
-                metric_name,
-                save=save,
-                show=show,
-            )
-            .figure
-        )
-
-        return figs
+        return dataset

@@ -15,14 +15,11 @@
 
 from __future__ import annotations
 
-from pathlib import Path
 from typing import TYPE_CHECKING
 from typing import Annotated
 from typing import Any
 
 from gemseo.algos.parameter_space import ParameterSpace
-from gemseo.datasets.dataset import Dataset
-from gemseo.post.dataset.scatter_plot_matrix import ScatterMatrix
 from gemseo.utils.directory_creator import DirectoryNamingMethod
 from numpy import inf
 from pydantic import Field
@@ -40,9 +37,7 @@ from vimseo.tools.statistics.statistics_tool import StatisticsResult
 from vimseo.utilities.distribution import InterfacedDistributionSettings
 
 if TYPE_CHECKING:
-    from collections.abc import Mapping
-
-    from plotly.graph_objs import Figure
+    from pathlib import Path
 
 
 def _get_fitted_distribution_parameters(distribution) -> tuple:
@@ -323,37 +318,6 @@ class SpaceTool(BaseAnalysisTool):
     ) -> SpaceToolResult:
         self.update(**options)
         return self.result
-
-    def plot_results(
-        self,
-        result: SpaceToolResult,
-        save=False,
-        show=True,
-        directory_path: str | Path = "",
-        n_samples=10,
-        **options,
-    ) -> Mapping[str, Figure]:
-        """
-
-        Args:
-            n_samples: The number of samples used to represent the parameter space.
-
-        Returns:
-
-        """
-        dataset = Dataset.from_array(
-            data=result.parameter_space.compute_samples(n_samples),
-            variable_names=result.parameter_space.uncertain_variables,
-        )
-        plot = ScatterMatrix(dataset)
-        return plot.execute(
-            save=save,
-            show=show,
-            directory_path=(
-                self.working_directory if directory_path == "" else Path(directory_path)
-            ),
-            **options,
-        )
 
     @property
     def parameter_space(self):

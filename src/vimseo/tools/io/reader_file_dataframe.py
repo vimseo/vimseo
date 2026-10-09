@@ -64,10 +64,8 @@ class ReaderFileDataFrame(BaseReaderFile):
 
     _STREAMLIT_SETTINGS = StreamlitReaderFileDataFrameSettings
 
-    def __init__(
-        self,
-    ):
-        super().__init__()
+    def __init__(self, **options):
+        super().__init__(**options)
         self.result = DatasetResult()
 
     @BaseTool.validate

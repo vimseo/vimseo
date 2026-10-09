@@ -26,10 +26,13 @@ from typing import TYPE_CHECKING
 import numpy as np
 
 from vimseo.config.global_configuration import _configuration as config
+from vimseo.core.model_metadata import MetaDataNames
 from vimseo.storage_management.base_archive_storage import BaseArchiveManager
+from vimseo.storage_management.base_archive_storage import _order_results
 from vimseo.utilities.json_grammar_utils import EnhancedJSONEncoderArchive
 
 if TYPE_CHECKING:
+    from collections.abc import Iterable
     from collections.abc import Sequence
 
     from vimseo.storage_management.base_archive_storage import ArchiveResultType
@@ -123,6 +126,21 @@ class DirectoryArchive(BaseArchiveManager):
             }
 
         return results
+
+    def get_results_by_run_id(self, run_ids: Iterable[str]) -> list[ModelDataType]:
+        run_ids = list(run_ids)
+        wanted = set(run_ids)
+        found = {}
+        for root, _, files in os.walk(self._root_directory):
+            if self._RESULTS_JSON_FILE not in files:
+                continue
+            result = self.get_result(root)
+            run_id = str(result["outputs"].get(MetaDataNames.run_id, [""])[0])
+            if run_id in wanted:
+                found[run_id] = {**result, "dir_archive_job": Path(root)}
+                if len(found) == len(wanted):
+                    break
+        return _order_results(run_ids, found, self._root_directory)
 
     def copy_persistent_files(self, src_dir: Path | str) -> None:
         if src_dir == "":
