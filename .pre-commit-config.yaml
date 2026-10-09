@@ -88,6 +88,8 @@ repos:
     - id: insert-license
       name: insert CC BY-SA license for md files
       files: \.md$
+      # A header before the YAML front matter breaks the SPDD commands and canvases.
+      exclude: ^(\.claude/commands|spdd)/
       args:
         - --license-filepath
         - LICENSES/headers/CC-BY-SA-4.0.txt

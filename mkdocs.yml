@@ -132,6 +132,18 @@ nav:
     - Conference abstracts:
         - ASME 2025: explanations/asme2025/abstract.md
         - ECCOMAS 2024: explanations/eccomas2024/abstract.md
+- Requirements:
+    - Overview: requirements/index.md
+    - Models: requirements/REQ-MOD.md
+    - Tools: requirements/REQ-TOOL.md
+    - Results: requirements/REQ-RES.md
+    - Storage and traceability: requirements/REQ-STO.md
+    - Serialization: requirements/REQ-SER.md
+    - Deployment: requirements/REQ-DEP.md
+    - Workflows: requirements/REQ-WF.md
+    - User interfaces: requirements/REQ-UX.md
+    - Non-functional: requirements/REQ-NFR.md
+    - Specifications (SPDD): specs/index.md
 
 markdown_extensions:
 - admonition
