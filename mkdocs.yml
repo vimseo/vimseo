@@ -122,6 +122,7 @@ nav:
    - Integrated Model:
      - Component based Model: references/component_based_model.md
    - Solution Verification: references/solution_verification/solution_verification_method.md
+   - Calibration: references/calibration.md
    - State of the Art: references/state_of_the_art.md
    - Acronyms: references/acronyms.md
 - Tutorials:
