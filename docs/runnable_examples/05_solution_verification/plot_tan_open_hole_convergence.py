@@ -204,7 +204,7 @@ figures = verificator.plot_results(
     show=True,
     directory_path=verificator.working_directory,
 )
-figures["convergence_fit"]
+figures["convergence_fit_plotter"]
 
 # %%
 # A sawtooth quantity
@@ -253,7 +253,7 @@ figures_peak = verificator_peak.plot_results(
     show=True,
     directory_path=verificator_peak.working_directory,
 )
-figures_peak["convergence_fit"]
+figures_peak["convergence_fit_plotter"]
 
 # %%
 # Discussion: smooth versus sawtooth
@@ -269,8 +269,8 @@ figures_peak["convergence_fit"]
 # markedly different values, giving a wide band: the estimate depends heavily on
 # which grids are used.
 side_by_side(
-    figures["convergence_cross_validation"],
-    figures_peak["convergence_cross_validation"],
+    figures["convergence_cross_validation_plotter"],
+    figures_peak["convergence_cross_validation_plotter"],
     "smooth probe",
     "sawtooth peak",
     "sigma_xx",
@@ -284,8 +284,8 @@ side_by_side(
 # enters the asymptotic regime, so no meaningful discretization order (and hence
 # no reliable Richardson extrapolation) exists.
 side_by_side(
-    figures["relative_error_versus_element_size"],
-    figures_peak["relative_error_versus_element_size"],
+    figures["relative_error_versus_element_size_plotter"],
+    figures_peak["relative_error_versus_element_size_plotter"],
     "smooth probe",
     "sawtooth peak",
     "relative error",
@@ -345,8 +345,8 @@ native_figures = {
     for name, verificator in native_verificators.items()
 }
 side_by_side(
-    native_figures["sigma_xx_r"]["convergence_fit"],
-    native_figures["sigma_xx_d0"]["convergence_fit"],
+    native_figures["sigma_xx_r"]["convergence_fit_plotter"],
+    native_figures["sigma_xx_d0"]["convergence_fit_plotter"],
     "sigma_xx_r",
     "sigma_xx_d0",
     "sigma_xx",
@@ -358,8 +358,8 @@ side_by_side(
 # behaviour expected of an analytical model output, and a reassuring baseline for
 # the solution-verification workflow.
 side_by_side(
-    native_figures["sigma_xx_r"]["relative_error_versus_element_size"],
-    native_figures["sigma_xx_d0"]["relative_error_versus_element_size"],
+    native_figures["sigma_xx_r"]["relative_error_versus_element_size_plotter"],
+    native_figures["sigma_xx_d0"]["relative_error_versus_element_size_plotter"],
     "sigma_xx_r",
     "sigma_xx_d0",
     "relative error",

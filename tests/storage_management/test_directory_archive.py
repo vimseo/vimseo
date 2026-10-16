@@ -68,3 +68,9 @@ def test_copy_persistent_files_warns_when_missing(tmp_path, caplog):
     archive._job_directory = tmp_path
     archive.copy_persistent_files(Path(tmp_path))
     assert "was not found" in caplog.text
+
+
+def test_get_archived_results_no_run_ids(archive, caplog):
+    """Querying an archive with an empty selection of runs returns no result."""
+    assert archive.get_archived_results(run_ids=[]) == []
+    assert "No run IDs were given" in caplog.text

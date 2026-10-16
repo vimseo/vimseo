@@ -70,6 +70,7 @@ CORE_TOOLS = (
     "DOETool",
     "DesignValueTool",
     "DistributionComparison",
+    "OATSensitivityTool",
     "ReaderFileTecplot",
     "SensitivityTool",
     "SolutionVerificationCase",

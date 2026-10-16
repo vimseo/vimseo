@@ -60,6 +60,7 @@ class ExternalSoftwareComponent(BaseComponent):
     ) -> None:
         super().__init__(load_case, material_grammar_file, material, check_subprocess)
 
+        # External software reports a scalar error code, which is required.
         self.output_grammar.update_from_data({self._ERROR_CODE_NAME: 0})
         self.output_grammar.required_names.add(self._ERROR_CODE_NAME)
 

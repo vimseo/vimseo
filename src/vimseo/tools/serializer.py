@@ -116,6 +116,31 @@ def __from_dataframe(item: h5py.Group) -> pd.DataFrame:
     return df
 
 
+def __get_dataset_class(item: h5py.Group) -> type[Dataset]:
+    """Return the class of a serialized dataset.
+
+    Args:
+        item: The serialized dataset.
+
+    Returns:
+        The class of the dataset, :class:`.Dataset` if it is not serialized.
+
+    Raises:
+        TypeError: When the serialized class is not a dataset.
+    """
+    class_path = item.attrs.get("dataset_class")
+    if class_path is None:
+        return Dataset
+
+    module_name, class_name = str(class_path).rsplit(".", 1)
+    cls = getattr(importlib.import_module(module_name), class_name)
+    if not (isinstance(cls, type) and issubclass(cls, Dataset)):
+        msg = f"The serialized class {class_path} is not a Dataset."
+        raise TypeError(msg)
+
+    return cls
+
+
 def serialize_value(group: h5py.Group, key: str, value: Any) -> None:
     """Recurcively serialize a value in an HDF5 group."""
 
@@ -129,6 +154,14 @@ def serialize_value(group: h5py.Group, key: str, value: Any) -> None:
 
     elif isinstance(value, Dataset):
         __to_dataframe(value, key, group, "dataset")
+        # The attributes of a Dataset that a DataFrame does not have.
+        sub = group[key]
+        dataset_class = type(value)
+        sub.attrs["dataset_class"] = (
+            f"{dataset_class.__module__}.{dataset_class.__qualname__}"
+        )
+        sub.attrs["dataset_name"] = value.name
+        serialize_value(sub, "misc", value.misc)
 
     elif isinstance(value, pd.DataFrame):
         __to_dataframe(value, key, group, "dataframe")
@@ -229,7 +262,14 @@ def deserialize_value(node: h5py.Group | h5py.Dataset, key: str) -> Any:
 
     if type_ == "dataset":
         df = __from_dataframe(item)
-        return Dataset.from_dataframe(df)
+        # A file written before the class, the name and the misc of the dataset
+        # were serialized gives a Dataset with the default name.
+        dataset = __get_dataset_class(item).from_dataframe(df)
+        if "dataset_name" in item.attrs:
+            dataset.name = str(item.attrs["dataset_name"])
+        if "misc" in item:
+            dataset.misc = deserialize_value(item, "misc")
+        return dataset
 
     if type_ == "dataframe":
         return __from_dataframe(item)

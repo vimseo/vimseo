@@ -31,14 +31,14 @@
       }
     },
     "imposed_dplt_location": {
-      "description": "",
+      "description": "Location of the imposed displacement along the beam",
       "type": "array",
       "items": {
         "type": "number"
       }
     },
     "reaction_forces": {
-      "description": "",
+      "description": "Value of the reaction forces at the imposed displacement location",
       "type": "array",
       "minItems": 1,
       "maxItems": 1,

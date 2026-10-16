@@ -21,6 +21,7 @@ from gemseo.datasets.dataset import Dataset
 from gemseo.datasets.io_dataset import IODataset
 from numpy import full
 from numpy import vstack
+from numpy.testing import assert_allclose
 from numpy.testing import assert_array_equal
 
 from vimseo.problems.mock.mock_pre_run_post.mock_main import MockModel
@@ -175,3 +176,95 @@ def test_serialization(tmp_wd, mock_model_doe):
     result.to_hdf5("result.hdf5")
     serialized_result = DOEResult.from_hdf5("result.hdf5")
     assert_results_equal(result, serialized_result)
+
+
+def test_doe_without_n_samples(tmp_wd, parameter_space):
+    """Check that the number of samples is not passed to a DOE algorithm without such a
+    setting."""
+    doe_tool = DOETool()
+    doe_tool.execute(
+        model=MockModel("LC1"),
+        parameter_space=parameter_space,
+        output_names=["y1"],
+        algo="StarDOE",
+        n_samples=N_SAMPLES,
+        algo_settings={"center": {"x1": 0.5}, "two_sided": False},
+    )
+    dataset = doe_tool.result.dataset
+    assert dataset.name == "DOE_MockModel_LC1_StarDOE"
+    assert_allclose(
+        dataset.get_view(variable_names="x1").to_numpy().ravel(), [0.5, 0.525]
+    )
+
+
+def test_validated_algo_settings(tmp_wd, parameter_space):
+    """Check that the metadata store the settings as validated by the DOE algorithm,
+    with the default values of the settings specific to this algorithm."""
+    doe_tool = DOETool()
+    doe_tool.execute(
+        model=MockModel("LC1"),
+        parameter_space=parameter_space,
+        output_names=["y1"],
+        algo="StarDOE",
+        algo_settings={"center": {"x1": 0.5}, "two_sided": "false", "n_processes": 1},
+    )
+    assert doe_tool.result.metadata.settings["algo_settings"] == {
+        "center": {"x1": 0.5},
+        "relative_step": 0.05,
+        "two_sided": False,
+        "fallback_step": 0.05,
+        "n_processes": 1,
+    }
+    assert len(doe_tool.result.dataset) == 2
+
+
+def test_algo_settings_and_dataset_name_from_disk(tmp_wd, parameter_space):
+    """Check that the settings of the DOE algorithm and the name of the dataset are
+    kept when the result is saved."""
+    doe_tool = DOETool()
+    doe_tool.execute(
+        model=MockModel("LC1"),
+        parameter_space=parameter_space,
+        output_names=["y1"],
+        algo="StarDOE",
+        algo_settings={"two_sided": False},
+    )
+    doe_tool.save_results()
+    result = BaseTool.load_results(doe_tool.working_directory / "DOETool_result.hdf5")
+    assert result.dataset.name == "DOE_MockModel_LC1_StarDOE"
+    assert not result.metadata.settings["algo_settings"]["two_sided"]
+
+
+def test_parameter_space_not_modified(tmp_wd):
+    """Check that a DOE does not set the current value of the variables to its best
+    sample."""
+    parameter_space = ParameterSpace()
+    parameter_space.add_variable("x1", lower_bound=-1.0, upper_bound=1.0, value=0.5)
+    DOETool().execute(
+        model=MockModel("LC1"),
+        parameter_space=parameter_space,
+        output_names=["y1"],
+        algo="OT_MONTE_CARLO",
+        n_samples=N_SAMPLES,
+    )
+    assert_allclose(parameter_space.get_current_value(["x1"]), [0.5])
+
+
+def test_doe_algo_settings(tmp_wd, parameter_space):
+    """Check that the settings of the DOE algorithm are passed with the number of
+    samples."""
+    doe_tool = DOETool()
+    doe_tool.execute(
+        model=MockModel("LC1"),
+        parameter_space=parameter_space,
+        output_names=["y1"],
+        algo="MorrisDOE",
+        n_samples=4,
+        algo_settings={"step": 0.25},
+    )
+    dataset = doe_tool.result.dataset
+    assert dataset.name == "DOE_MockModel_LC1_MorrisDOE_4"
+    x1 = dataset.get_view(variable_names="x1").to_numpy().ravel()
+    assert len(x1) == 4
+    # The OAT step of x1 is 0.25 * (1 - (-1)).
+    assert abs(x1[1] - x1[0]) == pytest.approx(0.5)

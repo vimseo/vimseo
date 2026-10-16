@@ -174,6 +174,33 @@ class TestDataFrames:
         rt = roundtrip(result, tmp_hdf5)
         assert rt.measured_data is None
 
+    @pytest.mark.parametrize("dataset_class", [Dataset, IODataset])
+    def test_dataset_attributes(self, tmp_hdf5, dataset_class):
+        """Check that the class, the name and the misc of a dataset are kept."""
+        dataset = dataset_class.from_dataframe(self.dataset)
+        dataset.name = "my_doe"
+        dataset.misc["step"] = 0.1
+        rt = roundtrip(ValidationPointResult(simulated_data=dataset), tmp_hdf5)
+        assert type(rt.simulated_data) is dataset_class
+        assert rt.simulated_data.name == "my_doe"
+        assert rt.simulated_data.misc == {"step": 0.1}
+        assert_frame_equal_unordered(rt.simulated_data, dataset)
+
+    def test_dataset_written_without_attributes(self, tmp_hdf5):
+        """Check that a dataset serialized without its class, name and misc is read
+        as a Dataset with the default name."""
+        roundtrip(ValidationPointResult(simulated_data=self.dataset), tmp_hdf5)
+        with h5py.File(tmp_hdf5, "a") as f:
+            item = f["simulated_data"]
+            del item.attrs["dataset_class"]
+            del item.attrs["dataset_name"]
+            del item["misc"]
+
+        rt = ValidationPointResult.from_hdf5(tmp_hdf5)
+        assert type(rt.simulated_data) is Dataset
+        assert rt.simulated_data.name == "Dataset"
+        assert rt.simulated_data.misc == {}
+
     def test_statistics_dataframe(self, tmp_hdf5):
         df = pd.DataFrame({"mean": [1.0, 2.0], "std": [0.1, 0.2]})
         result = StatisticsResult(statistics=df)

@@ -114,3 +114,19 @@ def test_copy_persistent_files(tmp_wd):
     assert result["outputs"][MetaDataNames.directory_archive_job] == str(
         model.archive_manager.job_directory
     )
+
+
+def test_archived_results_no_run_ids(tmp_wd, caplog):
+    """Check that an empty selection of runs gives no result, not all the runs."""
+    model = create_model(
+        "MockModelPersistent",
+        "LC1",
+        model_options=IntegratedModelSettings(archive_manager="MlflowArchive"),
+    )
+    model.cache = None
+    model.execute()
+    assert len(model.archive_manager.get_archived_results()) == 1
+    assert model.archive_manager.get_archived_results(run_ids=[]) == ()
+    assert "No run IDs were given" in caplog.text
+    cache = model.create_cache_from_archive(run_ids=[])
+    assert len(cache) == 0

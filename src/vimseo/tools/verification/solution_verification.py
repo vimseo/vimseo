@@ -174,11 +174,9 @@ class SolutionVerificationSettings(CustomDOESettings):
         "If specified, it overrides the element size values generated from "
         "``element_size_ratio``.",
     )
-    output_name: str = (
-        Field(
-            default="",
-            description="The name of the output variable used to assess convergence.",
-        ),
+    output_name: str = Field(
+        default="",
+        description="The name of the output variable used to assess convergence.",
     )
     observed_output_names: list[str] = Field(
         default=[],

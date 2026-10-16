@@ -886,9 +886,17 @@ class IntegratedModel(GemseoDisciplineWrapper):
             ]),
         })
 
-    def create_cache_from_archive(self, run_ids: Iterable[str] = ()) -> HDF5Cache:
+    def create_cache_from_archive(
+        self, run_ids: Iterable[str] | None = None
+    ) -> HDF5Cache:
         """Defines a temporary HDF5 cache file, based on results found on the current
-        archive."""
+        archive.
+
+        Args:
+            run_ids: The IDs of the runs to put in the cache.
+                If ``None``, use all the runs of the current archive or experiment.
+                If empty, the cache is empty.
+        """
 
         # cache file preparation
         cache_dir_path = Path(self._cache_file_path).parent

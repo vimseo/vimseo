@@ -88,6 +88,11 @@ All analysis tools inherit from `BaseTool` ([base_tool.py](src/vimseo/tools/base
 - Results are stored in `tool.result` (a `BaseResult` subclass) and persisted via `tool.save_results()` to HDF5/pickle.
 - `plot_results(result, ...)` produces Plotly figures.
 
+**Calling tools:** prefer `tool.execute(inputs=MyToolInputs(...), settings=MyToolSettings(...))`
+(the tool's `_INPUTS` / `_SETTINGS` classes) over keyword arguments, in examples, tests and
+new code. The models validate eagerly and keep inputs and settings distinct; keyword
+arguments remain supported for backward compatibility.
+
 Available tool categories: DOE, sensitivity analysis, calibration, verification (solution + vs-data + vs-model), validation (point + case), surrogate modelling, statistics, Bayesian analysis, design value.
 
 ### Storage (`src/vimseo/storage_management/`)

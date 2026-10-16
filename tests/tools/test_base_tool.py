@@ -24,6 +24,7 @@ from gemseo.core.grammars.errors import InvalidDataError
 from gemseo.utils.directory_creator import DirectoryNamingMethod
 
 from vimseo.tools.base_result import BaseResult
+from vimseo.tools.base_settings import BaseInputs
 from vimseo.tools.base_tool import BaseTool
 from vimseo.tools.doe.doe import DOEInputs
 from vimseo.tools.doe.doe import DOESettings
@@ -40,6 +41,22 @@ class InputsOnlyTool(BaseTool):
 
     @BaseTool.validate
     def execute(self, inputs: MyInputs | None = None, **options):
+        """A mock run."""
+
+
+class ResultInputs(BaseInputs):
+    result: BaseResult | None = None
+
+
+class ResultInputTool(BaseTool):
+    """A tool whose input is the result of another tool."""
+
+    _INPUTS = ResultInputs
+
+    _SETTINGS = MySettings
+
+    @BaseTool.validate
+    def execute(self, inputs=None, settings=None, **options):
         """A mock run."""
 
 
@@ -129,6 +146,38 @@ def test_execute_with_inputs_only(tmp_wd):
     tool.execute(inputs=MyInputs(bar="x"))
     assert tool.options["bar"] == "x"
     assert tool.options["foo"] == ""
+
+
+def test_execute_with_inputs_only_then_kwargs(tmp_wd):
+    """Check that a tool executed with inputs only can then be executed with keyword
+    arguments."""
+    tool = MyTool()
+    tool.execute(inputs=MyInputs(bar="x"))
+    assert "inputs" not in tool.options
+    tool.execute(foo="y")
+    assert tool.options == {"foo": "y", "bar": "x"}
+
+
+@pytest.mark.parametrize(
+    "get_options",
+    [
+        lambda result: {"result": result, "foo": "x"},
+        lambda result: {
+            "inputs": ResultInputs(result=result),
+            "settings": MySettings(foo="x"),
+        },
+        lambda result: {"inputs": ResultInputs(result=result)},
+    ],
+)
+def test_result_as_input(tmp_wd, get_options):
+    """Check that an input that is the result of another tool is kept as is.
+
+    Dumping a Pydantic model converts a dataclass into a dictionary.
+    """
+    result = BaseResult()
+    tool = ResultInputTool()
+    tool.execute(**get_options(result))
+    assert tool.options["result"] is result
 
 
 def test_set_plot_uses_plot_factory():

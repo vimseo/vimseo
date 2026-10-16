@@ -86,7 +86,23 @@ class DirectoryArchive(BaseArchiveManager):
             LOGGER.info(f"Removing job directory: {job_dir}")
             shutil.rmtree(str(job_dir))
 
-    def get_archived_results(self, run_ids: Sequence[str] | Sequence[Path] = ()):
+    def get_archived_results(
+        self, run_ids: Sequence[str] | Sequence[Path] | None = None
+    ):
+        """Return archived results.
+
+        Args:
+            run_ids: The paths to the result files of the runs.
+                If ``None``, use all the runs of the archive.
+                If empty, no result is returned.
+
+        Returns:
+            The archived results,
+            or ``None`` if the archive directory does not exist.
+        """
+        if run_ids is not None and len(run_ids) == 0:
+            LOGGER.warning("No run IDs were given; no archived result is returned.")
+            return []
 
         root_archive = self._root_directory / self._experiment_name
         root_archive = Path(root_archive)
@@ -97,7 +113,7 @@ class DirectoryArchive(BaseArchiveManager):
             )
             return None
 
-        if len(run_ids) > 0:
+        if run_ids is not None:
             target_files = run_ids
         else:
             target_files = []

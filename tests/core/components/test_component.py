@@ -26,7 +26,8 @@ def test_grammar_from_parent_class_inherit(tmp_wd):
     factory = ComponentFactory()
     mcc1 = factory.create("MockChildComponent1")
     assert list(mcc1.io.input_grammar.keys()) == ["x1", "x2", "x3"]
-    assert list(mcc1.io.output_grammar.keys()) == ["y1", "y2", "y3"]
+    # Every component declares an optional error code.
+    assert list(mcc1.io.output_grammar.keys()) == ["y1", "y2", "y3", "error_code"]
     assert mcc1.default_input_data == {"x1": 0.0, "x2": 0.0, "x3": 0.0}
 
 

@@ -3,7 +3,7 @@
   "required": [],
   "properties": {
     "reaction_forces": {
-      "description": "",
+      "description": "Value of the reaction forces at the imposed displacement location",
       "type": "array",
       "items": {
         "type": "number"

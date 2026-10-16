@@ -33,6 +33,8 @@ from vimseo.core.model_metadata import DEFAULT_METADATA
 from vimseo.core.model_metadata import MetaDataNames
 from vimseo.core.pre_run_post_model import PreRunPostModel
 from vimseo.job_executor.base_user_job_options import BaseUserJobSettings
+from vimseo.problems.mock.mock_pre_run_post.mock_components_lc1 import MockPost_LC1
+from vimseo.problems.mock.mock_pre_run_post.mock_components_lc2 import MockPost_LC2
 from vimseo.problems.mock.mock_pre_run_post.mock_with_material import (
     MockModelWithMaterial,
 )
@@ -64,19 +66,20 @@ def test_check_data_flow(tmp_wd):
                 "x1_minimum_only",
                 "x1_no_bounds",
             ],
-            "outputs": ["x2"],
+            "outputs": ["x2", "error_code"],
         },
         "MockRun": {
             "inputs": [
                 "x2",
             ],
-            "outputs": ["y0"],
+            "outputs": ["y0", "error_code"],
         },
         "MockPost_LC1": {
             "inputs": ["y0"],
-            "outputs": ["y1"],
+            "outputs": ["y1", "error_code"],
         },
     }
+    # Every component declares an optional error code.
 
     for io_key in ["model_inputs", "model_outputs"]:
         assert set(expected[io_key]) == set(model.get_dataflow()[io_key])
@@ -198,9 +201,8 @@ def test_metadata(tmp_wd):
 
     assert output_data[MetaDataNames.model][0] == "MockModel"
     assert output_data[MetaDataNames.load_case][0] == "LC1"
-    assert (
-        output_data[MetaDataNames.error_code][0] == IntegratedModel._ERROR_CODE_DEFAULT
-    )
+    # The post-processor of the model returns a zero error code.
+    assert output_data[MetaDataNames.error_code][0] == 0
     assert output_data[MetaDataNames.description][0] == ""
     assert output_data[MetaDataNames.job_name][0] == ""
     assert len(output_data[MetaDataNames.persistent_result_files]) == 1
@@ -354,3 +356,44 @@ def test_auto_get_file_not_found_raises(tmp_wd):
     model = create_model("MockModel", "LC1")
     with pytest.raises(FileNotFoundError, match="No files with suffix"):
         model.auto_get_file(".nonexistent_suffix")
+
+
+@pytest.mark.parametrize(
+    ("model_name", "load_case"),
+    [("MockModel", "LC2"), ("BendingTestAnalytical", "Cantilever")],
+)
+def test_error_code_from_component(tmp_wd, model_name, load_case):
+    """Check that the error code returned by a component reaches the metadata."""
+    model = create_model(model_name, load_case)
+    model.cache = None
+    model.execute()
+    assert model.get_output_data()[MetaDataNames.error_code][0] == 0
+
+
+def test_error_code_non_zero(tmp_wd, monkeypatch):
+    """Check that a non-zero error code returned by a component reaches the
+    metadata."""
+    monkeypatch.setattr(MockPost_LC2, "ERROR_VALUE", 3)
+    model = create_model("MockModel", "LC2")
+    model.cache = None
+    model.execute()
+    assert model.get_output_data()[MetaDataNames.error_code][0] == 3
+
+
+def test_error_code_default(tmp_wd, monkeypatch):
+    """Check that the error code is the default one when no component returns it."""
+    run = MockPost_LC1._run
+
+    def run_without_error_code(self, input_data):
+        output_data = run(self, input_data)
+        del output_data[MetaDataNames.error_code.value]
+        return output_data
+
+    monkeypatch.setattr(MockPost_LC1, "_run", run_without_error_code)
+    model = create_model("MockModel", "LC1")
+    model.cache = None
+    model.execute()
+    assert (
+        model.get_output_data()[MetaDataNames.error_code][0]
+        == IntegratedModel._ERROR_CODE_DEFAULT
+    )

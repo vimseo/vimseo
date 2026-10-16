@@ -26,6 +26,7 @@ from copy import deepcopy
 from os.path import join
 from pathlib import Path
 from typing import TYPE_CHECKING
+from typing import Any
 from typing import ClassVar
 
 from docstring_inheritance import GoogleDocstringInheritanceMeta
@@ -360,15 +361,35 @@ class BaseTool(metaclass=GoogleDocstringInheritanceMeta):
                     if not isinstance(options["inputs"], self._INPUTS):
                         msg = f"Inputs must be of type {self._INPUTS}."
                         raise TypeError(msg)
-                    self._options.update(options["inputs"].model_dump())
+                    self._options.update(self._dump_options(options["inputs"]))
             elif "inputs" in options:
-                self._options.update(options["inputs"].model_dump())
+                # update_options stored the model of the inputs itself,
+                # which is not an option.
+                del self._options["inputs"]
+                self._options.update(self._dump_options(options["inputs"]))
                 if self._SETTINGS is not None:
                     self._options.update(self._SETTINGS().model_dump())
             else:
-                self._options = self._opt_grammar(**self._options).model_dump()
+                self._options = self._dump_options(self._opt_grammar(**self._options))
 
         return self._options
+
+    def _dump_options(self, options: BaseModel) -> dict[str, Any]:
+        """Dump options into a dictionary, keeping the inputs as is.
+
+        :meth:`~pydantic.BaseModel.model_dump` would convert an input that is a
+        dataclass, e.g. the result of another tool, into a dictionary.
+
+        Args:
+            options: The options, including all the inputs.
+
+        Returns:
+            The options.
+        """
+        input_names = self.input_names
+        dumped_options = options.model_dump(exclude=set(input_names))
+        dumped_options.update({name: getattr(options, name) for name in input_names})
+        return dumped_options
 
     def validate(f):  # ruff: ignore[invalid-first-argument-name-for-method]
         @functools.wraps(f)

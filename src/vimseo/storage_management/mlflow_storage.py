@@ -128,13 +128,24 @@ class MlflowArchive(BaseArchiveManager):
         self._experiment_name = experiment_name
         mlflow.set_experiment_tags(tags)
 
-    def get_archived_results(self, run_ids: Sequence[str] = ()):
+    def get_archived_results(self, run_ids: Sequence[str] | None = None):
+        """Return archived results.
 
-        run_ids = (
-            run_ids
-            if len(run_ids) > 0
-            else mlflow.search_runs(experiment_names=[self._experiment_name])["run_id"]
-        )
+        Args:
+            run_ids: The IDs of the runs.
+                If ``None``, use all the runs of the current experiment.
+                If empty, no result is returned.
+
+        Returns:
+            The archived results.
+        """
+        if run_ids is None:
+            run_ids = mlflow.search_runs(experiment_names=[self._experiment_name])[
+                "run_id"
+            ]
+        elif len(run_ids) == 0:
+            LOGGER.warning("No run IDs were given; no archived result is returned.")
+            return ()
 
         if len(run_ids) == 0:
             LOGGER.info(

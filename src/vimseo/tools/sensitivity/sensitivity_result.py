@@ -20,6 +20,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from dataclasses import field
 from json import dumps
+from typing import TYPE_CHECKING
 
 from gemseo.uncertainty.sensitivity.base_sensitivity_analysis import (
     BaseSensitivityAnalysis,
@@ -27,9 +28,21 @@ from gemseo.uncertainty.sensitivity.base_sensitivity_analysis import (
 from gemseo.utils.string_tools import MultiLineString
 
 from vimseo.tools.base_tool import BaseResult
+from vimseo.tools.sensitivity.indices import indices_to_dataframe
 from vimseo.utilities.json_grammar_utils import EnhancedJSONEncoder
 
+if TYPE_CHECKING:
+    from pandas import DataFrame
+
 LOGGER = logging.getLogger(__name__)
+
+_MAIN_INDEX_NAMES = {
+    "Morris": "mu_star",
+    "MorrisAnalysis": "mu_star",
+    "HSIC": "r2_hsic",
+    "HSICAnalysis": "r2_hsic",
+}
+"""The names of the main indices of the sensitivity analyses."""
 
 
 @dataclass
@@ -43,6 +56,30 @@ class SensitivityResult(BaseResult):
     """The indices of the sensitivity analysis."""
 
     variable_dimensions: Mapping[str, int] = field(default_factory=dict)
+
+    def get_indices_dataframe(self, index_name: str = "") -> DataFrame:
+        """Return sensitivity indices as a table.
+
+        Args:
+            index_name: The name of the indices, e.g. ``"mu_star"`` or ``"sigma"``
+                for a Morris analysis, ``"hsic"`` or ``"r2_hsic"`` for a HSIC one.
+                If empty, use the main indices of the analysis,
+                i.e. ``"mu_star"`` for Morris and ``"r2_hsic"`` for HSIC.
+
+        Returns:
+            The indices, with a row per input component
+            and a column per non-constant output component.
+        """
+        if not index_name:
+            index_name = _MAIN_INDEX_NAMES[self.metadata.settings["sensitivity_algo"]]
+
+        indices = self.indices
+        indices = (
+            indices[index_name]
+            if isinstance(indices, Mapping)
+            else getattr(indices, index_name)
+        )
+        return indices_to_dataframe(indices)
 
     def __str__(self):
         text = MultiLineString()

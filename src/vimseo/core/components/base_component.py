@@ -23,6 +23,7 @@ from gemseo.core.discipline.discipline import Discipline
 from numpy import atleast_1d
 
 from vimseo.core.gemseo_discipline_wrapper import GemseoDisciplineWrapper
+from vimseo.core.model_metadata import MetaDataNames
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -62,6 +63,13 @@ class BaseComponent(GemseoDisciplineWrapper):
         check_subprocess: bool = False,
     ) -> None:
         super().__init__()
+        # A component may return an error code; without it in its grammar,
+        # GEMSEO would drop it and the model would report the default one.
+        # It is optional.
+        error_code_name = MetaDataNames.error_code.value
+        if error_code_name not in self.output_grammar:
+            self.output_grammar.update_from_data({error_code_name: atleast_1d(0)})
+            self.output_grammar.required_names.discard(error_code_name)
         self._load_case = load_case
         self._job_directory = ""
         self._check_subprocess = check_subprocess
