@@ -18,6 +18,10 @@ from __future__ import annotations
 import subprocess
 from pathlib import Path
 
+import numpy as np
+import pytest
+from openturns import RandomGenerator
+
 from vimseo.utilities.pytest_conftest import *  # ruff: ignore[unused-import, undefined-local-with-import-star]
 from vimseo.utilities.pytest_conftest import (
     pytest_sessionfinish as _fortran_sessionfinish,
@@ -80,3 +84,16 @@ def pytest_sessionfinish(session, exitstatus):
         else:
             print(message)
         session.exitstatus = 1
+
+
+@pytest.fixture(autouse=True)
+def reset_random_seeds():
+    """Reset the seeds of the global random generators before each test.
+
+    OpenTURNS and NumPy draw from generators shared by the whole process: without a
+    reset, the random values of a test depend on the tests executed before it in the
+    same process, e.g. in a pytest-xdist worker, so that a statistical tolerance may
+    be met or missed depending on the order of the tests.
+    """
+    RandomGenerator.SetSeed(0)
+    np.random.seed(0)  # ruff: ignore[numpy-legacy-random]
