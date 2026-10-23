@@ -43,8 +43,13 @@ class BaseDisciplineModel(IntegratedModel):
         if load_case_name != self._EXPECTED_LOAD_CASE:
             msg = f"The load case should be {self._EXPECTED_LOAD_CASE}."
             raise ImportError(msg)
+        discipline = deepcopy(self._DISCIPLINE)
+        # The model manages the cache: a cache left on the wrapped discipline would
+        # answer even when the model cache is disabled, and the model would then
+        # archive a simulation that the discipline did not run.
+        discipline.cache = None
         super().__init__(
             load_case_name,
-            [DisciplineWrapperComponent(load_case_name, deepcopy(self._DISCIPLINE))],
+            [DisciplineWrapperComponent(load_case_name, discipline)],
             **options,
         )
