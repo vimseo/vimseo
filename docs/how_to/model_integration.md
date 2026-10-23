@@ -29,6 +29,13 @@ class attribute:
 --8<-- "src/vimseo/problems/mock/mock_convergence/mock_convergence.py"
 ```
 
+The cache of the discipline is disabled: the model manages the cache.
+
+A material is declared with the `MATERIAL_FILE` class attribute, or passed to the
+constructor (`material=...`, also through `create_model`). Its property values become the
+default values of the discipline inputs of the same names; each property must be an
+input of the discipline.
+
 If you have a model implemented in a Python script, you may integrate the process to **VIMSEO** by:
 
 - wrapping this model in a **GEMSEO** discipline

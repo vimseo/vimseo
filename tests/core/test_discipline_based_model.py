@@ -15,11 +15,16 @@
 
 from __future__ import annotations
 
+import re
+
+import pytest
 from gemseo.core.discipline import Discipline
 from numpy import atleast_1d
 
 from vimseo.api import create_model
 from vimseo.core.base_discipline_model import BaseDisciplineModel
+from vimseo.material.material import Material
+from vimseo.material_lib import MATERIAL_LIB_DIR
 
 
 def test_discipline_based_model(tmp_wd):
@@ -81,3 +86,59 @@ def test_wrapped_discipline_cache_is_disabled(tmp_wd):
     model.execute()
     model.execute()
     assert discipline.n_calls == 2
+
+
+class _StiffnessDiscipline(Discipline):
+    """A discipline whose input ``E1`` is the property of the ``Mock`` material."""
+
+    def __init__(self):
+        super().__init__()
+        self.input_grammar.update_from_data({
+            "E1": atleast_1d(0.0),
+            "area": atleast_1d(0.0),
+        })
+        self.output_grammar.update_from_data({"stiffness": atleast_1d(0.0)})
+        self.default_input_data = {"E1": atleast_1d(1.0), "area": atleast_1d(2.0)}
+
+    def _run(self, input_data):
+        return {"stiffness": input_data["E1"] * input_data["area"]}
+
+
+class _ModelWithMaterial(BaseDisciplineModel):
+    MATERIAL_FILE = MATERIAL_LIB_DIR / "Mock.json"
+    _DISCIPLINE = _StiffnessDiscipline()
+    _EXPECTED_LOAD_CASE = "Dummy"
+
+
+def test_material_values_are_default_inputs(tmp_wd):
+    """The values of the material declared by ``MATERIAL_FILE`` are default inputs,
+    while the other default inputs and the class discipline are left unchanged."""
+    model = _ModelWithMaterial()
+
+    assert model.material_variable_names == ["E1"]
+    assert model.default_input_data["E1"][0] == 150000.0  # ruff: ignore[float-equality-comparison]
+    assert model.default_input_data["area"][0] == 2.0  # ruff: ignore[float-equality-comparison]
+    assert model.execute()["stiffness"][0] == 300000.0  # ruff: ignore[float-equality-comparison]
+    assert _ModelWithMaterial._DISCIPLINE.default_input_data["E1"][0] == 1.0  # ruff: ignore[float-equality-comparison]
+
+
+def test_material_argument_overrides_material_file(tmp_wd):
+    """A material passed to the constructor overrides ``MATERIAL_FILE``."""
+    material = Material.from_json(MATERIAL_LIB_DIR / "Mock.json")
+    material.update_from_dict({"E1": 120000.0})
+    model = _ModelWithMaterial(material=material)
+
+    assert model.material is material
+    assert model.default_input_data["E1"][0] == 120000.0  # ruff: ignore[float-equality-comparison]
+
+
+def test_material_property_not_an_input(tmp_wd):
+    """A material property must be an input of the discipline."""
+    with pytest.raises(
+        ValueError,
+        match=re.escape(
+            "The properties ['E1'] of the material MockDefaultMaterial are not inputs "
+            "of the discipline _CountingDiscipline."
+        ),
+    ):
+        _CountingModel(material=MATERIAL_LIB_DIR / "Mock.json")
