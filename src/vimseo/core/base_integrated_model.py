@@ -391,6 +391,7 @@ class IntegratedModel(GemseoDisciplineWrapper):
         self.default_input_data = self._chain.default_input_data
         for name in self.input_grammar.names:
             self.input_grammar.required_names.add(name)
+        self._update_input_grammar()
 
         self.output_grammar.update_from_types(
             self._chain.output_grammar._get_names_to_types()
@@ -445,9 +446,17 @@ class IntegratedModel(GemseoDisciplineWrapper):
         # TODO check if integration of jacobian is correct
         self._set_differentiated_names(self._chain.disciplines[0])
 
-        if isinstance(self._chain.disciplines[0].input_grammar, JSONGrammar):
+        # The input grammar of the model, built from the chain, is a JSON grammar
+        # only when ``_update_input_grammar`` makes it one, e.g. to bound the inputs;
+        # otherwise the bounds are those of the first component.
+        bounds_grammar = (
+            self.input_grammar
+            if isinstance(self.input_grammar, JSONGrammar)
+            else self._chain.disciplines[0].input_grammar
+        )
+        if isinstance(bounds_grammar, JSONGrammar):
             self.lower_bounds, self.upper_bounds, self.input_space = load_input_bounds(
-                self._chain.disciplines[0].input_grammar
+                bounds_grammar
             )
         else:
             self.input_space = {}
@@ -464,6 +473,12 @@ class IntegratedModel(GemseoDisciplineWrapper):
         # Reset execution time, otherwise the execution is cumulated over all the
         # executions of the model instance.
         self._chain.exec_time = 0.0
+
+    def _update_input_grammar(self) -> None:
+        """Update the input grammar of the model, once built from its components.
+
+        Called before the cache is set, since the cache is bound to the input grammar.
+        """
 
     def _set_differentiated_names(self, component_with_jacobian):
         self._differentiated_input_names = (

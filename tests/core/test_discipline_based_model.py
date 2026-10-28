@@ -15,10 +15,13 @@
 
 from __future__ import annotations
 
+import json
 import re
 
 import pytest
 from gemseo.core.discipline import Discipline
+from gemseo.core.grammars.errors import InvalidDataError
+from gemseo.core.grammars.json_grammar import JSONGrammar
 from numpy import atleast_1d
 
 from vimseo.api import create_model
@@ -142,3 +145,53 @@ def test_material_property_not_an_input(tmp_wd):
         ),
     ):
         _CountingModel(material=MATERIAL_LIB_DIR / "Mock.json")
+
+
+def _write_input_grammar(file_path, properties):
+    file_path.write_text(json.dumps({"type": "object", "properties": properties}))
+    return file_path
+
+
+def test_input_grammar_file(tmp_wd):
+    """The input grammar file bounds the inputs, keeping the default values, the
+    required names and the cache."""
+    file_path = _write_input_grammar(
+        tmp_wd / "input.json",
+        {
+            "area": {
+                "type": "array",
+                "items": {"type": "number", "minimum": 1.0, "maximum": 3.0},
+            }
+        },
+    )
+
+    class _BoundedModel(_ModelWithMaterial):
+        _INPUT_GRAMMAR_FILE = file_path
+
+    model = _BoundedModel()
+
+    assert isinstance(model.input_grammar, JSONGrammar)
+    assert model.lower_bounds == {"area": 1.0}
+    assert model.upper_bounds == {"area": 3.0}
+    assert set(model.input_grammar.required_names) == {"E1", "area"}
+    assert model.default_input_data["E1"][0] == 150000.0  # ruff: ignore[float-equality-comparison]
+    assert model.execute()["stiffness"][0] == 300000.0  # ruff: ignore[float-equality-comparison]
+    model.execute()
+    assert len(model.cache) == 1
+    with pytest.raises(
+        InvalidDataError, match=r"must be smaller than or equal to 3\.0"
+    ):
+        model.execute({"area": atleast_1d(4.0)})
+
+
+def test_input_grammar_file_only_restricts(tmp_wd):
+    """The input grammar file cannot change the type of an input."""
+    file_path = _write_input_grammar(
+        tmp_wd / "input.json", {"area": {"type": "number"}}
+    )
+
+    class _BadModel(_ModelWithMaterial):
+        _INPUT_GRAMMAR_FILE = file_path
+
+    with pytest.raises(ValueError, match="shall only restrict"):
+        _BadModel()

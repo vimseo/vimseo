@@ -36,6 +36,12 @@ constructor (`material=...`, also through `create_model`). Its property values b
 default values of the discipline inputs of the same names; each property must be an
 input of the discipline.
 
+The inputs can be bounded by a JSON grammar file, declared with the
+`_INPUT_GRAMMAR_FILE` class attribute. Its properties replace those of the same names in
+the input grammar of the discipline, e.g. to set the `minimum` and `maximum` of the
+`items` of an input. This file can only restrict the grammar of the discipline: a
+variable unknown to the discipline, a different type or a looser bound raises an error.
+
 If you have a model implemented in a Python script, you may integrate the process to **VIMSEO** by:
 
 - wrapping this model in a **GEMSEO** discipline

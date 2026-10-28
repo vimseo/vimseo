@@ -24,6 +24,7 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 from gemseo.algos.parameter_space import ParameterSpace
+from gemseo.core.grammars.json_grammar import JSONGrammar
 from gemseo.mlearning import MinMaxScaler
 from numpy import array
 from numpy import inf
@@ -35,7 +36,7 @@ if TYPE_CHECKING:
     from collections.abc import Mapping
     from numbers import Number
 
-    from gemseo.core.grammars.json_grammar import JSONGrammar
+    from gemseo.core.grammars.base_grammar import BaseGrammar
 
 LOGGER = logging.getLogger(__name__)
 
@@ -105,6 +106,77 @@ def load_default_inputs(grammar: JSONGrammar) -> Mapping[str, float]:
                 LOGGER.debug(f"Default value is not defined for input key {key}.")
 
     return default_inputs
+
+
+def to_json_grammar(grammar: BaseGrammar, name: str = "") -> JSONGrammar:
+    """Return a grammar as a JSON grammar.
+
+    Args:
+        grammar: The grammar.
+        name: The name of the JSON grammar. By default, the name of ``grammar``.
+
+    Returns:
+        A copy of ``grammar`` when it is a JSON grammar, with its bounds; otherwise
+        a JSON grammar built from the types of its variables.
+    """
+    json_grammar = JSONGrammar(name or grammar.name)
+    if isinstance(grammar, JSONGrammar):
+        json_grammar.update(grammar)
+    else:
+        json_grammar.update_from_types(grammar._get_names_to_types())
+    return json_grammar
+
+
+def check_grammar_restriction(reference: JSONGrammar, file_path: str | Path) -> None:
+    """Check that a JSON grammar file only restricts a reference grammar.
+
+    Args:
+        reference: The reference grammar.
+        file_path: The path to the JSON grammar file.
+
+    Raises:
+        ValueError: When the file declares a variable unknown to the reference grammar,
+            changes the type of a variable, or has a looser ``minimum`` or ``maximum``
+            than the reference one.
+    """
+    properties = json.loads(Path(file_path).read_text(encoding="utf-8"))["properties"]
+    reference_properties = reference.schema["properties"]
+    errors = []
+    unknown_names = sorted(properties.keys() - reference_properties.keys())
+    if unknown_names:
+        errors.append(f"unknown variables {unknown_names}")
+    lower_bounds, upper_bounds, _ = load_input_bounds(reference)
+    for name in sorted(properties.keys() & reference_properties.keys()):
+        prop = properties[name]
+        reference_prop = reference_properties[name]
+        prop_type = (prop.get("type"), prop.get("items", {}).get("type"))
+        reference_type = (
+            reference_prop.get("type"),
+            reference_prop.get("items", {}).get("type"),
+        )
+        if prop_type != reference_type:
+            errors.append(f"{name}: type {prop_type} instead of {reference_type}")
+            continue
+        items = prop.get("items", {})
+        lower_bound, upper_bound = items.get("minimum"), items.get("maximum")
+        if name in lower_bounds and (
+            lower_bound is None or lower_bound < lower_bounds[name]
+        ):
+            errors.append(
+                f"{name}: minimum {lower_bound} looser than {lower_bounds[name]}"
+            )
+        if name in upper_bounds and (
+            upper_bound is None or upper_bound > upper_bounds[name]
+        ):
+            errors.append(
+                f"{name}: maximum {upper_bound} looser than {upper_bounds[name]}"
+            )
+    if errors:
+        msg = (
+            f"The JSON grammar {file_path} shall only restrict the grammar "
+            f"{reference.name}: {'; '.join(errors)}."
+        )
+        raise ValueError(msg)
 
 
 class EnhancedJSONEncoder(json.JSONEncoder):
