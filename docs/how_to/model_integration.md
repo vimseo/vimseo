@@ -47,6 +47,48 @@ If you have a model implemented in a Python script, you may integrate the proces
 - wrapping this model in a **GEMSEO** discipline
 - using the above procedure to convert it as a **VIMSEO** model
 
+## Declarative integration of a **GEMSEO** discipline
+
+A **GEMSEO** discipline can also be turned into a **VIMSEO** model without writing
+Python, by declaring the model in a YAML file:
+
+```yaml
+name: TensileCoupon                       # the name of the model
+discipline: tensile_coupon:TensileCoupon  # the discipline class, as module:Class
+discipline_path: .                        # the directory of the module, if not installed
+discipline_options: {n_points: 100}       # the arguments of the discipline constructor
+load_case: Dummy                          # the load case, Dummy by default
+summary: A tensile coupon with a bilinear elasto-plastic behaviour.
+material: coupon_material.json            # the material JSON file
+input_grammar: TensileCoupon_input.json   # the JSON grammar file bounding the inputs
+plots:                                    # the figures: abscissa, then ordinates
+  - [strain_history, stress_history]
+```
+
+The relative paths are relative to the directory of the YAML file. Each key sets a
+class attribute of a `BaseDisciplineModel`: only `name` and `discipline` are required.
+
+The command `vimseo_wrap` helps to write the declaration:
+
+- `vimseo_wrap write-grammar TensileCoupon.yaml` writes the input grammar of the
+  discipline as a JSON file, with the types of the inputs. Complete it with the
+  `minimum` and `maximum` of the `items` of the inputs to bound, remove the inputs not to
+  bound, and reference the file in the YAML file with `input_grammar`.
+- `vimseo_wrap check TensileCoupon.yaml` creates the model and prints its description
+  and its input bounds; it also tells whether `create_model` finds the model.
+
+The models declared in the directories of the environment variable `VIMSEO_MODELS_PATH`
+(separated by `;` on Windows, `:` otherwise) are available by their name, as any model:
+
+```python
+from vimseo.api import create_model
+
+model = create_model("TensileCoupon", "Dummy")
+```
+
+No development installation is needed: the discipline module is imported from
+`discipline_path` when it is not installed.
+
 ## Integration of a pure Python model as a pre-run-post component model
 
 If you have a model implemented in a Python script, and want to integrate it as a three-step pre-processing, run-processing and post-processing:
