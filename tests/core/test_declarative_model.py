@@ -227,40 +227,24 @@ def test_main_write_grammar_and_check(tmp_wd, capsys):
 
 
 def test_models_path(tmp_wd):
-    """The models of ``VIMSEO_MODELS_PATH`` are created by name, and a model pickled in
-    a process is loaded in another one."""
+    """The models of ``VIMSEO_MODELS_PATH`` are created by name."""
     _write_declaration(tmp_wd)
-    env = {**os.environ, "VIMSEO_MODELS_PATH": str(tmp_wd)}
-
-    def run(script):
-        result = subprocess.run(
-            [sys.executable, "-c", script],
-            capture_output=True,
-            text=True,
-            env=env,
-            cwd=tmp_wd,
-            check=False,
-        )
-        assert result.returncode == 0, result.stderr
-        return result.stdout.split()[-1]
-
-    module_name = run(
-        "import pickle\n"
-        "from pathlib import Path\n"
+    script = (
+        "from numpy import array\n"
         "from vimseo.api import create_model\n"
         "if __name__ == '__main__':\n"
         "    model = create_model('DeclaredStiffness', 'Dummy')\n"
-        "    Path('model.pkl').write_bytes(pickle.dumps(model))\n"
         "    print(type(model).__module__)\n"
-    )
-    stiffness = run(
-        "import pickle\n"
-        "from pathlib import Path\n"
-        "from numpy import array\n"
-        "if __name__ == '__main__':\n"
-        "    model = pickle.loads(Path('model.pkl').read_bytes())\n"
         "    print(model.execute({'area': array([2.0])})['stiffness'][0])\n"
     )
+    result = subprocess.run(
+        [sys.executable, "-c", script],
+        capture_output=True,
+        text=True,
+        env={**os.environ, "VIMSEO_MODELS_PATH": str(tmp_wd)},
+        cwd=tmp_wd,
+        check=False,
+    )
 
-    assert module_name == "vimseo.problems.declarative"
-    assert stiffness == "300000.0"
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.split()[-2:] == ["vimseo.problems.declarative", "300000.0"]

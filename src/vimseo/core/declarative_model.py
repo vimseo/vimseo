@@ -168,8 +168,8 @@ def create_model_class(
     Args:
         declaration: The declaration.
         module_name: The name of the module the class belongs to. The model factory
-            finds the classes of the modules of VIMSEO and of its plugins, and a class
-            is pickled only when it is an attribute of its module.
+            finds the classes of the modules of VIMSEO and of its plugins; the class is
+            to be kept as an attribute of this module, where it is found by its name.
 
     Returns:
         The class of the model.
