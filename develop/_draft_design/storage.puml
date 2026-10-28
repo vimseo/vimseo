@@ -1,0 +1,44 @@
+@startuml
+'https://plantuml.com/class-diagram
+
+
+package vimseo.tool {
+
+abstract class BaseStorageManager {
+    # root_directory
+    # persistency_policy
+    # job_name
+    # job_dir_prefix
+    # accept_overwrite_job_dir
+
+    create_job_directory()
+    whether_to_delete()
+    delete_job_directory()
+    {abstract} enforce_persistency_policy()
+}
+
+class DirectoryArchive {
+    # persistent_file_names
+
+    add_persistent_file_names()
+    get_archived_results()
+    # import_archive()
+    copy_persisting_files()
+    enforce_persistency_policy()
+    _encode_result()
+    {static} encode_dict_archive()
+    _decode_result()
+
+
+
+}
+
+class DirectoryScratch
+
+class MlflowArchive
+
+DirectoryArchive -u-|> BaseStorageManager
+DirectoryScratch -u|> BaseStorageManager
+MlflowArchive -u-|> BaseStorageManager
+
+@enduml

@@ -1,0 +1,65 @@
+@startuml
+'https://plantuml.com/class-diagram
+
+
+package vimseo.tool {
+
+'interface BaseTool{
+'    + result: BaseResult
+'    + settings
+'    + root_directory
+'    + working_directory
+'    + execute(inputs: InputModel, settings: SettingsModel, **options) -> BaseResult
+'}
+
+'abstract class BaseAnalysisTool
+
+class CalibrationTool{
+}
+
+'abstract class BaseResult{
+'    + metadata
+'}
+
+class CalibrationResult {
+    posterior_parameters
+    prior_parameters
+    prior_model_data
+    posterior_model_data
+}
+
+}
+
+package gemseo {
+
+class CalibrationScenario {
+    prior_parameters
+    posterior_parameters
+    calibrator
+    # execute()
+}
+
+CalibrationScenario -u-|> MDOScenario
+
+class MDOScenarioAdapter
+
+class Calibrator {
+    disciplines
+    input_space
+    reference_data
+    set_reference_data()
+    add_metric()
+    # execute()
+}
+
+Calibrator -u-|> MDOScenarioAdapter
+CalibrationScenario --* "1" Calibrator
+
+}
+
+'BaseAnalysisTool -u-|> BaseTool
+'CalibrationTool -u-|> BaseAnalysisTool
+'CalibrationResult -u-|> BaseResult
+CalibrationTool --* "1" CalibrationResult
+CalibrationTool ..* "1" CalibrationScenario
+@enduml

@@ -1,0 +1,66 @@
+@startuml
+'https://plantuml.com/class-diagram
+
+package gemseo.mlearning {
+    class SensitivityAnalysis
+    class DOE
+    class ParametricStatistics
+}
+
+package tool {
+
+'abstract class ToolFactory {
+'    create()
+'}
+'
+'class AnalysisToolFactory
+'
+'class ReaderToolFactory
+
+interface BaseTool{
+    + result: BaseResult
+    + settings
+    + root_directory
+    + working_directory
+    + execute(inputs: InputModel, settings: SettingsModel, **options) -> BaseResult
+}
+
+interface BaseCompositeTool {
+    subtools
+}
+
+abstract class BaseAnalysisTool
+
+abstract class BaseReader
+
+class MyAnalysisTool{
+}
+
+class ReaderTool{
+}
+
+abstract class BaseResult{
+    + metadata
+}
+
+class MyResult {
+    dataset
+    dict
+}
+
+}
+
+'AnalysisToolFactory -u-|> ToolFactory
+'ReaderToolFactory -u-|> ToolFactory
+'AnalysisToolFactory ..> BaseAnalysisTool
+'ReaderToolFactory ..> BaseReader
+BaseCompositeTool -u-|> BaseTool
+BaseAnalysisTool -u-|> BaseCompositeTool
+BaseReader -u-|> BaseTool
+MyAnalysisTool -u-|> BaseAnalysisTool
+ReaderTool -u-|> BaseReader
+MyResult -u-|> BaseResult
+BaseTool "1" *-- "1" BaseResult
+MyAnalysisTool "1" *-- "1" MyResult
+BaseAnalysisTool ..> gemseo.mlearning
+@enduml

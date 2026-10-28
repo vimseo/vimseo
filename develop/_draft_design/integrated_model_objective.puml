@@ -1,0 +1,72 @@
+@startuml
+'https://plantuml.com/class-diagram
+
+package gemseo {
+
+abstract class MDODiscipline
+
+class MDOChain
+
+}
+
+package vimseo {
+
+
+abstract class BaseIntegratedModel {
+    disciplines: List[MDODiscipline]
+    chain: MDOChain
+    lower_bounds
+    upper_bounds
+    job_directory
+}
+
+class BaseLoadCase
+
+class MyLoadCase
+
+package component_based_model {
+
+abstract class ComponentBasedModel {
+    disciplines = [pre, run, post]
+}
+
+class Component {
+    lower_bounds
+    upper_bounds
+    #job_directory
+}
+
+class MyAbaqusModel
+
+class PreProcessor
+class PostProcessor
+class ModelRun
+
+}
+
+'package analytic {
+'
+'class AnalyticalModel {
+'    disciplines = [analytic_discipline]
+'}
+'
+'}
+
+}
+
+BaseIntegratedModel -u-|> MDODiscipline
+BaseIntegratedModel *-- MDOChain
+Component -u-|> MDODiscipline
+'AnalyticalModel -u-|> BaseIntegratedModel
+ComponentBasedModel -u-|> BaseIntegratedModel
+MyAbaqusModel -u-|> ComponentBasedModel
+PreProcessor -u-|> Component
+ModelRun -u-|> Component
+PostProcessor -u-|> Component
+ComponentBasedModel *-- "1" PreProcessor
+ComponentBasedModel *-- "1" ModelRun
+ComponentBasedModel *-- "1" PostProcessor
+BaseIntegratedModel *-- "1" BaseLoadCase
+MyLoadCase -u-|> BaseLoadCase
+
+@enduml

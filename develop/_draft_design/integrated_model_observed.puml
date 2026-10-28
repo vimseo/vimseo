@@ -1,0 +1,62 @@
+@startuml
+'https://plantuml.com/class-diagram
+
+abstract class MDODiscipline
+
+class Component {
+    lower_bounds
+    upper_bounds
+    #job_directory
+    check_subprocess
+}
+
+abstract class IntegratedModel {
+    pre_processor: Component
+    post_processor: Component
+    model_run: Component
+    subroutine: Component
+    lower_bounds
+    upper_bounds
+    job_directory
+}
+
+class MyConcreteModel
+
+class Material {
+    relations: List[MaterialRelation]
+}
+
+class MaterialRelation {
+    properties: List[MaterialProperties]
+}
+
+class MaterialProperties {
+    name
+    lower_bound
+    upper_bound
+    distribution
+}
+
+note right of MaterialProperties::grammar
+  Defines the name, type and bounds of the local_state_solver parameters.
+end note
+note right of MaterialProperties::distributions
+  Defines the probability distribution for each local_state_solver parameters.
+end note
+
+MyConcreteModel --|> IntegratedModel
+MDODiscipline <|-- IntegratedModel
+MDODiscipline <|-- Component
+Component <|-- PreProcessor
+Component <|-- ModelRun
+Component <|-- LocalStateSolver
+Component <|-- PostProcessor
+IntegratedModel *-- "1" PreProcessor
+IntegratedModel *-- "1" ModelRun
+IntegratedModel *-- "1" PostProcessor
+IntegratedModel *-- "1" Material
+Material *-- "n" MaterialRelation
+MaterialRelation *-- "n" MaterialProperties
+
+
+@enduml

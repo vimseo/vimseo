@@ -1,0 +1,146 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+
+package "gemseo" #DDDDDD {
+}
+class gemseo.DataProcessor
+class gemseo.Factory
+abstract class gemseo.MDODiscipline
+
+
+
+'==================================================
+
+package vimseo {
+
+
+class core.components.DataProcessorComponent {
+    def get_input_data_names()
+    def get_output_data_names()
+    pre_process_data()
+    post_process_data()
+}
+DataProcessor <|-- DataProcessorComponent
+
+class core.VimsFactory{
+    ...
+}
+Factory <|-- VimsFactory
+
+class core.IntegratedModel {
+pre_processor
+post_processor
+model_run
+subroutine
+(component factories)
+(management functions)
+}
+MDODiscipline <|--IntegratedModel
+
+
+
+class core.components.Component{
+
+    ...
+    grammar manipulations()
+    execute()
+    _run()
+}
+
+
+'class core.components.ComponentFactory{
+'    create()
+'    VimsFactory factory
+'}
+'VimsFactory *-- ComponentFactory
+'Component o- ComponentFactory
+
+'====================
+
+class core.components.pre.PreProcessor
+Component <|-- PreProcessor
+IntegratedModel *-[#red]- PreProcessor
+
+class core.components.post.PostProcessor
+Component <|-- PostProcessor
+IntegratedModel *-[#red]- PostProcessor
+
+
+'====================
+
+class core.components.sub.LocalStateSolver{
+todo
+}
+Component <|-- LocalStateSolver
+IntegratedModel *-[#red]- LocalStateSolver
+
+'class core.components.sub.SubroutineFactory{
+'...
+'}
+'ComponentFactory <|-- SubroutineFactory
+'LocalStateSolver o- SubroutineFactory
+
+'====================================================
+
+class core.components.run.ModelRun{
+ ...
+}
+Component <|-- ModelRun
+IntegratedModel *-[#red]- ModelRun
+
+'class core.components.run.ModelRunFactory{
+'...
+'}
+'RunProcessor o- ModelRunFactory
+'ComponentFactory <|-- ModelRunFactory
+
+class core.components.run.RunAbaqus{
+...
+}
+ModelRun <|-- RunAbaqus
+note "To be removed ! =< oui moi" as N2
+N2 .. RunAbaqus
+
+class core.components.run.RunUnitCell{
+...
+}
+ModelRun <|-- RunUnitCell
+note "To be kept, under wrapper ?" as N3
+N3 .. RunUnitCell
+'===========================
+
+
+class core.components.wrapper.PreAbaqusWrapper
+PreProcessor <|-- PreAbaqusWrapper
+
+class core.components.wrapper.PostAbaqusWrapper
+PostProcessor <|-- PostAbaqusWrapper
+
+class core.components.wrapper.RunAbaqusWrapper{
+...
+}
+ModelRun <|-- RunAbaqusWrapper
+
+
+'===========================
+
+
+note "titi" as N1
+N1 .. Factory
+}
+
+'*************************
+'*************************
+'*************************
+
+package vims_composites{
+
+package composite_damage_model{
+class abaqus_wrapping.
+}
+
+
+class toto
+}
+
+@enduml

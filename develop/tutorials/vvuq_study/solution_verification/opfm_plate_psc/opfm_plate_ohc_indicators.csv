@@ -1,0 +1,11 @@
+﻿,value
+Extrapolation / 95pctErrBand,nan / [nan nan]
+CV order / 95pctErrBand,nan / [nan nan]
+gci / GCI-based-ErrBand (coarsest),nan / [nan nan]
+gci order 1 / GCI-based-ErrBand (coarsest),0.008993 / [-3825.584 -3895.018]
+gci order 2 / GCI-based-ErrBand (coarsest),0.003714 / [-3845.962 -3874.64 ]
+gci / GCI-based-ErrBand (finest),nan / [nan nan]
+gci order 1 / GCI-based-ErrBand (finest),0.017499 / [-3774.56  -3909.018]
+gci order 2 / GCI-based-ErrBand (finest),0.007232 / [-3814.003 -3869.574]
+RDE (coarsest to finest),[nan nan nan]
+RDE-based-ErrBand (coarsest),[nan nan]

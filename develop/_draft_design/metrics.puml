@@ -1,0 +1,38 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+
+class BaseMetric {
+    - sample_to_sample_result
+    - integrated_result
+    {abstract} compute(value_1, value_2)
+    @property sample_to_sample_result
+    @property integrated_result
+
+}
+note right of BaseMetric::sample_to_sample_result
+    None by default
+end note
+
+note right of BaseMetric::integrated_result
+    None by default
+end note
+
+class BaseVectorMetric {
+    # check_shape(value)
+}
+note right of BaseVectorMetric::check_shape
+    Check that value is a 1D array.
+end note
+
+class SEMetric {
+    compute(value_1, value_2)
+}
+note left of SEMetric::compute
+    Fill value of BaseMetric::integrated_result
+    and BaseMetric::sample_to_sample_result
+    if the metric has a sample-to-sample behaviour
+end note
+
+BaseVectorMetric -> BaseMetric
+SEMetric -> BaseVectorMetric
+@enduml
