@@ -1,0 +1,27 @@
+{
+  "inputs": {
+    "x1": 2.0
+  },
+  "outputs": {
+    "y1": 2.0,
+    "pyramid": "Pyramid.vtk"
+  },
+  "metadata": {
+    "error_code": 0,
+    "model": "MockModelFields",
+    "load_case": "LC1",
+    "description": "",
+    "job_name": "",
+    "persistent_result_files": "Pyramid.vtk",
+    "n_cpus": 1,
+    "date": "2025-11-05 22:19:44.645556",
+    "cpu_time": 0.010643243789672852,
+    "user": "sebastien.bocquet",
+    "machine": "B20191729",
+    "vims_git_version": "95990fa211debd91a91ffe1d89b2b0b4b855f387",
+    "directory_archive_root": "C:\\Users\\sebastien.bocquet\\PycharmProjects\\vims\\docs\\runnable_examples\\model_runs\\archive\\model_gallery",
+    "directory_archive_job": "..\\model_runs\\archive\\model_gallery\\MockModelFields\\LC1\\1",
+    "directory_scratch_root": "C:\\Users\\sebastien.bocquet\\PycharmProjects\\vims\\docs\\runnable_examples\\model_runs\\scratch\\model_gallery",
+    "directory_scratch_job": "..\\model_runs\\scratch\\model_gallery\\MockModelFields\\LC1\\1"
+  }
+}

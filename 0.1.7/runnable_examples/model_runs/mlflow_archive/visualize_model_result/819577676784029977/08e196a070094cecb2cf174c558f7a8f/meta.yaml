@@ -1,0 +1,14 @@
+artifact_uri: file:///C:\Users\sebastien.bocquet\Dev\vd017\docs\runnable_examples\model_runs\mlflow_archive\visualize_model_result/819577676784029977/08e196a070094cecb2cf174c558f7a8f/artifacts
+end_time: 1793177042448
+entry_point_name: ''
+experiment_id: '819577676784029977'
+lifecycle_stage: active
+run_id: 08e196a070094cecb2cf174c558f7a8f
+run_name: shivering-grouse-154
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1793177041680
+status: 3
+tags: []
+user_id: sebastien.bocquet

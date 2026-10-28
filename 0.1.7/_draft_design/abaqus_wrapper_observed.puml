@@ -1,0 +1,307 @@
+@startuml
+'https://plantuml.com/class-diagram
+
+'!theme spacelab
+
+abstract class gemseo.MDODiscipline
+
+package vimseo {
+
+abstract class Component {
+    _workdir
+    job_dir
+    ATTACHED_FILES[]
+    input_grammar
+    output_grammar
+    execute()
+    _run()
+}
+
+class gemseo.DiscFromExe
+
+class gemseo.MDOChain {
+PreProcessor > ModelRun > PostProcessor
+}
+
+DiscFromExe <|-- Component
+
+class IntegratedModel {
+    MDOChain chain
+    SUBROUTINES_NAMES[]
+    MATERIAL_GRAMMAR_FILE
+    N_CPUS
+    _workdir
+    <s>options_run{}</s>
+    execute()
+    _run()
+    set_n_cpus()
+}
+
+IntegratedModel *-down- MDOChain
+
+'MDOChain *-- pre.PreProcessor
+'MDOChain *-- post.PostProcessor
+'MDOChain *-- run.RunProcessor
+
+
+abstract class pre.PreProcessor {
+    create_job_directory()
+}
+
+
+abstract class post.PostProcessor {
+    delete_job_directory()
+}
+
+
+abstract class run.ModelRun {
+    n_cpus
+    Subroutine[] subroutine_list
+}
+
+
+abstract class sub.Subroutine #pink {
+execute*()
+<color:red> (class to create ?)
+
+}
+
+run.ModelRun *-- sub.Subroutine
+run.ModelRun *-- sub.Subroutine
+
+
+sub.Subroutine <|-- sub.SubroutineWrapper
+
+
+abstract class run.RunAnalytic #pink{
+<color:red> (class to create ?)
+}
+
+run.ModelRun <|-- run.RunAnalytic
+
+
+
+run.ModelRun <|-- run.RunCraft
+class run.RunCraft {
+
+}
+
+RunAnalytic <|-- vimseo.run.RunBeam
+
+
+
+abstract class run.RunUnitCell {
+RESOLUTION_SCHEME*
+AbaqusSubroutineWrapperStandalone subroutine
+_run()
+_run_strain_driven*()
+_run_stress_driven*()
+<s><color:blue> _execute_compiled_subroutine()
+_data_process_props()
+__data_process_compliance_inputs
+_compute_compliance(E11,E22, ...)
+
+
+}
+
+run.RunAnalytic <|-- RunUnitCell #blue
+
+RunUnitCell <|-- run.RUC_StaticImplicit
+RunUnitCell <|-- run.RUC_StaticExplicit
+
+
+class run.RUC_StaticImplicit {
+RESOLUTION_SCHEME
+_run_strain_driven()
+_run_stress_driven()
+}
+class run.RUC_StaticExplicit {
+RESOLUTION_SCHEME
+_run_strain_driven()
+_run_stress_driven()
+}
+
+
+
+class pre.PreUnitCell {
+
+}
+pre.PreProcessor <|-- PreUnitCell
+
+
+
+
+
+
+
+
+
+
+
+abstract class sub.SubroutineWrapper {
+    FILE_NAME
+    PATH_TO_LIB
+    <color:red> execute() ?
+}
+
+abstract class sub.AbaqusSubroutineWrapperStandalone {
+    <color:red> execute() ?
+    compiled_function
+    COMPILED_FUNCTION_NAME
+    <color:blue>COMPILED_FUNCTION = None
+    <color:blue>COMPILED_SUBROUTINE_NAME
+    <color:blue>COMPILED_PATH_TO_LIB
+    RESOLUTION_SCHEME
+
+    NB_STATE_VARIABLES
+    STATE_VARIABLES_OF_INTEREST
+    PROPS_NAMES_ORDERED
+    PROPS_NAMES_INPUTS_COMPLIANCE
+
+
+<color:blue> check_compilation_uptodate()
+}
+
+sub.SubroutineWrapper <|-- AbaqusSubroutineWrapperStandalone
+
+
+
+
+
+
+/'
+note top #pink
+<color:red> modele VIMSEO spécifique à une subroutine
+    => pas de généricité
+        => materiau pas integrogeable
+end note
+'/
+
+'IntegratedModel *-- SubroutineWrapper
+'IntegratedModel *-- SubroutineWrapper
+
+'RunAbaqusWrapper *-- Lss_neo
+'RunAbaqusWrapper *-- Lss_neo
+'RunUnitCell *-- SubroutineWrapperStandalone
+'note on link : to remove ?
+
+
+
+
+
+class pre.PreAbaqusWrapper {
+    #abaqus_command()
+    abaqus_script
+    #_run()
+    create_job_dir()
+    write_inputs_json()
+}
+
+
+
+
+class run.RunAbaqusWrapper {
+    <color:blue>SubroutineWrapper[] subroutine_list
+    <color:blue>(re check type and content (LSS_list))
+    _abaqus_command()
+    check_completion()
+    _run()
+    _create_fortran_index()
+
+}
+
+class post.PostAbaqusWrapper {
+    #abaqus_command()
+    abaqus_script
+    #_run()
+    read_outputs_json()
+
+}
+
+MDODiscipline <|-- IntegratedModel
+Component <|-- pre.PreProcessor
+Component <|-- run.ModelRun
+Component <|-- post.PostProcessor
+pre.PreProcessor <|-- PreAbaqusWrapper
+run.ModelRun <|-- RunAbaqusWrapper
+
+post.PostProcessor <|-- PostAbaqusWrapper
+}
+
+
+
+json Library_UserMaterials #grey {
+   "<i>Subroutine":"<i>Props",
+   "Opfm_UMAT.f":["IMAM21E.json", "T700M21.json"],
+   "Opfm_VUMAT.f":["IMAM21E.json", "T700M21.json", "T700PEEK.json"],
+   "PortoGirona_VUMAT_2022.f":["T700M21.json", "T700PEEK.json"],
+   "PortoGirona_VUMAT_2024.f":["T700M21.json", "T700PEEK.json"]
+}
+IntegratedModel -[dashed]- Library_UserMaterials #grey
+
+package Database_exp {
+
+package Unfolding{
+legend
+=Unfolding IMAM21E
+|= Conf_name |= Conf_props   |= exp_results  |
+| Conf161    | props_161.json | results_161.json |
+| Conf162    | props_162.json | results_162.json |
+| Conf252    | props_252.json | results_252.json |
+| Conf257    | props_257.json | results_257.json |
+endlegend
+}
+
+package FilledHole{
+legend
+= FilledHole T700/M21
+|= Conf_name |= Conf_props   |= exp_results  |
+| Conf161    | props_161.json | results_161.json |
+| Conf162    | props_162.json | results_162.json |
+| Conf252    | props_252.json | results_252.json |
+| Conf257    | props_257.json | results_257.json |
+endlegend
+}
+}
+IntegratedModel -[dashed]- Database_exp
+
+
+
+package vimseo.problems {
+class BendingTest.PostBendingTest_Cantilever
+PostAbaqusWrapper <|-- PostBendingTest_Cantilever
+class EOMS.PostEomsVUMAT_PST0
+PostAbaqusWrapper <|-- PostEomsVUMAT_PST0
+
+/'
+class run.RunAbaqus_OPFM_unfolding #grey{}
+RunAbaqusWrapper <|-- RunAbaqus_OPFM_unfolding #grey
+class run.RunAbaqus_OPFM_FH #grey{}
+RunAbaqusWrapper <|-- RunAbaqus_OPFM_FH #grey
+'/
+class BendingTest.PreBendingTest_Cantilever{}
+PreAbaqusWrapper <|-- BendingTest.PreBendingTest_Cantilever
+
+
+class EOMS.PreEomsVUMAT_PST0{}
+PreAbaqusWrapper <|-- EOMS.PreEomsVUMAT_PST0
+
+
+
+class EOMS.VumatEomsStandalone {}
+AbaqusSubroutineWrapperStandalone <|-- VumatEomsStandalone
+class EOMS.VumatEoms {}
+SubroutineWrapper <|-- VumatEoms
+'class sub.PgVumat #grey {}
+'SubroutineWrapper <|-- PgVumat #grey
+class BendingTest.ElasticBeamBernoulli #pink {
+    execute()
+    <color:red> (class to re-create ?)
+}
+vimseo.sub.Subroutine <|-- ElasticBeamBernoulli #pink
+
+}
+
+
+
+@enduml

@@ -1,0 +1,14 @@
+artifact_uri: file:///C:\Users\sebastien.bocquet\Dev\vd017\docs\runnable_examples\model_runs\mlflow_archive\visualize_model_result/819577676784029977/7c3c09328ece406ca8b48e982e178657/artifacts
+end_time: 1793177041633
+entry_point_name: ''
+experiment_id: '819577676784029977'
+lifecycle_stage: active
+run_id: 7c3c09328ece406ca8b48e982e178657
+run_name: dashing-bear-136
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1793177040998
+status: 3
+tags: []
+user_id: sebastien.bocquet

@@ -1,0 +1,100 @@
+@startuml
+'https://plantuml.com/class-diagram
+
+
+package gemseo {
+
+class Discipline {
+    + execute()
+}
+
+class MDAChain {
+    + execute()
+}
+
+}
+
+package tool {
+
+'abstract class ToolFactory {
+'    create()
+'}
+
+'class AnalysisToolFactory
+
+'class ReaderToolFactory
+
+abstract class BaseTool{
+    + result: BaseResult
+    + settings
+    + root_directory
+    + working_directory
+    + execute(inputs: InputModel, settings: SettingsModel, **options) -> BaseResult
+}
+
+class MyAnalysisTool{
+}
+
+'class ReaderTool{
+'}
+
+abstract class BaseResult{
+    + metadata
+}
+
+class MyResult {
+    dataset
+    dict
+}
+
+}
+
+package workflow {
+
+class Inputs {
+    + name
+    + input_name
+}
+
+class Outputs {
+    + name
+    + result_attribute_name
+}
+
+class Step{
+    + List[Inputs] : inputs
+    + List[Outputs] : outputs
+    + tool
+    + settings
+}
+
+note right of Step::execute
+  def execute():
+    self.set_inputs(inputs)
+    result = treatment.execute(treatment_options)
+    self.set_outputs(result)
+end note
+
+class Workflow {
+    + List[Step] : steps
+    + chain
+}
+
+}
+
+'AnalysisToolFactory -u-|> ToolFactory
+'ReaderToolFactory -u-|> ToolFactory
+'ToolFactory ..> BaseTool
+MyAnalysisTool -u-|> BaseTool
+'ReaderTool -u-|> BaseTool
+MyResult -u-|> BaseResult
+
+Step *-- "n" Inputs
+Step *-- "n" Outputs
+BaseTool *-- "1" BaseResult
+Step *-- "1" MyAnalysisTool
+Step --|> Discipline
+Workflow *-- "n" Step
+Workflow *-- "1" MDAChain
+
+@enduml

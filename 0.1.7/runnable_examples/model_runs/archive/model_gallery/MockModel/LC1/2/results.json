@@ -1,0 +1,29 @@
+{
+     "inputs": {
+         "x1": 0.1,
+         "x1_maximum_only": 0.1,
+         "x1_minimum_only": 0.1,
+         "x1_no_bounds": 0.1
+    },
+     "outputs": {
+         "y1": 5.2
+    },
+     "metadata": {
+         "model": "MockModel",
+         "load_case": "LC1",
+         "error_code": -1,
+         "description": "",
+         "job_name": "",
+         "persistent_result_files": "",
+         "n_cpus": 0,
+         "date": "2026-10-28 09:43:51.205315",
+         "cpu_time": 0.008558273315429688,
+         "user": "sebastien.bocquet",
+         "machine": "PCBM20250036",
+         "vims_git_version": "5ba602a7e3571a2fc5a0a3604673c7e5410711b0",
+         "directory_archive_root": "C:\\Users\\sebastien.bocquet\\Dev\\vd017\\docs\\runnable_examples\\model_runs\\archive\\model_gallery",
+         "directory_archive_job": "C:\\Users\\sebastien.bocquet\\Dev\\vd017\\docs\\runnable_examples\\model_runs\\archive\\model_gallery\\MockModel\\LC1\\2",
+         "directory_scratch_root": "C:\\Users\\sebastien.bocquet\\Dev\\vd017\\docs\\runnable_examples\\model_runs\\scratch\\model_gallery",
+         "directory_scratch_job": ""
+    }
+}

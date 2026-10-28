@@ -1,0 +1,12 @@
+@startuml
+'https://plantuml.com/class-diagram
+
+IntegratedModel <|-- AbaqusModel
+PreAbaqusWrapper <|-- PreAbaqusModel_LoadCase1
+RunAbaqusWrapper <|-- RunAbaqusModel
+PostAbaqusWrapper <|-- PostAbaqusModel_LoadCase1
+AbaqusModel *-- PreAbaqusModel_LoadCase1
+AbaqusModel *-- RunAbaqusModel
+AbaqusModel *-- PostAbaqusModel_LoadCase1
+
+@enduml

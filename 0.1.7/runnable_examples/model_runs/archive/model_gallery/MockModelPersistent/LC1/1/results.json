@@ -1,0 +1,49 @@
+{
+  "inputs": {
+    "x1": 2.0,
+    "x2": 5.0,
+    "x3": [
+      1.0,
+      2.0,
+      3.0
+    ]
+  },
+  "outputs": {
+    "y1": 7.0,
+    "y2": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "y3": "mock_string",
+    "y4": 6.0,
+    "y5": [
+      6.0,
+      36.0,
+      216.0
+    ]
+  },
+  "metadata": {
+    "error_code": 0,
+    "model": "MockModelPersistent",
+    "load_case": "LC1",
+    "description": "",
+    "job_name": "",
+    "persistent_result_files": [
+      "green_ellipse.png",
+      "blue_line.png"
+    ],
+    "n_cpus": 1,
+    "date": "2025-11-05 22:19:45.300752",
+    "cpu_time": 0.01053619384765625,
+    "user": "sebastien.bocquet",
+    "machine": "B20191729",
+    "vims_git_version": "95990fa211debd91a91ffe1d89b2b0b4b855f387",
+    "directory_archive_root": "C:\\Users\\sebastien.bocquet\\PycharmProjects\\vims\\docs\\runnable_examples\\model_runs\\archive\\model_gallery",
+    "directory_archive_job": "..\\model_runs\\archive\\model_gallery\\MockModelPersistent\\LC1\\1",
+    "directory_scratch_root": "C:\\Users\\sebastien.bocquet\\PycharmProjects\\vims\\docs\\runnable_examples\\model_runs\\scratch\\model_gallery",
+    "directory_scratch_job": "..\\model_runs\\scratch\\model_gallery\\MockModelPersistent\\LC1\\1"
+  }
+}

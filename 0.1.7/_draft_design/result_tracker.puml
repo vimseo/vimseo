@@ -1,0 +1,23 @@
+@startuml
+'https://plantuml.com/class-diagram
+
+abstract class BaseResultTracker {
+  {abstract} publish(model_result)
+  {abstract} search(request)
+}
+
+class ByDirectoryTracker {
+}
+
+class MLFlowTracker {
+}
+
+class Model {
+  result_tracker
+}
+
+Model --* "1" BaseResultTracker
+ByDirectoryTracker -u-|> BaseResultTracker
+MLFlowTracker -u-|> BaseResultTracker
+
+@enduml

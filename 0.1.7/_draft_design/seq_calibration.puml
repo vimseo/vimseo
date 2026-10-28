@@ -1,0 +1,20 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+
+entity      load_case_1    as lc1
+entity      load_case_2    as lc2
+entity      model_1    as model_1
+entity      model_2    as model_2
+entity      material   as material
+entity      material_properties   as material_properties
+entity      calibration_tool   as calibration_tool
+database    experiments   as expe
+lc1 -> model_1 : Constructor input
+material -> model_1 : Constructor input
+expe -> calibration_tool : Search for load_case_1 and material.
+calibration_tool -> material_properties : Compute calibration.
+material_properties -> material_properties : Check grammar.
+material_properties -> material : Update.
+lc2 -> model_2 : Constructor input
+material -> model_2 : Constructor input
+@enduml

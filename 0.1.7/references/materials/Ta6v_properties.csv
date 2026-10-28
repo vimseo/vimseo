@@ -1,0 +1,3 @@
+;name;description;unit;category;material_relation;default_value;distribution
+0;young_modulus;;none;Undefined;Ta6v_elastic_iso;210000.0;Normal
+1;nu_p;;none;Undefined;Ta6v_elastic_iso;0.3;Normal

@@ -1,0 +1,14 @@
+artifact_uri: file:///C:\Users\sebastien.bocquet\Dev\vd017\docs\runnable_examples\model_runs\mlflow_archive\visualize_model_result/825323519250050211/4cae1e62a4c249af87e36576e20617a2/artifacts
+end_time: 1793177040937
+entry_point_name: ''
+experiment_id: '825323519250050211'
+lifecycle_stage: active
+run_id: 4cae1e62a4c249af87e36576e20617a2
+run_name: beautiful-goat-120
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1793177040172
+status: 3
+tags: []
+user_id: sebastien.bocquet

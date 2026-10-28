@@ -1,0 +1,102 @@
+@startuml
+'https://plantuml.com/class-diagram
+
+abstract class MDODiscipline
+
+class Component {
+    name
+    input_grammar
+    output_grammar
+    lower_bounds
+    upper_bounds
+    #workdir
+    #job_dir
+    check_subprocess
+}
+
+class IntegratedModel {
+    Component pre_processor
+    Component post_processor
+    Component model_run
+    Component subroutine
+    lower_bounds
+    upper_bounds
+    #workdir
+    #use_cached_output
+}
+
+class PreProcessor {
+    create_job_directory()
+}
+
+class ModelRun {
+    n_cpus
+    #local_state_solver
+}
+
+class PostProcessor {
+    del_jobdir
+}
+
+class LocalStateSolver {
+    TODO
+}
+
+class PreAbaqusWrapper {
+    #abaqus_command
+    abaqus_script
+    attached_files
+    #run()
+    write_args_to_json()
+}
+
+class RunAbaqusWrapper {
+    #abaqus_command
+    #run()
+    check_completion()
+}
+
+class PostAbaqusWrapper {
+    #abaqus_command
+    abaqus_script
+    attached_files
+    #run()
+    extract_outputs_from_csv()
+}
+
+MDODiscipline <|-- IntegratedModel
+Component <|-- PreProcessor
+Component <|-- ModelRun
+ModelRun *-- "1" LocalStateSolver
+Component <|-- PostProcessor
+PreProcessor <|-- PreAbaqusWrapper
+ModelRun <|-- RunAbaqusWrapper
+PostProcessor <|-- PostAbaqusWrapper
+IntegratedModel *-- "1" PreProcessor
+IntegratedModel *-- "1" ModelRun
+IntegratedModel *-- "1" PostProcessor
+
+@enduml
+
+.. abstract class AbstractList
+.. abstract AbstractCollection
+.. interface List
+.. interface Collection
+..
+.. List <|-- AbstractList
+.. Collection <|-- AbstractCollection
+..
+.. Collection <|- List
+.. AbstractCollection <|- AbstractList
+.. AbstractList <|-- ArrayList
+..
+.. class ArrayList {
+.. Object[] elementData
+.. size()
+.. }
+..
+.. enum TimeUnit {
+.. DAYS
+.. HOURS
+.. MINUTES
+.. }

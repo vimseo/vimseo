@@ -1,0 +1,10 @@
+;name;description;unit;category;material_relation;default_value;distribution
+0;E1;Longitudinal Young's modulus, fibre direction;MPa;Stiffness;orthotropic;135000.0;Undefined
+1;E2;Transverse Young's modulus, perpendicular to fibres, in-plane;MPa;Stiffness;orthotropic;8000.0;Undefined
+2;G12;In-plane shear modulus, 1-2 directions;MPa;Stiffness;orthotropic;5000.0;Undefined
+3;nu12;Major Poisson's ratio, in-plane, direction 1-2;-;Stiffness;orthotropic;0.3;Undefined
+4;Xt;Longitudinal tensile strength, fibre direction;MPa;Strength;orthotropic;1500.0;Undefined
+5;Xc;Longitudinal compressive strength, fibre direction;MPa;Strength;orthotropic;1200.0;Undefined
+6;Yt;Transverse tensile strength, matrix direction;MPa;Strength;orthotropic;40.0;Undefined
+7;Yc;Transverse compressive strength, matrix direction;MPa;Strength;orthotropic;120.0;Undefined
+8;S12;In-plane shear strength, 1-2 directions;MPa;Strength;orthotropic;50.0;Undefined

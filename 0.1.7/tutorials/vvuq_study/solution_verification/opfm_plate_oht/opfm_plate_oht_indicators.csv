@@ -1,0 +1,5 @@
+﻿,value
+gci order 1 / GCI-based-ErrBand (coarsest),0.011272 / [8648.244 8845.433]
+gci order 2 / GCI-based-ErrBand (coarsest),0.004656 / [8706.118 8787.56 ]
+gci order 1 / GCI-based-ErrBand (finest),0.021827 / [8528.051 8908.641]
+gci order 2 / GCI-based-ErrBand (finest),0.009021 / [8639.698 8796.994]

@@ -1,0 +1,11 @@
+﻿,value
+Extrapolation / 95pctErrBand,761.686 / [761.005 762.367]
+CV order / 95pctErrBand,4.788 / [-2.752 12.328]
+gci / GCI-based-ErrBand (coarsest),0.000209 / [762.443 762.761]
+gci order 1 / GCI-based-ErrBand (coarsest),0.002121 / [760.985 764.219]
+gci order 2 / GCI-based-ErrBand (coarsest),0.000881 / [761.93  763.274]
+gci / GCI-based-ErrBand (finest),3e-05 / [761.755 761.801]
+gci order 1 / GCI-based-ErrBand (finest),0.000317 / [761.537 762.02 ]
+gci order 2 / GCI-based-ErrBand (finest),0.00013 / [761.679 761.877]
+RDE (coarsest to finest),[0.002 0.002 0.   ]
+RDE-based-ErrBand (coarsest),[761.777 761.779]
