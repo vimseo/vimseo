@@ -37,10 +37,13 @@ default values of the discipline inputs of the same names; each property must be
 input of the discipline.
 
 The inputs can be bounded by a JSON grammar file, declared with the
-`_INPUT_GRAMMAR_FILE` class attribute. Its properties replace those of the same names in
-the input grammar of the discipline, e.g. to set the `minimum` and `maximum` of the
-`items` of an input. This file can only restrict the grammar of the discipline: a
-variable unknown to the discipline, a different type or a looser bound raises an error.
+`_INPUT_GRAMMAR_FILE` class attribute. The component wrapping the discipline then gets
+its own JSON grammar: the input grammar of the discipline, whose properties of the same
+names as those of the file are replaced, e.g. to set the `minimum` and `maximum` of the
+`items` of an input. The model input bounds are read from this grammar, and an input
+out of these bounds makes the simulation fail. The discipline still validates its inputs
+with its own grammar, so the file can only restrict it: a variable unknown to the
+discipline, a different type or a looser bound raises an error.
 
 If you have a model implemented in a Python script, you may integrate the process to **VIMSEO** by:
 

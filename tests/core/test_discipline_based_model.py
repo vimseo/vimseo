@@ -22,6 +22,7 @@ import pytest
 from gemseo.core.discipline import Discipline
 from gemseo.core.grammars.errors import InvalidDataError
 from gemseo.core.grammars.json_grammar import JSONGrammar
+from gemseo.core.grammars.simpler_grammar import SimplerGrammar
 from numpy import atleast_1d
 
 from vimseo.api import create_model
@@ -153,8 +154,9 @@ def _write_input_grammar(file_path, properties):
 
 
 def test_input_grammar_file(tmp_wd):
-    """The input grammar file bounds the inputs, keeping the default values, the
-    required names and the cache."""
+    """The input grammar file restricts the grammar of the component, not the one of
+    the model nor the one of the discipline, keeping the default values and the
+    cache."""
     file_path = _write_input_grammar(
         tmp_wd / "input.json",
         {
@@ -170,10 +172,15 @@ def test_input_grammar_file(tmp_wd):
 
     model = _BoundedModel()
 
-    assert isinstance(model.input_grammar, JSONGrammar)
+    assert isinstance(model.input_grammar, SimplerGrammar)
+    component_grammar = model.run.input_grammar
+    discipline_grammar = model.run._discipline.input_grammar
+    assert isinstance(component_grammar, JSONGrammar)
+    assert component_grammar is not discipline_grammar
+    assert component_grammar.schema["properties"]["area"]["items"]["maximum"] == 3.0  # ruff: ignore[float-equality-comparison]
+    assert "maximum" not in discipline_grammar.schema["properties"]["area"]["items"]
     assert model.lower_bounds == {"area": 1.0}
     assert model.upper_bounds == {"area": 3.0}
-    assert set(model.input_grammar.required_names) == {"E1", "area"}
     assert model.default_input_data["E1"][0] == 150000.0  # ruff: ignore[float-equality-comparison]
     assert model.execute()["stiffness"][0] == 300000.0  # ruff: ignore[float-equality-comparison]
     model.execute()

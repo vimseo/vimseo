@@ -9,4 +9,7 @@
 
 A `BaseDisciplineModel` bounds its inputs with a JSON grammar file, declared by
 `_INPUT_GRAMMAR_FILE`, which can only restrict the input grammar of the discipline.
-The input bounds of a model are those of its input grammar when it is a JSON grammar.
+The component wrapping the discipline gets a JSON grammar built from the discipline
+one and restricted by the file, from which the model input bounds are read; the
+input grammar of the model remains a `SimplerGrammar`, and the discipline keeps its
+own grammar. An input out of the bounds makes the simulation fail.
