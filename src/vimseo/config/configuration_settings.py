@@ -60,13 +60,14 @@ class VimseoSettings(
     )
 
     root_directory: str = Field(
-        default="", description="The root directory where tool results are written."
+        default="",
+        description="The root directory where analysis node results are written.",
     )
 
     working_directory: str = Field(
         default="",
         description="The working directory where "
-        "tool results are written. If left to empty string, results are exported in "
+        "analysis_node results are written. If left to empty string, results are exported in "
         "unique directories created under the root directory. If a path is prescribed, "
         "results are exported under this path.",
     )
@@ -76,16 +77,16 @@ class VimseoSettings(
         description="The archive manager of the simulations.",
     )
 
-    tool_archive_manager: str | None = Field(
+    analysis_node_archive_manager: str | None = Field(
         default=None,
-        description="The archive manager of the results of the tools. If not set, it "
+        description="The archive manager of the results of the analysis nodes. If not set, it "
         "is the ``run_archive_manager``. Set it to ``none`` to disable the archive of "
-        "the tool results.",
+        "the analysis node results.",
     )
 
     study_name: str = Field(
         default=DEFAULT_STUDY_NAME,
-        description="The study in which the simulations and the tool runs are "
+        description="The study in which the simulations and the analysis node runs are "
         "archived.",
     )
 

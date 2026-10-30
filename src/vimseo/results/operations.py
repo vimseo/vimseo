@@ -186,7 +186,7 @@ def to_dataframe(
             else (summaries[columns])
         )
     # A column keeps its prefix when its name would collide with another column, e.g.
-    # a setting and a key value of a tool, both named n_samples.
+    # a setting and a key value of an analysis node, both named n_samples.
     stripped = Counter(
         column.split(".", 1)[1]
         for column in table.columns

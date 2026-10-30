@@ -37,7 +37,7 @@ a virtual testing platform shall meet the following high level requirements:
 
 For a successful integration in a given organization,
 the virtual testing platform must also comply to organization-specific requirements and application field specificities,
-including expected lead time, availability of modelling tools and methods, computational ressources
+including expected lead time, availability of modelling analysis nodes and methods, computational ressources
 and available test data.
 Indeed, the choice of a mathematical method for uncertainty quantificaiton, the model features
 (input and output space dimensionality, non-linearity, computational cost) and the available test data are intricated.

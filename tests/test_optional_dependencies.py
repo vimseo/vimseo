@@ -22,8 +22,8 @@ declared in ``[project.optional-dependencies]``.
 These tests are the guard rail of that split. They matter because GEMSEO swallows
 import failures during class discovery: ``BaseFactory`` catches ``BaseException`` and
 records the failure in ``failed_imports``. So an ``import pyvista`` added at the top of
-a module of ``vimseo.tools`` would raise nothing -- the tool would simply vanish from
-``get_available_tools()``, silently, and only for the users who installed the core.
+a module of ``vimseo.analysis_nodes`` would raise nothing -- the analysis node would simply vanish from
+``get_available_analysis_nodes()``, silently, and only for the users who installed the core.
 """
 
 from __future__ import annotations
@@ -36,10 +36,10 @@ from pathlib import Path
 import pytest
 import tomllib
 
+from vimseo.analysis_nodes.analysis_nodes_factory import AnalysisNodesFactory
 from vimseo.core.model_factory import ModelFactory
 from vimseo.storage_management import get_archive_class
 from vimseo.storage_management.directory_storage import DirectoryArchive
-from vimseo.tools.tools_factory import ToolsFactory
 from vimseo.utilities.optional_dependencies import EXTRA_TO_DISTRIBUTIONS
 from vimseo.utilities.optional_dependencies import import_optional
 
@@ -47,7 +47,7 @@ EXTRA_TO_OPTIONAL_MODULES: dict[str, tuple[str, ...]] = {
     "dashboard": ("vimseo.dashboards",),
     "mlflow": (
         "vimseo.storage_management.mlflow_storage",
-        "vimseo.storage_management.tool_archive.mlflow_tool_archive",
+        "vimseo.storage_management.analysis_node_archive.mlflow_analysis_node_archive",
     ),
     "jax": ("vimseo.lib_vimseo.tan_lib_jax",),
     # pyvista is imported lazily, inside extract_line() and vtu_to_png(), so no
@@ -68,21 +68,21 @@ KNOWN_BROKEN_MODULES = frozenset({
     "vimseo.problems.beam_explicit.reference_dataset_builder",
 })
 
-CORE_TOOLS = (
-    "BayesTool",
+CORE_ANALYSIS_NODES = (
+    "BayesAnalysisNode",
     "CalibrationStep",
-    "DOETool",
-    "DesignValueTool",
+    "DOEAnalysisNode",
+    "DesignValueAnalysisNode",
     "DistributionComparison",
-    "OATSensitivityTool",
+    "OATSensitivityAnalysisNode",
     "ReaderFileTecplot",
-    "SensitivityTool",
+    "SensitivityAnalysisNode",
     "SolutionVerificationCase",
-    "StatisticsTool",
+    "StatisticsAnalysisNode",
     "StochasticValidationPoint",
-    "SurrogateTool",
+    "SurrogateAnalysisNode",
 )
-"""Tools that must be discoverable without any extra installed."""
+"""Analysis nodes that must be discoverable without any extra installed."""
 
 CORE_MODELS = (
     "BendingTestAnalytical",
@@ -116,7 +116,7 @@ def _allowed_failures() -> set[str]:
 
 
 @pytest.mark.fast
-@pytest.mark.parametrize("factory_class", [ToolsFactory, ModelFactory])
+@pytest.mark.parametrize("factory_class", [AnalysisNodesFactory, ModelFactory])
 def test_no_core_module_fails_to_import(factory_class):
     """Check that only modules of a missing extra fail during class discovery."""
     allowed = _allowed_failures()
@@ -133,9 +133,9 @@ def test_no_core_module_fails_to_import(factory_class):
 
 
 @pytest.mark.fast
-def test_core_tools_are_discoverable():
-    """Check that the core tools are registered whatever the extras installed."""
-    missing = set(CORE_TOOLS) - set(ToolsFactory().class_names)
+def test_core_analysis_nodes_are_discoverable():
+    """Check that the core analysis nodes are registered whatever the extras installed."""
+    missing = set(CORE_ANALYSIS_NODES) - set(AnalysisNodesFactory().class_names)
     assert not missing
 
 
@@ -181,13 +181,13 @@ def test_directory_archive_needs_no_extra():
 
 
 @pytest.mark.fast
-def test_tool_result_visualization_needs_no_extra():
-    """Check that the tool results can be loaded and visualized on a core install,
-    from the Python API and from the command line ``visualize_tool_result``."""
+def test_analysis_node_result_visualization_needs_no_extra():
+    """Check that the analysis node results can be loaded and visualized on a core install,
+    from the Python API and from the command line ``visualize_analysis_node_result``."""
     for module_name in (
-        "vimseo.tools.result_visualization",
-        "vimseo.storage_management.tool_archive.uri",
-        "vimseo.tools.visualize_tool_result",
+        "vimseo.analysis_nodes.result_visualization",
+        "vimseo.storage_management.analysis_node_archive.uri",
+        "vimseo.analysis_nodes.visualize_analysis_node_result",
     ):
         importlib.import_module(module_name)
 

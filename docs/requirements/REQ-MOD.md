@@ -9,13 +9,13 @@
 
 # Models (MOD)
 
-A model wraps a simulation so that the VV&UQ tools can execute it as a black box.
+A model wraps a simulation so that the VV&UQ analysis nodes can execute it as a black box.
 
 ### REQ-MOD-001 — A model is a GEMSEO discipline
 
 - **Statement:** Every VIMSEO model shall be a GEMSEO `Discipline`, with typed input
-  and output grammars, so that any GEMSEO or VIMSEO tool can execute it.
-- **Rationale:** The tools are generic; they must not depend on the model.
+  and output grammars, so that any GEMSEO or VIMSEO analysis node can execute it.
+- **Rationale:** The analysis nodes are generic; they must not depend on the model.
 - **Priority:** Must
 - **Status:** Proposed
 - **Verification:** Test.

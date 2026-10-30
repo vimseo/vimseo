@@ -23,25 +23,29 @@ from typing import TextIO
 
 from gemseo.algos.parameter_space import ParameterSpace
 
-from vimseo.io.base_tool_io import BaseToolFileIO
+from vimseo.analysis_nodes.space.random_variable_interface import (
+    add_distributions_from_dict,
+)
+from vimseo.analysis_nodes.space.random_variable_interface import distributions_to_dict
+from vimseo.analysis_nodes.space.space_analysis_node_result import (
+    SpaceAnalysisNodeResult,
+)
+from vimseo.io.base_analysis_node_io import BaseAnalysisNodeFileIO
 from vimseo.lib_vimseo.solver_utilities import EnhancedJSONEncoderModelWrapper
-from vimseo.tools.space.random_variable_interface import add_distributions_from_dict
-from vimseo.tools.space.random_variable_interface import distributions_to_dict
-from vimseo.tools.space.space_tool_result import SpaceToolResult
 
 LOGGER = logging.getLogger(__name__)
 
 
 # TODO work at more atomic level, for exmaple metadata, parameter space, dataset
 #  Then the load_result, save_result methods are in charge of calling these io to
-#  create the final tool result.
-class SpaceToolFileIO(BaseToolFileIO):
+#  create the final analysis node result.
+class SpaceAnalysisNodeFileIO(BaseAnalysisNodeFileIO):
     _EXTENSION = ".json"
 
     def read(
         self, file_name: str | Path, directory_path: str | Path = ""
-    ) -> SpaceToolResult:
-        """Read a space tool result."""
+    ) -> SpaceAnalysisNodeResult:
+        """Read a space analysis node result."""
 
         if Path(file_name).suffix != self._EXTENSION:
             msg = f"{self.__class__.__name__} requires the file suffix to be {self._EXTENSION}."
@@ -52,18 +56,18 @@ class SpaceToolFileIO(BaseToolFileIO):
         with Path(file_path).open() as f:
             data = json.load(f)
 
-        result = SpaceToolResult()
+        result = SpaceAnalysisNodeResult()
         result.parameter_space = ParameterSpace()
         result.metadata = self.create_metadata(data)
         result.parameter_space = self.create_parameter_space(data)
         return result
 
-    def read_buffer(self, buf: BinaryIO | TextIO) -> SpaceToolResult:
-        """Read a space tool result."""
+    def read_buffer(self, buf: BinaryIO | TextIO) -> SpaceAnalysisNodeResult:
+        """Read a space analysis node result."""
 
         data = json.loads(buf)
 
-        result = SpaceToolResult()
+        result = SpaceAnalysisNodeResult()
         result.parameter_space = ParameterSpace()
         result.metadata = self.create_metadata(data)
         result.parameter_space = self.create_parameter_space(data)
@@ -77,7 +81,7 @@ class SpaceToolFileIO(BaseToolFileIO):
 
     def write(
         self,
-        result: SpaceToolResult,
+        result: SpaceAnalysisNodeResult,
         file_base_name: str | Path = "",
         directory_path: str | Path = "",
     ) -> dict:

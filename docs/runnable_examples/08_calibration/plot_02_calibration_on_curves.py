@@ -30,18 +30,20 @@ from gemseo.algos.opt.nlopt.settings.nlopt_cobyla_settings import NLOPT_COBYLA_S
 from numpy import atleast_1d
 
 from vimseo import EXAMPLE_RUNS_DIR
+from vimseo.analysis_nodes.calibration.calibration_metrics import (
+    CalibrationMetricSettings,
+)
+from vimseo.analysis_nodes.calibration.calibration_metrics import CurveScaling
+from vimseo.analysis_nodes.calibration.calibration_step import CalibrationStep
+from vimseo.analysis_nodes.calibration.calibration_step import CalibrationStepInputs
+from vimseo.analysis_nodes.calibration.calibration_step import CalibrationStepSettings
+from vimseo.analysis_nodes.calibration.input_data import CALIBRATION_INPUT_DATA
 from vimseo.api import activate_logger
 from vimseo.api import create_model
 from vimseo.core.model_settings import IntegratedModelSettings
-from vimseo.io.space_io import SpaceToolFileIO
+from vimseo.io.space_io import SpaceAnalysisNodeFileIO
 from vimseo.problems.mock.mock_curves.mock_curves import MockCurves
 from vimseo.storage_management.base_storage_manager import PersistencyPolicy
-from vimseo.tools.calibration.calibration_metrics import CalibrationMetricSettings
-from vimseo.tools.calibration.calibration_metrics import CurveScaling
-from vimseo.tools.calibration.calibration_step import CalibrationStep
-from vimseo.tools.calibration.calibration_step import CalibrationStepInputs
-from vimseo.tools.calibration.calibration_step import CalibrationStepSettings
-from vimseo.tools.calibration.input_data import CALIBRATION_INPUT_DATA
 from vimseo.utilities.generate_validation_reference import (
     generate_reference_from_parameter_space,
 )
@@ -78,7 +80,7 @@ reference_mock_curves.default_input_data["x"] = atleast_1d(X_TARGET)
 reference_mock_curves.cache = None
 reference_data = generate_reference_from_parameter_space(
     reference_mock_curves,
-    SpaceToolFileIO()
+    SpaceAnalysisNodeFileIO()
     .read(CALIBRATION_INPUT_DATA / "experimental_space_mock_curves.json")
     .parameter_space,
     n_samples=2,

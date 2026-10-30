@@ -231,7 +231,7 @@ flux_field.point_variable_names
 
 # %%
 # The mesh file backing the field is kept on disk, ready to be opened in an
-# external tool such as ParaView:
+# external analysis node such as ParaView:
 flux_field.path
 
 # %%

@@ -28,18 +28,20 @@ from gemseo.datasets.io_dataset import IODataset
 from numpy import array
 
 from vimseo import EXAMPLE_RUNS_DIR
+from vimseo.analysis_nodes.io.reader_file_dataframe import ReaderFileDataFrame
+from vimseo.analysis_nodes.io.reader_file_dataframe import ReaderFileDataFrameSettings
+from vimseo.analysis_nodes.validation_case.validation_case import (
+    DeterministicValidationCase,
+)
+from vimseo.analysis_nodes.validation_case.validation_case import (
+    DeterministicValidationCaseInputs,
+)
+from vimseo.analysis_nodes.validation_case.validation_case import (
+    DeterministicValidationCaseSettings,
+)
 from vimseo.api import activate_logger
 from vimseo.api import create_model
 from vimseo.core.model_settings import IntegratedModelSettings
-from vimseo.tools.io.reader_file_dataframe import ReaderFileDataFrame
-from vimseo.tools.io.reader_file_dataframe import ReaderFileDataFrameSettings
-from vimseo.tools.validation_case.validation_case import DeterministicValidationCase
-from vimseo.tools.validation_case.validation_case import (
-    DeterministicValidationCaseInputs,
-)
-from vimseo.tools.validation_case.validation_case import (
-    DeterministicValidationCaseSettings,
-)
 
 activate_logger(level=logging.INFO)
 
@@ -101,7 +103,7 @@ reference_data_from_mapping = {
 }
 
 # %%
-# The validation case tool is created and executed.
+# The validation case analysis node is created and executed.
 # The only setting is that only output ``y4`` is validated.
 validation = DeterministicValidationCase(
     working_directory="deterministic_validation_case_on_vectors"

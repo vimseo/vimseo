@@ -19,13 +19,13 @@ import logging
 
 from gemseo.core.base_factory import BaseFactory
 
-from vimseo.io.base_tool_io import BaseToolFileIO
+from vimseo.io.base_analysis_node_io import BaseAnalysisNodeFileIO
 
 LOGGER = logging.getLogger(__name__)
 
 
 class IOFactory(BaseFactory):
-    """Analysis tool factory to create an analysis tool from a name or a class."""
+    """Analysis node factory to create an analysis node from a name or a class."""
 
-    _CLASS = BaseToolFileIO
+    _CLASS = BaseAnalysisNodeFileIO
     _PACKAGE_NAMES = ("vimseo.io",)

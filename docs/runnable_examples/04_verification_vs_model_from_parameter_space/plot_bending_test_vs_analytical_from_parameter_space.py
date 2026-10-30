@@ -15,11 +15,11 @@
 # WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 """
-Usage of the model-to-model solution verification tool on a Finite-Element (Abaqus) model
+Usage of the model-to-model solution verification analysis node on a Finite-Element (Abaqus) model
 =========================================================================================
 
 Check an Abaqus cantilever beam model versus an analytical model with the
-'CodeVerificationAgainstModelFromParameterSpace' tool using as input a parameter
+'CodeVerificationAgainstModelFromParameterSpace' analysis node using as input a parameter
 space."""
 
 # %%
@@ -30,13 +30,13 @@ import logging
 from gemseo.utils.directory_creator import DirectoryNamingMethod
 
 from vimseo import EXAMPLE_RUNS_DIR
+from vimseo.analysis_nodes.space.space_analysis_node import SpaceAnalysisNode
+from vimseo.analysis_nodes.verification.verification_vs_model_from_parameter_space import (
+    CodeVerificationAgainstModelFromParameterSpace,
+)
 from vimseo.api import activate_logger
 from vimseo.api import create_model
 from vimseo.core.model_settings import IntegratedModelSettings
-from vimseo.tools.space.space_tool import SpaceTool
-from vimseo.tools.verification.verification_vs_model_from_parameter_space import (
-    CodeVerificationAgainstModelFromParameterSpace,
-)
 
 # %%
 # We first define the logger level:
@@ -45,10 +45,10 @@ activate_logger(level=logging.INFO)
 # %%
 # In this example, the two models are compared over an input parameter space.
 # So we need to generate a space of parameters.
-# It is obtained using the ``SpaceTool`` and choosing the ``FromModelCenterAndCov``
+# It is obtained using the ``SpaceAnalysisNode`` and choosing the ``FromModelCenterAndCov``
 # builder.
-space_tool = SpaceTool(working_directory="SpaceTool_results")
-space_tool.execute(
+space_analysis_node = SpaceAnalysisNode(working_directory="SpaceAnalysisNode_results")
+space_analysis_node.execute(
     distribution_name="OTTriangularDistribution",
     space_builder_name="FromMinAndMax",
     minimum_values={
@@ -64,7 +64,7 @@ space_tool.execute(
         "relative_dplt_location": 1.0,
     },
 )
-print(space_tool.parameter_space)
+print(space_analysis_node.parameter_space)
 
 
 # %%
@@ -97,7 +97,7 @@ model_2.cache = None
 
 # %%
 # All inputs to the verification are now available.
-# We create the verification tool we are interested in.
+# We create the verification analysis node we are interested in.
 verificator = CodeVerificationAgainstModelFromParameterSpace(
     directory_naming_method=DirectoryNamingMethod.NUMBERED,
     working_directory="CodeVerificationAgainstModelFromParameterSpace_results",
@@ -121,7 +121,7 @@ verificator.options["metric_names"] = [
 verificator.execute(
     model=model,
     reference_model=model_2,
-    parameter_space=space_tool.result.parameter_space,
+    parameter_space=space_analysis_node.result.parameter_space,
     n_samples=5,
     output_names=["reaction_forces", "maximum_dplt", "location_max_dplt"],
 )
@@ -137,9 +137,9 @@ verificator.save_results()
 # %%
 # The saved results can be loaded in a dashboard to be explored.
 # The dashboard is opened by typing ``dashboard_results`` in a terminal
-# (page **Tool Results**); it is provided by the plugin vimseo-dashboards.
+# (page **Analysis Node Results**); it is provided by the plugin vimseo-dashboards.
 # The figures and the tables can also be written in a directory by typing
-# ``visualize_tool_result --uri path/to/the/result.hdf5``.
+# ``visualize_analysis_node_result --uri path/to/the/result.hdf5``.
 
 # %%
 # The results can also be plotted from the Python API.

@@ -57,7 +57,7 @@ Metrics fall into two families:
 
 ``MSE``, ``MAE``, ``ISE`` and ``IAE`` come from gemseo-calibration.
 ``RelativeMSE`` and ``SBPISE`` are defined in
-``vimseo.tools.calibration.calibration_metrics``.
+``vimseo.analysis_nodes.calibration.calibration_metrics``.
 
 ### 2.1 Mean metrics
 
@@ -552,9 +552,9 @@ so ``init_step = 0.25`` is adequate.
 ```python
 from gemseo.algos.opt.nlopt.settings.nlopt_cobyla_settings import NLOPT_COBYLA_Settings
 
-from vimseo.tools.calibration.calibration_metrics import CalibrationMetricSettings
-from vimseo.tools.calibration.calibration_metrics import CurveScaling
-from vimseo.tools.calibration.calibration_step import CalibrationStepSettings
+from vimseo.analysis_nodes.calibration.calibration_metrics import CalibrationMetricSettings
+from vimseo.analysis_nodes.calibration.calibration_metrics import CurveScaling
+from vimseo.analysis_nodes.calibration.calibration_step import CalibrationStepSettings
 
 settings = CalibrationStepSettings(
     name_to_models={"DCB": model},

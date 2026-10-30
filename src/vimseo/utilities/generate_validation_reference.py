@@ -24,7 +24,7 @@ from typing import TYPE_CHECKING
 import pandas as pd
 from gemseo.datasets.io_dataset import IODataset
 
-from vimseo.tools.doe.custom_doe import CustomDOETool
+from vimseo.analysis_nodes.doe.custom_doe import CustomDOEAnalysisNode
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -64,7 +64,7 @@ def generate_reference_from_dataset(
         model.default_input_data.update(specific_inputs)
 
     dataset = (
-        CustomDOETool()
+        CustomDOEAnalysisNode()
         .execute(
             model=model,
             input_dataset=input_dataset,

@@ -24,24 +24,28 @@ from zipfile import ZipFile
 import streamlit as st
 from streamlit_pydantic import pydantic_input
 
+from vimseo.analysis_nodes.analysis_nodes_factory import CompositeAnalysisNodesFactory
+from vimseo.analysis_nodes.io.reader_analysis_nodes_factory import (
+    ReaderAnalysisNodesFactory,
+)
+from vimseo.analysis_nodes.io.reader_file_result import ResultFileReaderAnalysisNode
 from vimseo.dashboards.visualisation.generic_layout import generate_layout
 from vimseo.dashboards.workflow.dashboard_workflow_model import WORKFLOW_DATA_DIR
 from vimseo.dashboards.workflow.dashboard_workflow_model import add_step
 from vimseo.dashboards.workflow.dashboard_workflow_model import add_unhandled_settings
 from vimseo.dashboards.workflow.dashboard_workflow_model import filter_settings
-from vimseo.dashboards.workflow.dashboard_workflow_model import get_analysis_tool_names
+from vimseo.dashboards.workflow.dashboard_workflow_model import get_analysis_node_names
 from vimseo.dashboards.workflow.dashboard_workflow_model import get_input_description
 from vimseo.dashboards.workflow.dashboard_workflow_model import get_output_description
-from vimseo.dashboards.workflow.dashboard_workflow_model import get_reader_tool_names
+from vimseo.dashboards.workflow.dashboard_workflow_model import (
+    get_reader_analysis_node_names,
+)
 from vimseo.dashboards.workflow.dashboard_workflow_model import get_result_attr_names
 from vimseo.dashboards.workflow.dashboard_workflow_model import get_workflow_file_name
 from vimseo.dashboards.workflow.dashboard_workflow_model import initialize
 from vimseo.dashboards.workflow.dashboard_workflow_model import load_workflow
 from vimseo.dashboards.workflow.dashboard_workflow_model import show_graph
-from vimseo.dashboards.workflow.dashboard_workflow_model import update_tool
-from vimseo.tools.io.reader_file_result import ResultFileReaderTool
-from vimseo.tools.io.reader_tools_factory import ReaderToolsFactory
-from vimseo.tools.tools_factory import AnalysisToolsFactory
+from vimseo.dashboards.workflow.dashboard_workflow_model import update_analysis_node
 from vimseo.utilities.user import get_user_name
 from vimseo.workflow.workflow_step import Input
 from vimseo.workflow.workflow_step import Output
@@ -79,65 +83,77 @@ def workflow_dashboard():
     selection, visualization = st.columns((0.5, 0.5))
 
     with selection:
-        tool_type = st.selectbox("Select a type of tool", ["Analysis", "Reader"])
+        analysis_node_type = st.selectbox(
+            "Select a type of analysis node", ["Analysis", "Reader"]
+        )
 
-        if tool_type == "Analysis":
+        if analysis_node_type == "Analysis":
             st.session_state.table_to_show = None
-            tool_name = st.selectbox(
-                "Select a tool",
-                get_analysis_tool_names(),
+            analysis_node_name = st.selectbox(
+                "Select an analysis node",
+                get_analysis_node_names(),
             )
-            with st.form("Create an analysis tool"):
-                st.sidebar.markdown("### Current tool construction parameters")
-                tmp_tool = AnalysisToolsFactory().create(tool_name)
+            with st.form("Create an analysis node"):
+                st.sidebar.markdown("### Current analysis node construction parameters")
+                tmp_analysis_node = CompositeAnalysisNodesFactory().create(
+                    analysis_node_name
+                )
                 constructor_options = pydantic_input(
-                    key="workflow_tool_constructor_options",
-                    model=deepcopy(tmp_tool._STREAMLIT_CONSTRUCTOR_OPTIONS),
+                    key="workflow_analysis_node_constructor_options",
+                    model=deepcopy(tmp_analysis_node._STREAMLIT_CONSTRUCTOR_OPTIONS),
                     group_optional_fields="sidebar",
                     lowercase_labels=True,
                 )
 
-                tmp_tool = AnalysisToolsFactory().create(
-                    tool_name, **constructor_options
+                tmp_analysis_node = CompositeAnalysisNodesFactory().create(
+                    analysis_node_name, **constructor_options
                 )
-                st.sidebar.markdown("### Current tool settings")
-                settings_model = deepcopy(tmp_tool._st_settings)
+                st.sidebar.markdown("### Current analysis node settings")
+                settings_model = deepcopy(tmp_analysis_node._st_settings)
                 if settings_model is not None:
                     settings = pydantic_input(
-                        key="workflow_tool_options",
+                        key="workflow_analysis_node_options",
                         model=settings_model,
                         group_optional_fields="sidebar",
                         lowercase_labels=True,
                     )
-                    settings = filter_settings(settings, tmp_tool.st_settings_names)
-                    add_unhandled_settings(tmp_tool, settings)
+                    settings = filter_settings(
+                        settings, tmp_analysis_node.st_settings_names
+                    )
+                    add_unhandled_settings(tmp_analysis_node, settings)
                 else:
                     settings = {}
 
-                if st.form_submit_button("Submit tool"):
-                    update_tool(st.session_state, tmp_tool, settings)
+                if st.form_submit_button("Submit analysis node"):
+                    update_analysis_node(st.session_state, tmp_analysis_node, settings)
         else:
-            tool_name = st.selectbox(
-                "Select a tool",
-                get_reader_tool_names(),
+            analysis_node_name = st.selectbox(
+                "Select an analysis node",
+                get_reader_analysis_node_names(),
             )
             with st.form("Create a reader"):
-                if tool_name == "ResultFileReaderTool":
-                    tool_name_of_reader = st.selectbox(
-                        "Select an analysis tool of which the result is to be read",
-                        AnalysisToolsFactory().class_names,
+                if analysis_node_name == "ResultFileReaderAnalysisNode":
+                    analysis_node_name_of_reader = st.selectbox(
+                        "Select an analysis node of which the result is to be read",
+                        CompositeAnalysisNodesFactory().class_names,
                     )
-                    tmp_tool = ResultFileReaderTool(tool_name_of_reader)
-                    constructor_options = {"tool_name": tool_name_of_reader}
+                    tmp_analysis_node = ResultFileReaderAnalysisNode(
+                        analysis_node_name_of_reader
+                    )
+                    constructor_options = {
+                        "analysis_node_name": analysis_node_name_of_reader
+                    }
                 else:
-                    tmp_tool = ReaderToolsFactory().create(tool_name)
+                    tmp_analysis_node = ReaderAnalysisNodesFactory().create(
+                        analysis_node_name
+                    )
                     constructor_options = {}
 
-                st.sidebar.markdown("### Current tool settings")
-                settings_model = deepcopy(tmp_tool._st_settings)
+                st.sidebar.markdown("### Current analysis node settings")
+                settings_model = deepcopy(tmp_analysis_node._st_settings)
                 if settings_model is not None:
                     settings = pydantic_input(
-                        key="workflow_tool_options",
+                        key="workflow_analysis_node_options",
                         model=settings_model,
                         group_optional_fields="sidebar",
                         lowercase_labels=True,
@@ -146,34 +162,38 @@ def workflow_dashboard():
                     settings = {}
 
                 if settings != {}:
-                    settings = filter_settings(settings, tmp_tool.st_settings_names)
+                    settings = filter_settings(
+                        settings, tmp_analysis_node.st_settings_names
+                    )
 
                 result = st.file_uploader(
-                    f"Select a {tmp_tool.get_file_extension()} file",
-                    type=tmp_tool.get_file_extension(),
+                    f"Select a {tmp_analysis_node.get_file_extension()} file",
+                    type=tmp_analysis_node.get_file_extension(),
                 )
                 if result is not None:
-                    # Update tool settings from information that can only be knows after
+                    # Update analysis node settings from information that can only be knows after
                     # reading the file.
                     file_path = working_directory / result.name
                     Path(file_path).write_bytes(result.getvalue())
                     settings["file_name"] = result.name
                     settings["directory_path"] = str(working_directory)
 
-                if st.form_submit_button("Submit tool"):
-                    update_tool(st.session_state, tmp_tool, settings)
-                    if tmp_tool.get_file_extension() == ".csv":
-                        st.session_state.table_to_show = tmp_tool.execute().dataset
+                if st.form_submit_button("Submit analysis node"):
+                    update_analysis_node(st.session_state, tmp_analysis_node, settings)
+                    if tmp_analysis_node.get_file_extension() == ".csv":
+                        st.session_state.table_to_show = (
+                            tmp_analysis_node.execute().dataset
+                        )
 
-        tool = st.session_state.tool
-        if tool is not None:
+        analysis_node = st.session_state.analysis_node
+        if analysis_node is not None:
             option_key = st.selectbox(
-                "Tool input",
-                tool.input_names,
+                "Analysis node input",
+                analysis_node.input_names,
             )
             with st.form("Add an input"):
                 input_name = st.text_input(
-                    "Input name", help=get_input_description(tool, option_key)
+                    "Input name", help=get_input_description(analysis_node, option_key)
                 )
                 if st.form_submit_button("Submit input"):
                     if input_name == "":
@@ -182,21 +202,21 @@ def workflow_dashboard():
                         raise ValueError(msg)
                     # TODO use an ensemble instead of a dict?
                     st.session_state.created_inputs.update({
-                        input_name: type(tool.options[option_key])
+                        input_name: type(analysis_node.options[option_key])
                     })
                     st.session_state.inputs[input_name] = Input(input_name, option_key)
 
-            attr_names = get_result_attr_names(tool)
+            attr_names = get_result_attr_names(analysis_node)
             attr_name = st.selectbox(
                 "Result attribute",
                 attr_names,
-                help="Any attribute of the selected tool can be used as output. "
+                help="Any attribute of the selected analysis node can be used as output. "
                 "The result itself can also be used by selecting 'result'.",
             )
 
             with st.form("Add an output"):
                 output_name = st.text_input(
-                    "Output name", help=get_output_description(tool, attr_name)
+                    "Output name", help=get_output_description(analysis_node, attr_name)
                 )
                 if st.form_submit_button("Submit output"):
                     if output_name == "":
@@ -204,9 +224,9 @@ def workflow_dashboard():
                         st.error(msg)
                         raise ValueError(msg)
                     attr_type = (
-                        type(getattr(tool.result, attr_name))
+                        type(getattr(analysis_node.result, attr_name))
                         if attr_name != "result"
-                        else type(tool.result)
+                        else type(analysis_node.result)
                     )
                     st.session_state.created_outputs[output_name] = attr_type
                     st.session_state.outputs[output_name] = Output(
@@ -215,11 +235,11 @@ def workflow_dashboard():
 
             with st.form("Step definition"):
                 name = st.text_input(
-                    f"Override step name (default is {tool.name})",
+                    f"Override step name (default is {analysis_node.name})",
                     value="",
                     key="workflow_step_name",
                 )
-                name = tool.name if name == "" else name
+                name = analysis_node.name if name == "" else name
                 submit_step = st.form_submit_button("Submit step")
                 if submit_step:
                     if name in st.session_state.steps:
@@ -228,7 +248,12 @@ def workflow_dashboard():
                             f"({list(st.session_state.steps.keys())})."
                         )
                     else:
-                        add_step(st.session_state, name, tool_name, constructor_options)
+                        add_step(
+                            st.session_state,
+                            name,
+                            analysis_node_name,
+                            constructor_options,
+                        )
 
         if (
             st.checkbox("Modify step or inputs/outputs")
@@ -271,7 +296,9 @@ def workflow_dashboard():
                     "Step to modify", list(st.session_state.steps.keys())
                 )
                 if st.form_submit_button("Submit modification"):
-                    st.session_state.steps[step_name]["tool_settings"] = settings
+                    st.session_state.steps[step_name]["analysis_node_settings"] = (
+                        settings
+                    )
 
         suffix = st.text_input("Suffix of workflow file name")
         file_name = get_workflow_file_name(suffix)
@@ -309,14 +336,14 @@ def workflow_dashboard():
             st.markdown("### Read csv data")
             st.table(st.session_state.table_to_show)
 
-        if st.session_state.tool is not None:
-            st.markdown("### Tool settings")
-            st.write(st.session_state.tool_settings)
+        if st.session_state.analysis_node is not None:
+            st.markdown("### Analysis node settings")
+            st.write(st.session_state.analysis_node_settings)
 
-        st.markdown(f"### Current inputs for tool {tool_name}")
+        st.markdown(f"### Current inputs for analysis node {analysis_node_name}")
         st.write(st.session_state.inputs)
 
-        st.markdown(f"### Current outputs for tool {tool_name}")
+        st.markdown(f"### Current outputs for analysis node {analysis_node_name}")
         st.write(st.session_state.outputs)
 
         st.markdown("### Created inputs")

@@ -25,9 +25,9 @@ from numpy import array
 from numpy import full
 from numpy import vstack
 
+from vimseo.analysis_nodes.doe.custom_doe import CustomDOEAnalysisNode
 from vimseo.api import create_model
 from vimseo.problems import beam_analytic
-from vimseo.tools.doe.custom_doe import CustomDOETool
 from vimseo.utilities.datasets import SEP
 from vimseo.utilities.datasets import plot_dataset_element
 
@@ -88,11 +88,11 @@ INPUT_DATASET = Dataset.from_array(
 )
 
 
-def create_dataset_from_beam_model(input_dataset):
+def create_dataset_from_beam_model(input_dataset):  # pragma: no cover
     datasets = {}
     for load_case in ["Cantilever", "ThreePoints"]:
         beam_model = create_model("BendingTestAnalytical", load_case)
-        doe = CustomDOETool()
+        doe = CustomDOEAnalysisNode()
         input_names = input_dataset.get_variable_names(group_name=IODataset.INPUT_GROUP)
         input_names.remove("relative_support_location")
         doe.execute(beam_model, input_dataset, input_names=input_names)

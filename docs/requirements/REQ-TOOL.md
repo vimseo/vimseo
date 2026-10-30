@@ -7,14 +7,14 @@
  Commons, PO Box 1866, Mountain View, CA 94042, USA.
 -->
 
-# Tools (TOOL)
+# Analysis nodes (ANALYSIS_NODE)
 
-A tool performs one VV&UQ analysis (DOE, sensitivity, calibration, verification,
+An analysis node performs one VV&UQ analysis (DOE, sensitivity, calibration, verification,
 validation, surrogate, statistics, Bayesian analysis, design value) on models or data.
 
-### REQ-TOOL-001 — A tool validates its inputs and settings
+### REQ-TOOL-001 — An analysis node validates its inputs and settings
 
-- **Statement:** Every tool shall declare its inputs and settings as validated schemas,
+- **Statement:** Every analysis node shall declare its inputs and settings as validated schemas,
   and reject unknown or invalid ones before executing anything.
 - **Rationale:** A typo in a setting must not silently produce a wrong study.
 - **Priority:** Must
@@ -22,19 +22,19 @@ validation, surrogate, statistics, Bayesian analysis, design value) on models or
 - **Verification:** Test.
 - **Satisfied by:** —
 
-### REQ-TOOL-002 — A tool produces a typed result
+### REQ-TOOL-002 — An analysis node produces a typed result
 
-- **Statement:** Every tool shall store its outcome in a result object of a class
-  dedicated to the tool, independent of the tool instance.
+- **Statement:** Every analysis node shall store its outcome in a result object of a class
+  dedicated to the analysis node, independent of the analysis node instance.
 - **Rationale:** The result is the deliverable; see REQ-RES-*.
 - **Priority:** Must
 - **Status:** Proposed
 - **Verification:** Test.
 - **Satisfied by:** SPEC-006
 
-### REQ-TOOL-003 — A tool can be composed of subtools
+### REQ-TOOL-003 — An analysis node can be composed of sub-analysis nodes
 
-- **Statement:** A tool may execute other tools; the subtools shall inherit the
+- **Statement:** An analysis node may execute other analysis nodes; the sub-analysis nodes shall inherit the
   configuration of their parent (archive, working directory) unless overridden.
 - **Rationale:** Complex VV&UQ analyses are built from simpler ones.
 - **Priority:** Must

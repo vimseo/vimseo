@@ -120,6 +120,12 @@ def test_metadata_added_to_outputs(tmp_wd):
     assert set(out) == {"y1", *list(DEFAULT_METADATA.keys())}
 
 
+def test_set_n_cpus_is_deprecated(tmp_wd):
+    model = create_model("MockModel", "LC1")
+    with pytest.warns(DeprecationWarning, match="set_n_cpus is deprecated"):
+        model.set_n_cpus(2)
+
+
 def test_metadata_vars_from_outputs(tmp_wd):
     """Check that metadata are removed when asked so."""
     model = create_model("MockModel", "LC1")

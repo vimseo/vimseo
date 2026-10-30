@@ -23,7 +23,7 @@ from numpy import concatenate
 from numpy import linspace
 from numpy import ones
 
-from vimseo.tools.calibration.calibration_metrics import SBPISE
+from vimseo.analysis_nodes.calibration.calibration_metrics import SBPISE
 from vimseo.utilities.curves_generator import expressions_convexity
 from vimseo.utilities.curves_generator import expressions_oscillate
 from vimseo.utilities.curves_generator import get_history

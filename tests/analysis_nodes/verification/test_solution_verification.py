@@ -1,0 +1,365 @@
+# Copyright 2021 IRT Saint Exupery, https://www.irt-saintexupery.com
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Lesser General Public
+# License version 3 as published by the Free Software Foundation.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with this program; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
+from __future__ import annotations
+
+from pathlib import Path
+
+import pytest
+from gemseo.datasets.io_dataset import IODataset
+from gemseo.utils.directory_creator import DirectoryNamingMethod
+from numpy import array
+from numpy import atleast_1d
+from numpy import empty
+from numpy import isfinite
+from numpy import isnan
+from numpy import ones
+from numpy.testing import assert_allclose
+from numpy.testing import assert_array_equal
+from pandas import DataFrame
+
+from vimseo.analysis_nodes.base_result import assert_results_equal
+from vimseo.analysis_nodes.verification.solution_verification import Analysis
+from vimseo.analysis_nodes.verification.solution_verification import (
+    DiscretizationSolutionVerification,
+)
+from vimseo.analysis_nodes.verification.verification_result import (
+    SolutionVerificationResult,
+)
+from vimseo.api import create_model
+from vimseo.api import search_analysis_node_runs
+from vimseo.utilities.test_utils import check_result_visualization
+
+ELEMENT_SIZES = [0.45, 0.25, 0.15, 0.1]
+ELEMENT_SIZE_RATIO = 1.2
+
+
+@pytest.fixture
+def convergence_verificator():
+    """A convergence verificator."""
+    model = create_model("MockConvergence", "Dummy")
+    model.EXTRA_INPUT_GRAMMAR_CHECK = True
+    verificator = DiscretizationSolutionVerification(
+        directory_naming_method=DirectoryNamingMethod.NUMBERED,
+    )
+    verificator.execute(
+        model=model,
+        element_size_variable_name="h",
+        element_size_values=ELEMENT_SIZES,
+        output_name="a_h",
+    )
+    return verificator
+
+
+def test_convergence(tmp_wd, convergence_verificator):
+    """Check code convergence verification analysis node."""
+    model = create_model("MockConvergence", "Dummy")
+    model.EXTRA_INPUT_GRAMMAR_CHECK = True
+    result = convergence_verificator.result
+
+    for cross_validation_folds in result.cross_validation.values():
+        assert cross_validation_folds["beta"] == pytest.approx(2.0)
+        assert cross_validation_folds["q_extrap"] == pytest.approx(1.0)
+        assert len(cross_validation_folds["h"]) == 3
+        assert set(cross_validation_folds["h"]).issubset(set(ELEMENT_SIZES))
+
+    assert result.extrapolation["beta"] == pytest.approx(2.0)
+    assert result.extrapolation["beta_mad"] == pytest.approx(0.0)
+    assert result.extrapolation["q_extrap"] == pytest.approx(1.0)
+    assert result.extrapolation["q_extrap_mad"] == pytest.approx(0.0)
+    # Richardson succeeds here, so it is the selected converged value and its
+    # cross-validation band is the Richardson MAD (the palliative CV is skipped).
+    assert result.extrapolation["q_converged_method"] == "richardson"
+    assert result.extrapolation["q_converged"] == pytest.approx(1.0)
+    assert result.extrapolation["q_converged_cv_mad"] == pytest.approx(
+        result.extrapolation["q_extrap_mad"]
+    )
+    q = (
+        convergence_verificator.result.simulation_and_reference
+        .get_view(variable_names="a_h")
+        .to_numpy()
+        .ravel()
+    )
+    h = (
+        convergence_verificator.result.simulation_and_reference
+        .get_view(variable_names="h")
+        .to_numpy()
+        .ravel()
+    )
+    assert (h == ELEMENT_SIZES).all()
+
+    gci_fine = 1.25 * (q[3] - q[2]) / q[3] * 1.0 / ((h[2] / h[3]) ** 2 - 1)
+    gci_coarse = 1.25 * (q[1] - q[0]) / q[1] * 1.0 / ((h[0] / h[1]) ** 2 - 1)
+    assert_allclose(result.extrapolation["gci"], array([gci_coarse, gci_fine]))
+
+    error = (
+        result.element_wise_metrics.get_view(variable_names="a_h").to_numpy().ravel()
+    )
+    expected_error = empty(4)
+    for i, h in enumerate(ELEMENT_SIZES):
+        model.execute({"h": atleast_1d(h)})
+        expected_error[i] = (
+            model.get_input_data()["a"][0] - model.get_output_data()["a_h"][0]
+        )
+    assert_allclose(expected_error, error)
+
+
+def test_convergence_versus_n_dof(tmp_wd):
+    """Check code convergence for an N_DOF analysis."""
+    model = create_model("MockConvergence", "Dummy")
+    model.EXTRA_INPUT_GRAMMAR_CHECK = True
+    verificator = DiscretizationSolutionVerification(
+        directory_naming_method=DirectoryNamingMethod.NUMBERED,
+    )
+    verificator.execute(
+        model=model,
+        element_size_variable_name="h",
+        element_size_values=ELEMENT_SIZES,
+        output_name="a_h",
+        analysis=Analysis.N_DOF,
+        abscissa_name="n_dof",
+    )
+    result = verificator.result
+    assert (
+        DiscretizationSolutionVerification._DOF_ABSCISSA_NAME
+        in result.element_wise_metrics.get_variable_names(
+            group_name=IODataset.INPUT_GROUP
+        )
+    )
+    assert result.element_wise_metrics.get_view(
+        variable_names=DiscretizationSolutionVerification._DOF_ABSCISSA_NAME
+    ).to_numpy().ravel()[0] == pytest.approx(1)
+
+
+def test_plot(tmp_wd, convergence_verificator):
+    """Check that the convergence verification plot are written on disk."""
+    figures = convergence_verificator.result.plot(save=True)
+    expected_keys = [
+        "convergence_cross_validation",
+        "convergence_fit",
+        "error_versus_element_size",
+        "relative_error_versus_element_size",
+        "relative_error_versus_cpu_time",
+    ]
+    assert set(figures) == set(expected_keys)
+    for key in expected_keys:
+        assert Path(f"{key}.html").is_file()
+
+
+def test_repr(tmp_wd, convergence_verificator):
+    """Check representation of the convergence verification result."""
+    expected_words = [
+        "Richardson extrapolation:",
+        "Cross validation on Richardson extrapolation:",
+    ]
+    for word in expected_words:
+        assert word in str(convergence_verificator.result)
+
+
+def test_verification_from_ratio(tmp_wd):
+    """A convergence verificator based on a ratio of mesh size."""
+    model = create_model("MockConvergence", "Dummy")
+    model.EXTRA_INPUT_GRAMMAR_CHECK = True
+    verificator = DiscretizationSolutionVerification(
+        directory_naming_method=DirectoryNamingMethod.NUMBERED,
+    )
+    verificator.execute(
+        model=model,
+        element_size_variable_name="h",
+        element_size_ratio=ELEMENT_SIZE_RATIO,
+        output_name="a_h",
+    )
+    h = (
+        verificator.result.simulation_and_reference
+        .get_view(variable_names="h")
+        .to_numpy()
+        .ravel()
+    )
+    dx_0 = model.default_input_data["h"][0]
+    assert_array_equal(
+        h,
+        array([
+            dx_0 * ELEMENT_SIZE_RATIO,
+            dx_0,
+            dx_0 * ELEMENT_SIZE_RATIO ** (-1),
+            dx_0 * ELEMENT_SIZE_RATIO ** (-2),
+        ]),
+    )
+
+
+def test_from_data(tmp_wd):
+    """Check that solution verification can take simulated data."""
+
+    df = DataFrame.from_dict({
+        ("inputs", "h", 0): array([0.5, 0.4, 0.3, 0.2, 0.1]),
+        ("outputs", "a_h", 0): array([1.5, 1.4, 1.3, 1.2, 1.1]),
+        ("outputs", "y1", 0): ones(5),
+        ("outputs", "y2", 0): ones(5),
+    })
+    archive = {"archive_manager": "DirectoryArchive", "directory_archive_root": "a"}
+    verificator = DiscretizationSolutionVerification(
+        directory_naming_method=DirectoryNamingMethod.NUMBERED, **archive
+    )
+    verificator.execute(
+        element_size_variable_name="h",
+        output_name="a_h",
+        simulated_data=df,
+        observed_output_names=["y1"],
+    )
+    verificator.result.plot(directory_path=verificator.working_directory, save=True)
+    # Without model, the result is archived without model.
+    assert verificator.result.metadata.model is None
+    (summary,) = search_analysis_node_runs(
+        **archive, analysis_node_name="DiscretizationSolutionVerification"
+    )
+    assert summary["model"] is None
+
+
+def test_serialization(tmp_wd, convergence_verificator):
+    """Check that a SolutionVerificationResult can be serialized to hdf5."""
+    result = convergence_verificator.result
+    result.to_hdf5("result.hdf5")
+    serialized_result = SolutionVerificationResult.from_hdf5("result.hdf5")
+    assert_results_equal(result, serialized_result)
+
+
+# --- Richardson-independent converged-value estimators -----------------------
+# These estimators (see ``solution_verification_indicators``) keep the analysis node usable
+# when the three-point Richardson extrapolation returns ``nan`` (e.g. sawtooth
+# convergence). The order is fitted, never assumed.
+
+# A monotone, power-law convergent sequence q(h) = 1.0 + 0.5 * h**2, coarse->fine.
+_MONOTONE_H = array([0.4, 0.2, 0.1, 0.05])
+_MONOTONE_Q = 1.0 + 0.5 * _MONOTONE_H**2
+
+# A sawtooth (non-monotone) sequence: Richardson cannot fit an order on it.
+_SAWTOOTH_H = array([0.4, 0.2, 0.1, 0.05])
+_SAWTOOTH_Q = array([1.80, 2.05, 1.90, 2.02])
+
+
+def test_fit_power_law_recovers_converged_value():
+    """The power-law fit recovers the asymptote and order of clean data."""
+    from vimseo.analysis_nodes.verification.solution_verification_indicators import (
+        fit_power_law,
+    )
+
+    q_converged, order, _coefficient, rmse = fit_power_law(_MONOTONE_H, _MONOTONE_Q)
+    assert q_converged == pytest.approx(1.0, abs=1e-3)
+    assert order == pytest.approx(2.0, abs=1e-2)
+    assert rmse == pytest.approx(0.0, abs=1e-6)
+
+
+def test_cross_validated_mad_ignores_non_finite():
+    """The cross-validation spread uses only the finite fold estimates."""
+    from numpy import nan
+
+    from vimseo.analysis_nodes.verification.solution_verification_indicators import (
+        cross_validated_mad,
+    )
+
+    center, band = cross_validated_mad([2.0, 2.0, 2.0, nan])
+    assert center == pytest.approx(2.0)
+    assert band == pytest.approx(0.0)
+
+    center, band = cross_validated_mad([nan, nan])
+    assert isnan(center)
+    assert isnan(band)
+
+
+def test_estimators_survive_sawtooth():
+    """Both estimators stay finite on sawtooth data, where Richardson fails."""
+    from vimseo.analysis_nodes.verification.solution_verification_indicators import (
+        compute_richardson,
+    )
+    from vimseo.analysis_nodes.verification.solution_verification_indicators import (
+        fit_power_law,
+    )
+    from vimseo.analysis_nodes.verification.solution_verification_indicators import (
+        robust_converged_value,
+    )
+
+    # Richardson cannot fit a positive order on the sawtooth triplet.
+    beta, q_extrap = compute_richardson(_SAWTOOTH_H[:3], _SAWTOOTH_Q[:3])
+    assert isnan(beta)
+    assert isnan(q_extrap)
+
+    # The power-law fit never raises and returns a finite value with a large
+    # residual that flags the unreliability.
+    q_fit, _order, _coefficient, rmse = fit_power_law(_SAWTOOTH_H, _SAWTOOTH_Q)
+    assert isfinite(q_fit)
+    assert rmse > 0.0
+
+    # The model-free median of the finest grids is finite with a non-zero band.
+    q_robust, band = robust_converged_value(_SAWTOOTH_Q)
+    assert isfinite(q_robust)
+    assert band > 0.0
+
+
+def test_converged_estimates_populated_when_richardson_fails(tmp_wd):
+    """The analysis node exposes the converged-value estimates even when Richardson is nan."""
+    df = DataFrame.from_dict({
+        ("inputs", "h", 0): _SAWTOOTH_H,
+        ("outputs", "a_h", 0): _SAWTOOTH_Q,
+    })
+    verificator = DiscretizationSolutionVerification(
+        directory_naming_method=DirectoryNamingMethod.NUMBERED,
+    )
+    verificator.execute(
+        element_size_variable_name="h",
+        output_name="a_h",
+        simulated_data=df,
+    )
+    result = verificator.result
+    extrapolation = result.extrapolation
+    # Richardson collapses to nan on sawtooth data ...
+    assert isnan(extrapolation["q_extrap"])
+    # ... but the Richardson-independent estimates remain available.
+    assert isfinite(extrapolation["q_converged_robust"])
+    assert isfinite(extrapolation["q_converged_fit"])
+    # The analysis node falls back to a palliative and flags it explicitly.
+    assert isfinite(extrapolation["q_converged"])
+    assert extrapolation["q_converged_method"] != "richardson"
+    assert "palliative" in extrapolation["q_converged_method"]
+    # The palliatives are cross-validated when Richardson fails: each fold carries
+    # a palliative estimate and a cross-validation band is available.
+    assert isfinite(extrapolation["q_converged_cv_mad"])
+    for fold in result.cross_validation.values():
+        assert "q_converged_fit" in fold
+        assert "q_converged_robust" in fold
+    # The error metrics are computed against the selected converged value, so they
+    # stay finite (and the error / relative-error plots non-empty) despite the nan
+    # Richardson extrapolation.
+    errors = result.element_wise_metrics.get_view(variable_names="a_h").to_numpy()
+    assert isfinite(errors).all()
+    # And the Richardson-free plot can still be produced.
+    verificator.result.plot(save=True)
+    assert Path("convergence_fit.html").is_file()
+
+
+def test_result_visualization(tmp_wd, convergence_verificator):
+    """Check that a solution verification result can be visualized once loaded from a
+    file."""
+    check_result_visualization(convergence_verificator.result, "visualization")
+    tables = convergence_verificator.result.to_dataframes()
+    assert "extrapolated_value" in tables["extrapolation"].index
+    assert "convergence_order" in tables["extrapolation"].index
+    assert "extrapolated_value" in tables["cross_validation"].columns
+
+
+def test_key_values(tmp_wd, convergence_verificator):
+    """The extrapolated quantities summarize a solution verification."""
+    key_values = convergence_verificator.result.get_key_values()
+    assert "extrapolated_value" in key_values
+    assert "convergence_order" in key_values

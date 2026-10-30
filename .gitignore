@@ -30,7 +30,7 @@ coverage.xml
 /docs/runnable_examples/model_runs/
 /docs/runnable_examples/**/default_archive/
 /docs/runnable_examples/**/default_scratch/
-/docs/runnable_examples/**/doe_tool_results/
+/docs/runnable_examples/**/doe_analysis_node_results/
 /docs/runnable_examples/**/*.png
 /docs/runnable_examples/**/*.html
 /docs/runnable_examples/**/*.pickle
@@ -44,11 +44,11 @@ coverage.xml
 /docs/runnable_examples/07_validation_case/dataframe_validation_beam_cantilever.csv
 /docs/runnable_examples/07_validation_case/reference_validation_bending_test_cantilever_*.csv
 
-# The outputs of the models and the tools executed from the root of the repository
+# The outputs of the models and the analysis nodes executed from the root of the repository
 /default_archive/
 /default_scratch/
 /mlruns/
 /model_runs/
 /visualization/
 /*_cache.hdf
-/*Tool/
+/*AnalysisNode/

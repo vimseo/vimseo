@@ -35,9 +35,9 @@ from packaging import version
 
 
 def __tmp_wd(tmp_path):
-    """Generator to move into a tools directory forth and back.
+    """Generator to move into an analysis nodes directory forth and back.
 
-    Return the path to the tools directory.
+    Return the path to the analysis nodes directory.
     """
     prev_cwd = Path.cwd()
     os.chdir(str(tmp_path))
@@ -47,7 +47,7 @@ def __tmp_wd(tmp_path):
         os.chdir(str(prev_cwd))
 
 
-# Fixture to move into a tools directory.
+# Fixture to move into an analysis nodes directory.
 tmp_wd = pytest.fixture()(__tmp_wd)
 
 
@@ -123,11 +123,11 @@ original_image_directories = matplotlib.testing.decorators._image_directories
 
 
 if "GEMSEO_KEEP_IMAGE_COMPARISONS" not in os.environ:
-    # Context manager to change the current working directory to a tools one.
+    # Context manager to change the current working directory to an analysis nodes one.
     __ctx_tmp_wd = contextlib.contextmanager(__tmp_wd)
 
     def _image_directories(func):
-        """Create the result_images directory in a tools parent directory."""
+        """Create the result_images directory in an analysis nodes parent directory."""
         with __ctx_tmp_wd(tempfile.mkdtemp()):
             baseline_dir, result_dir = original_image_directories(func)
         return baseline_dir, result_dir

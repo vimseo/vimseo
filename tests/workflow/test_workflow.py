@@ -39,4 +39,7 @@ def test_set_reader_dir_path(tmp_wd):
         WORKFLOW_LIB_DIR / "parameter_space_reader__model__sensitivity_workflow.json"
     )
     workflow._set_input_file_dir_path("foo")
-    assert workflow.steps["ParameterSpaceReader"].tool_settings.directory_path == "foo"
+    assert (
+        workflow.steps["ParameterSpaceReader"].analysis_node_settings.directory_path
+        == "foo"
+    )

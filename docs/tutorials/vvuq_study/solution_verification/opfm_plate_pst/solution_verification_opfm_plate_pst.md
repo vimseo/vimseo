@@ -75,5 +75,5 @@ Raw model input and output data are also available:
 
 These figures and other information about the model can be explored interactively in a dashboard.
 The dashboard can be opened by typing ``dashboard_results`` in a console where the plugin
-[vimseo-dashboards](https://forge-is.pf.irt-saintexupery.com/vims/vimseo-dashboards) is installed, then selecting the page **Tool Results**.
+[vimseo-dashboards](https://forge-is.pf.irt-saintexupery.com/vims/vimseo-dashboards) is installed, then selecting the page **Analysis Node Results**.
 Once the result is loaded, its values and its figures are shown in two tabs.

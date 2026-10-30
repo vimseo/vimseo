@@ -20,8 +20,8 @@ from pathlib import Path
 
 from pydantic import Field
 
+from vimseo.analysis_nodes.base_settings import BaseSettings
 from vimseo.storage_management.base_storage_manager import PersistencyPolicy
-from vimseo.tools.base_settings import BaseSettings
 
 LOGGER = logging.getLogger(__name__)
 

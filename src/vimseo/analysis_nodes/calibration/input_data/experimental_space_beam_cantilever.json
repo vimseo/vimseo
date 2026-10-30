@@ -1,0 +1,73 @@
+{
+  "parameter_space": {
+    "height": {
+      "name": "Triangular",
+      "mode": 40.0,
+      "minimum": 39.2,
+      "maximum": 40.8,
+      "sigma": 0.0,
+      "mu": 1.0,
+      "lower_bound": 39.2,
+      "upper_bound": 40.8,
+      "parameters": [],
+      "size": 1
+    },
+    "width": {
+      "name": "Triangular",
+      "mode": 30.0,
+      "minimum": 29.4,
+      "maximum": 30.6,
+      "sigma": 0.0,
+      "mu": 1.0,
+      "lower_bound": 29.4,
+      "upper_bound": 30.6,
+      "parameters": [],
+      "size": 1
+    },
+    "imposed_dplt": {
+      "name": "Triangular",
+      "mode": -5.0,
+      "minimum": -5.1,
+      "maximum": -4.9,
+      "sigma": 0.0,
+      "mu": 1.0,
+      "lower_bound": -5.1,
+      "upper_bound": -4.9,
+      "parameters": [],
+      "size": 1
+    }
+  },
+  "metadata": {
+    "generic": {
+      "datetime": "25-10-2024_11-12-12",
+      "version": "1.0.1.dev41+gfb0a4332.d20241017"
+    },
+    "misc": {},
+    "settings": {
+      "distribution_name": "OTTriangularDistribution",
+      "space_builder_name": "FromModelCenterAndCov",
+      "minimum_values": null,
+      "maximum_values": null,
+      "center_value_expr": "0.5*(mini+maxi)",
+      "use_default_values_as_center": true,
+      "variable_names": [
+        "length",
+        "height",
+        "width",
+        "relative_dplt_location",
+        "imposed_dplt"
+      ],
+      "center_values": null,
+      "cov": 0.02,
+      "truncate_to_model_bounds": true,
+      "lower_bounds": null,
+      "upper_bounds": null
+    },
+    "report": {},
+    "model": null,
+    "analysis_node_run_id": "a35bae056f9f4ee286dca6f970054fc7",
+    "parent_analysis_node_run_id": "",
+    "child_analysis_node_run_ids": [],
+    "simulation_run_ids": []
+  }
+}

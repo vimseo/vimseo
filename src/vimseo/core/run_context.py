@@ -13,26 +13,26 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-"""The run of a tool, seen from the simulations it launches.
+"""The run of an analysis node, seen from the simulations it launches.
 
-A tool (:class:`~vimseo.tools.base_tool.BaseTool`) executes models, and a model
-result must be traceable to the tool run that asked for it, and conversely.
+An analysis node (:class:`~vimseo.analysis_nodes.base_analysis_node.BaseAnalysisNode`) executes models, and a model
+result must be traceable to the analysis node run that asked for it, and conversely.
 Both sides carry a unique identifier:
 
 - a simulation has a ``run_id``, generated when the model is really run, and a
-  ``tool_run_id``, which is the one of the tool run during which it was executed,
-- a tool result has a ``run_id``, and the ``simulation_run_ids`` of all the
+  ``analysis_node_run_id``, which is the one of the analysis node run during which it was executed,
+- an analysis node result has a ``run_id``, and the ``simulation_run_ids`` of all the
   simulations it used.
 
-The tool run is made known to the models through a context variable, so that no
-model or tool has to pass it to the other. A simulation retrieved from the model
-cache is not run again: it keeps the ``run_id`` and the ``tool_run_id`` of the
-run which created it, but it is also recorded as used by the current tool run.
+The analysis node run is made known to the models through a context variable, so that no
+model or analysis node has to pass it to the other. A simulation retrieved from the model
+cache is not run again: it keeps the ``run_id`` and the ``analysis_node_run_id`` of the
+run which created it, but it is also recorded as used by the current analysis node run.
 
 Warnings:
     A context variable is local to a thread, and is not passed to a child
     process. The simulations executed by a thread or a process pool started
-    during a tool run are therefore not recorded in its context.
+    during an analysis node run are therefore not recorded in its context.
 """
 
 from __future__ import annotations
@@ -68,67 +68,69 @@ def new_run_id() -> str:
 
 
 @dataclass
-class ToolRunContext:
-    """The run of a tool, while it is executed."""
+class AnalysisNodeRunContext:
+    """The run of an analysis node, while it is executed."""
 
-    tool_run_id: str
-    """The unique identifier of the tool run."""
+    analysis_node_run_id: str
+    """The unique identifier of the analysis node run."""
 
-    tool_name: str
-    """The name of the tool."""
+    analysis_node_name: str
+    """The name of the analysis node."""
 
-    parent: ToolRunContext | None = None
-    """The run of the tool executing this tool, if any."""
+    parent: AnalysisNodeRunContext | None = None
+    """The run of the analysis node executing this analysis node, if any."""
 
     simulation_run_ids: dict[str, None] = field(default_factory=dict)
-    """The ``run_id`` of the simulations used by the tool run, and by the tool runs it
+    """The ``run_id`` of the simulations used by the analysis node run, and by the analysis node runs it
     launched, in order of first use.
 
     A dictionary is used as an ordered set."""
 
-    child_tool_run_ids: list[str] = field(default_factory=list)
-    """The identifiers of the tool runs launched by this tool run."""
+    child_analysis_node_run_ids: list[str] = field(default_factory=list)
+    """The identifiers of the analysis node runs launched by this analysis node run."""
 
 
-_CURRENT_TOOL_RUN: ContextVar[ToolRunContext | None] = ContextVar(
-    "vimseo_current_tool_run", default=None
+_CURRENT_ANALYSIS_NODE_RUN: ContextVar[AnalysisNodeRunContext | None] = ContextVar(
+    "vimseo_current_analysis_node_run", default=None
 )
 
 
-def current_tool_run() -> ToolRunContext | None:
-    """Return the tool run being executed, or ``None`` outside of a tool run."""
-    return _CURRENT_TOOL_RUN.get()
+def current_analysis_node_run() -> AnalysisNodeRunContext | None:
+    """Return the analysis node run being executed, or ``None`` outside of an analysis node run."""
+    return _CURRENT_ANALYSIS_NODE_RUN.get()
 
 
 @contextmanager
-def tool_run(tool_name: str) -> Generator[ToolRunContext, None, None]:
-    """Execute a block as a tool run.
+def analysis_node_run(
+    analysis_node_name: str,
+) -> Generator[AnalysisNodeRunContext, None, None]:
+    """Execute a block as an analysis node run.
 
-    The run is a child of the current tool run, if any. When it ends, it is
+    The run is a child of the current analysis node run, if any. When it ends, it is
     recorded in its parent, to which its simulations are added.
 
     Args:
-        tool_name: The name of the tool.
+        analysis_node_name: The name of the analysis node.
     """
-    parent = _CURRENT_TOOL_RUN.get()
-    context = ToolRunContext(new_run_id(), tool_name, parent)
-    token = _CURRENT_TOOL_RUN.set(context)
+    parent = _CURRENT_ANALYSIS_NODE_RUN.get()
+    context = AnalysisNodeRunContext(new_run_id(), analysis_node_name, parent)
+    token = _CURRENT_ANALYSIS_NODE_RUN.set(context)
     try:
         yield context
     finally:
-        _CURRENT_TOOL_RUN.reset(token)
+        _CURRENT_ANALYSIS_NODE_RUN.reset(token)
         if parent is not None:
-            parent.child_tool_run_ids.append(context.tool_run_id)
+            parent.child_analysis_node_run_ids.append(context.analysis_node_run_id)
             parent.simulation_run_ids.update(context.simulation_run_ids)
 
 
 def record_simulation(run_id: str) -> None:
-    """Record a simulation as used by the current tool run, if any.
+    """Record a simulation as used by the current analysis node run, if any.
 
     Args:
         run_id: The ``run_id`` of the simulation.
     """
-    context = _CURRENT_TOOL_RUN.get()
+    context = _CURRENT_ANALYSIS_NODE_RUN.get()
     if context is not None and run_id != "":
         context.simulation_run_ids[run_id] = None
 
@@ -142,7 +144,7 @@ def record_simulation_from_outputs(output_data: Mapping) -> None:
     Args:
         output_data: The outputs of a model.
     """
-    if _CURRENT_TOOL_RUN.get() is None:
+    if _CURRENT_ANALYSIS_NODE_RUN.get() is None:
         return
     run_id = output_data.get(RUN_ID_NAME)
     if run_id is not None:

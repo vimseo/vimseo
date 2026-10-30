@@ -26,16 +26,16 @@ from pathlib import Path
 
 from pandas import read_csv
 
+from vimseo.analysis_nodes.validation.validation_point import NominalValuesOutputType
+from vimseo.analysis_nodes.validation.validation_point import read_nominal_values
 from vimseo.api import activate_logger
-from vimseo.tools.validation.validation_point import NominalValuesOutputType
-from vimseo.tools.validation.validation_point import read_nominal_values
 from vimseo.utilities.datasets import SEP
 
 activate_logger()
 
 # %%
 # Loading experimental data is necessary for model validation or calibration.
-# Tools accept the data a user already has -- a mapping of variable names to
+# Analysis nodes accept the data a user already has -- a mapping of variable names to
 # values, a ``DataFrame`` read from a csv file, or a GEMSEO ``Dataset`` -- so raw
 # experimental data usually needs no conversion at all. What raw data does often
 # need is *reshaping*, which is what this example is about.
@@ -74,7 +74,7 @@ read_csv(raw_file, delimiter=SEP)
 # Finally, the nominal values can be returned as a GEMSEO Dataset, a multi-index
 # column Pandas DataFrame that handles data by group and by component. This is
 # useful here because the raw data holds an encoded vector, which has to be
-# decoded into components before the tools can use it.
+# decoded into components before the analysis nodes can use it.
 # In this case, the following additional arguments are necessary:
 #  - a mapping between scalar variable names and group names, to specify in which groups
 #    the variables are placed,

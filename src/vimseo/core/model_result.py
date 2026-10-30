@@ -32,20 +32,20 @@ from numpy import atleast_1d
 from numpy import ndarray
 from pandas import DataFrame
 
+from vimseo.analysis_nodes.base_result import BaseResult
+from vimseo.analysis_nodes.result_visualization import BasePlotSettings
 from vimseo.api import create_model
 from vimseo.core.model_metadata import MetaDataNames
 from vimseo.storage_management.base_storage_manager import PersistencyPolicy
 from vimseo.storage_management.directory_storage import DirectoryArchive
-from vimseo.tools.base_result import BaseResult
-from vimseo.tools.result_visualization import BasePlotSettings
 from vimseo.utilities.curves import CurveSet
 from vimseo.utilities.curves import NamedList
 from vimseo.utilities.fields import MeshField
 
 if TYPE_CHECKING:
+    from vimseo.analysis_nodes.result_visualization import Figure
     from vimseo.core.base_integrated_model import IntegratedModel
     from vimseo.storage_management.base_archive_storage import ModelDataType
-    from vimseo.tools.result_visualization import Figure
 
 LOGGER = logging.getLogger(__name__)
 
@@ -215,9 +215,9 @@ class ModelResult(BaseResult):
         return self._get_metadata(MetaDataNames.status) or "FINISHED"
 
     @property
-    def tool_run_id(self) -> str:
-        """The ``tool_run_id`` of the tool run which executed the simulation."""
-        return self._get_metadata(MetaDataNames.tool_run_id)
+    def analysis_node_run_id(self) -> str:
+        """The ``analysis_node_run_id`` of the analysis node run which executed the simulation."""
+        return self._get_metadata(MetaDataNames.analysis_node_run_id)
 
     @classmethod
     def from_dict(

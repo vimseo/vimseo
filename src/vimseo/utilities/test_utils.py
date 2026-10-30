@@ -35,8 +35,8 @@ if TYPE_CHECKING:
     from numpy import ndarray
     from streamlit.testing.v1 import AppTest
 
+    from vimseo.analysis_nodes.base_result import BaseResult
     from vimseo.core.base_integrated_model import BaseIntegratedModel
-    from vimseo.tools.base_result import BaseResult
 
 LOGGER = logging.getLogger(__name__)
 
@@ -153,7 +153,7 @@ class SetConfig:
 def check_result_visualization(
     result: BaseResult, directory_path: str | Path, **options
 ) -> None:
-    """Check that a tool result can be visualized after being loaded from a file.
+    """Check that an analysis node result can be visualized after being loaded from a file.
 
     The result is written to an HDF5 file, loaded back without knowing its class,
     and its figures, tables and plot choices are compared with the ones of the
@@ -161,11 +161,11 @@ def check_result_visualization(
     drawn from the first value it proposes.
 
     Args:
-        result: The tool result.
+        result: The analysis node result.
         directory_path: The directory where the result and its figures are written.
         **options: The settings of the visualization.
     """
-    from vimseo.tools.tool_results_factory import load_result_file
+    from vimseo.analysis_nodes.analysis_node_results_factory import load_result_file
 
     directory_path = Path(directory_path)
     directory_path.mkdir(parents=True, exist_ok=True)

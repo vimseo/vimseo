@@ -29,10 +29,12 @@ from gemseo import generate_coupling_graph
 from pydantic import BaseModel
 from streamlit_pydantic import pydantic_input
 
-from vimseo.tools.base_result import BaseResult
-from vimseo.tools.io.reader_tools_factory import ReaderToolsFactory
-from vimseo.tools.tools_factory import AnalysisToolsFactory
-from vimseo.tools.tools_factory import ToolsFactory
+from vimseo.analysis_nodes.analysis_nodes_factory import AnalysisNodesFactory
+from vimseo.analysis_nodes.analysis_nodes_factory import CompositeAnalysisNodesFactory
+from vimseo.analysis_nodes.base_result import BaseResult
+from vimseo.analysis_nodes.io.reader_analysis_nodes_factory import (
+    ReaderAnalysisNodesFactory,
+)
 from vimseo.utilities.user import get_user_name
 from vimseo.workflow.workflow_step import Input
 from vimseo.workflow.workflow_step import WorkflowStep
@@ -48,13 +50,13 @@ def initialize(session_state):
         working_directory.mkdir(parents=True)
 
     variables = {
-        "tool": None,
+        "analysis_node": None,
         "created_inputs": {},
         "created_outputs": {},
         "inputs": {},
         "outputs": {},
         "steps": {},
-        "tool_settings": {},
+        "analysis_node_settings": {},
         "table_to_show": None,
         "workflow_name": "",
     }
@@ -66,10 +68,10 @@ def initialize(session_state):
     return working_directory
 
 
-def update_tool(session_state, tool, settings):
-    session_state.tool = tool
-    session_state.tool.update_options(**settings)
-    session_state.tool_settings = settings
+def update_analysis_node(session_state, analysis_node, settings):
+    session_state.analysis_node = analysis_node
+    session_state.analysis_node.update_options(**settings)
+    session_state.analysis_node_settings = settings
 
 
 def filter_settings(settings, settings_names):
@@ -79,10 +81,10 @@ def filter_settings(settings, settings_names):
     return {name: option for name, option in settings.items() if name in settings_names}
 
 
-def add_unhandled_settings(tool, settings):
+def add_unhandled_settings(analysis_node, settings):
     """Add the settings that are not handled by Streamlit-pydantic."""
     # TODO should be done in workflow step (method to_dict(settings_names)).
-    model = tool._st_settings
+    model = analysis_node._st_settings
     if model is not None:
         default_settings = model().model_dump()
         missing_attrs = set(default_settings.keys()) - set(settings.keys())
@@ -104,36 +106,38 @@ def add_unhandled_settings(tool, settings):
                 settings[attr] = default_settings[attr]
 
 
-def get_input_description(tool, attr_name):
-    if tool._INPUTS:
+def get_input_description(analysis_node, attr_name):
+    if analysis_node._INPUTS:
         return (
-            f"{tool._INPUTS.model_fields[attr_name].description}; "
-            f"type is {get_input_type(tool, attr_name)}"
+            f"{analysis_node._INPUTS.model_fields[attr_name].description}; "
+            f"type is {get_input_type(analysis_node, attr_name)}"
         )
     return ""
 
 
-def get_output_description(tool, attr_name):
+def get_output_description(analysis_node, attr_name):
     output_description = [
-        str(field.metadata) for field in fields(tool.result) if field.name == attr_name
+        str(field.metadata)
+        for field in fields(analysis_node.result)
+        if field.name == attr_name
     ]
     return output_description[0] if len(output_description) > 0 else ""
 
 
-def get_input_type(tool, attr_name):
-    return get_type_hints(tool._INPUTS)[attr_name]
+def get_input_type(analysis_node, attr_name):
+    return get_type_hints(analysis_node._INPUTS)[attr_name]
 
 
-def get_result_attr_names(tool):
-    attr_names = list(set(dir(tool.result)) - set(dir(BaseResult)))
+def get_result_attr_names(analysis_node):
+    attr_names = list(set(dir(analysis_node.result)) - set(dir(BaseResult)))
     attr_names.append("result")
     return attr_names
 
 
-def add_step(session_state, name, tool_name, constructor_options):
+def add_step(session_state, name, analysis_node_name, constructor_options):
     # Add undefined inputs with a default name, such that they are accessible as
     # input of the workflow:
-    undefined_keys = set(session_state.tool.input_names) - {
+    undefined_keys = set(session_state.analysis_node.input_names) - {
         input_.option_key for input_ in st.session_state.inputs.values()
     }
     for key in undefined_keys:
@@ -142,15 +146,15 @@ def add_step(session_state, name, tool_name, constructor_options):
 
     session_state.steps[name] = {
         "name": name,
-        "tool_name": tool_name,
+        "analysis_node_name": analysis_node_name,
         "inputs": [asdict(input_) for input_ in session_state.inputs.values()],
         "outputs": [asdict(output) for output in session_state.outputs.values()],
-        "tool_settings": deepcopy(session_state.tool_settings),
-        "tool_constructor_options": deepcopy(constructor_options),
+        "analysis_node_settings": deepcopy(session_state.analysis_node_settings),
+        "analysis_node_constructor_options": deepcopy(constructor_options),
     }
     session_state.inputs = {}
     session_state.outputs = {}
-    session_state.tool_settings = {}
+    session_state.analysis_node_settings = {}
 
 
 def get_workflow_file_name(suffix):
@@ -161,23 +165,24 @@ def get_workflow_file_name(suffix):
     return f"{user}_{datetime_}_workflow{suffix}.json"
 
 
-def get_analysis_tool_names():
-    tool_list = AnalysisToolsFactory().class_names
-    for tool in [
-        "BaseAnalysisTool",
+def get_analysis_node_names():
+    analysis_node_list = CompositeAnalysisNodesFactory().class_names
+    for analysis_node in [
+        "BaseCompositeAnalysisNode",
+        "MyBaseCompositeAnalysisNode",
         "BaseVerification",
     ]:
-        tool_list.remove(tool)
-    return tool_list
+        analysis_node_list.remove(analysis_node)
+    return analysis_node_list
 
 
-def get_reader_tool_names():
-    tool_list = ReaderToolsFactory().class_names
-    for tool in [
+def get_reader_analysis_node_names():
+    analysis_node_list = ReaderAnalysisNodesFactory().class_names
+    for analysis_node in [
         "BaseReaderFile",
     ]:
-        tool_list.remove(tool)
-    return tool_list
+        analysis_node_list.remove(analysis_node)
+    return analysis_node_list
 
 
 @st.cache_data
@@ -189,16 +194,18 @@ def load_workflow(workflow_json):
         for settings in json.load(data):
             steps[settings["name"]] = settings
 
-            tool = ToolsFactory().create(settings["tool_name"])
+            analysis_node = AnalysisNodesFactory().create(
+                settings["analysis_node_name"]
+            )
 
             for input_ in settings["inputs"]:
                 created_inputs.update({input_["name"]: input_["option_key"]})
 
             for output in settings["outputs"]:
                 attr_type = (
-                    type(getattr(tool.result, output["attr_name"]))
+                    type(getattr(analysis_node.result, output["attr_name"]))
                     if output["attr_name"] != "result"
-                    else type(tool.result)
+                    else type(analysis_node.result)
                 )
                 created_outputs.update({output["name"]: attr_type})
 

@@ -728,7 +728,7 @@ interval bounds.
 The second one is the relative magnitude of the uncertainties composing
 the simulated uncertainty.
 
-| Ideal simulated uncertainties                                            | Too large auxiliary model uncertainty                               | Tool large mesh convergence uncertainty                                        |
+| Ideal simulated uncertainties                                            | Too large auxiliary model uncertainty                               | Analysis node large mesh convergence uncertainty                                        |
 |--------------------------------------------------------------------------|-------------------------------------------------------------------------------|--------------------------------------------------------------------------------|
 | ![](../images/real_space_comparisons/nominal_simulated_uncertainties.png) | ![](../images/real_space_comparisons/unmet_prerequisites_model_intrinsic.png) | ![](../images/real_space_comparisons/unmet_prerequisites_mesh_convergence.png) |
 
@@ -880,7 +880,7 @@ placing at centre stage uncertainty quantification.
 
 This framework can be implemented in practice.
 The computation of the uncertainty intervals can be done with existing
-VIMSEO tools. It requires to define ad-hoc workflows involving
+VIMSEO analysis nodes. It requires to define ad-hoc workflows involving
 solution verification and additional uncertainty propagation
 within the validation. Once this workflow is computed,
 the uncertainty interval comparisons can be seen as implementing a

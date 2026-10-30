@@ -19,7 +19,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from vimseo.tools.base_metadata import BaseMetadata
+from vimseo.analysis_nodes.base_metadata import BaseMetadata
 
 
 @dataclass

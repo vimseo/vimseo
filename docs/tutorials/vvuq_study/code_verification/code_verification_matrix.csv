@@ -12,8 +12,8 @@ model to model;;;;
 ;;;;
 model to dataset;;;;
 ;PgPlate;;;
-;OHT;VATool;;0.2
-;PST;VATool;;0.2
+;OHT;VAAnalysisNode;;0.2
+;PST;VAAnalysisNode;;0.2
 ;;;;
 ;;;;
 ;;;;

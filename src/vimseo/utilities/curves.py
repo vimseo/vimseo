@@ -26,9 +26,9 @@ from numpy import atleast_1d
 from numpy import vstack
 from pandas import DataFrame
 
-from vimseo.tools.post_tools.plot_parameters import ConstantTrace
-from vimseo.tools.post_tools.plot_parameters import Plot
-from vimseo.tools.post_tools.plot_parameters import Trace
+from vimseo.analysis_nodes.post_analysis_nodes.plot_parameters import ConstantTrace
+from vimseo.analysis_nodes.post_analysis_nodes.plot_parameters import Plot
+from vimseo.analysis_nodes.post_analysis_nodes.plot_parameters import Trace
 
 if TYPE_CHECKING:
     from collections.abc import Iterable

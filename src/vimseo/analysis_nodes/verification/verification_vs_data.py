@@ -1,0 +1,145 @@
+# Copyright 2021 IRT Saint Exupery, https://www.irt-saintexupery.com
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Lesser General Public
+# License version 3 as published by the Free Software Foundation.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with this program; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
+"""An analysis node to verify a model against a reference dataset."""
+
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+from gemseo.datasets.io_dataset import IODataset
+from gemseo.utils.directory_creator import DirectoryNamingMethod
+
+from vimseo.analysis_nodes.base_composite_analysis_node import BaseCompositeAnalysisNode
+from vimseo.analysis_nodes.base_settings import BaseInputs
+from vimseo.analysis_nodes.doe.custom_doe import CustomDOEAnalysisNode
+from vimseo.analysis_nodes.verification.base_verification import (
+    BaseCodeVerificationSettings,
+)
+from vimseo.analysis_nodes.verification.base_verification import BaseVerification
+from vimseo.analysis_nodes.verification.base_verification import check_output_names
+from vimseo.config.global_configuration import _configuration as config
+from vimseo.core.base_integrated_model import IntegratedModel
+from vimseo.utilities.datasets import DatasetInput
+from vimseo.utilities.datasets import resolve_io_groups
+
+if TYPE_CHECKING:
+    from pathlib import Path
+
+    from vimseo.analysis_nodes.verification.verification_result import (
+        VerificationResult,
+    )
+
+
+class CodeVerificationAgainstDataInputs(BaseInputs):
+    model: IntegratedModel | None = None
+    reference_data: DatasetInput | None = None
+
+
+class CodeVerificationAgainstData(BaseVerification):
+    """Perform a code verification on a model based on a dataset providing input and
+    reference output values."""
+
+    _INPUTS = CodeVerificationAgainstDataInputs
+
+    _SETTINGS = BaseCodeVerificationSettings
+
+    def __init__(
+        self,
+        root_directory: str | Path = config.root_directory,
+        directory_naming_method: DirectoryNamingMethod = DirectoryNamingMethod.NUMBERED,
+        working_directory: str | Path = config.working_directory,
+        **options,
+    ):
+        super().__init__(
+            sub_analysis_nodes=[CustomDOEAnalysisNode()],
+            root_directory=root_directory,
+            directory_naming_method=directory_naming_method,
+            working_directory=working_directory,
+            **options,
+        )
+
+    # TODO: pass control_outputs arg. if None, use metric_name applied to all output
+    #  variables.
+    @BaseCompositeAnalysisNode._validate
+    def execute(
+        self,
+        inputs: CodeVerificationAgainstDataInputs | None = None,
+        settings: BaseCodeVerificationSettings | None = None,
+        **options,
+    ) -> VerificationResult:
+        model = options["model"]
+        reference_data = resolve_io_groups(
+            options["reference_data"],
+            model=model,
+            input_names=options["input_names"],
+            output_names=options["output_names"],
+        )
+
+        self.result._fill_metadata(options["description"], model.description)
+
+        input_names = (
+            reference_data.get_variable_names(group_name=IODataset.INPUT_GROUP)
+            if len(options["input_names"]) == 0
+            else options["input_names"]
+        )
+
+        self._output_names = (
+            reference_data.get_variable_names(group_name=IODataset.OUTPUT_GROUP)
+            if not options["output_names"]
+            else options["output_names"]
+        )
+        check_output_names(self._output_names, model)
+
+        doe_dataset = (
+            self
+            ._sub_analysis_nodes["CustomDOEAnalysisNode"]
+            .execute(
+                model=model,
+                input_dataset=reference_data,
+                input_names=input_names,
+                output_names=self._get_extended_output_names(),
+            )
+            .dataset
+        )
+        element_wise_metrics, integrated_metrics = self._compute_comparison(
+            reference_data, doe_dataset
+        )
+        element_wise_metrics.add_group(
+            group_name=IODataset.INPUT_GROUP,
+            data=reference_data.get_view(
+                variable_names=input_names, group_names=IODataset.INPUT_GROUP
+            ).to_numpy(),
+            variable_names=input_names,
+            variable_names_to_n_components=reference_data.variable_names_to_n_components,
+        )
+        doe_dataset.add_group(
+            group_name="Reference",
+            data=reference_data.get_view(
+                variable_names=self._output_names,
+                group_names=IODataset.OUTPUT_GROUP,
+            ).to_numpy(),
+            variable_names=self._output_names,
+            variable_names_to_n_components=reference_data.variable_names_to_n_components,
+        )
+
+        # simulation_and_reference, _ = self._post(
+        #     doe_dataset, reference_data, element_wise_metrics.copy()
+        # )
+        self.result.simulation_and_reference = doe_dataset
+        self.result.element_wise_metrics = element_wise_metrics
+        self.result.integrated_metrics = integrated_metrics
+
+        return self.result

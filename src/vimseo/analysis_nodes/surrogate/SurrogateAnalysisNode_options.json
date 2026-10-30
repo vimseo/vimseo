@@ -1,0 +1,58 @@
+{
+  "name": "SurrogateAnalysisNode_options",
+  "required": [
+    "plot"
+  ],
+  "properties": {
+    "plot": {
+      "type": "string"
+    },
+    "algo": {
+      "type": "string"
+    },
+    "algo_options": {
+      "type": "object"
+    },
+    "candidates": {
+      "items": {
+        "type": "array",
+        "minItems": 1
+      },
+      "type": "array"
+    },
+    "quality_measures": {
+      "items": {
+        "type": "string",
+        "minItems": 1
+      },
+      "type": "array"
+    },
+    "evaluation_methods": {
+      "items": {
+        "type": "string",
+        "minItems": 1
+      },
+      "type": "array"
+    },
+    "evaluation_options": {
+      "type": "object"
+    },
+    "quality_for_selection": {
+      "items": {
+        "type": "string",
+        "minItems": 1
+      },
+      "type": "array"
+    },
+    "output_names": {
+      "items": {
+        "type": "string",
+        "minItems": 0
+      },
+      "type": "array"
+    }
+  },
+  "additionalProperties": false,
+  "$schema": "http://json-schema.org/draft-04/schema",
+  "type": "object"
+}

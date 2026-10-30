@@ -99,15 +99,16 @@ def reset_random_seeds():
     RandomGenerator.SetSeed(0)
     np.random.seed(0)  # ruff: ignore[numpy-legacy-random]
 
+
 @pytest.fixture(autouse=True)
-def no_tool_archive():
-    """Disable the archive of the tool results, so that a test does not write into the
+def no_analysis_node_archive():
+    """Disable the archive of the analysis node results, so that a test does not write into the
     directory it runs in.
 
-    A test of the archive enables it by passing ``archive_manager`` to the tool,
+    A test of the archive enables it by passing ``archive_manager`` to the analysis node,
     which takes precedence over the configuration.
     """
-    previous = config.tool_archive_manager
-    config.tool_archive_manager = "none"
+    previous = config.analysis_node_archive_manager
+    config.analysis_node_archive_manager = "none"
     yield
-    config.tool_archive_manager = previous
+    config.analysis_node_archive_manager = previous

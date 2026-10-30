@@ -18,7 +18,7 @@ The private gemseo fork vimseo used to depend on searched a discipline's whole
 ``__mro__`` for an auto-discovered JSON grammar file, not just its direct
 ``__bases__``. Stock gemseo only searches direct bases
 (:meth:`.GrammarFactory.__search_file`), which breaks vimseo's deeper
-``_IS_JSON_GRAMMAR`` discipline/tool hierarchies (e.g. a grammar file defined
+``_IS_JSON_GRAMMAR`` discipline/analysis_node hierarchies (e.g. a grammar file defined
 two or more levels up from a leaf class). Rather than restructure those
 hierarchies or maintain a gemseo fork, this module patches
 :class:`.GrammarFactory` in place to walk the full MRO again.

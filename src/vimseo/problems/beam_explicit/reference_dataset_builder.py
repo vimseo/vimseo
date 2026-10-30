@@ -17,6 +17,8 @@
 
 from __future__ import annotations
 
+from vimseo.analysis_nodes.doe.doe import DOEAnalysisNode
+from vimseo.analysis_nodes.space.space_analysis_node import SpaceAnalysisNode
 from vimseo.api import create_model
 from vimseo.problems.beam_explicit.analytical_laws import (
     analytic_bending_test_analytical_cantilever,
@@ -24,8 +26,6 @@ from vimseo.problems.beam_explicit.analytical_laws import (
 from vimseo.problems.beam_explicit.analytical_laws import (
     analytic_bending_test_analytical_three_points,
 )
-from vimseo.tools.doe.doe import DOETool
-from vimseo.tools.space.space_tool import SpaceTool
 from vimseo.utilities.datasets import SEP
 
 if __name__ == "__main__":
@@ -45,11 +45,11 @@ if __name__ == "__main__":
         # Check that all input variables have a default value.
         assert set(model.default_input_data.keys()) == set(model.input_grammar.names)
 
-        space_tool = SpaceTool()
+        space_analysis_node = SpaceAnalysisNode()
         retained_variables = model.input_grammar.names
         if load_case == "Cantilever":
             retained_variables.remove("relative_dplt_location")
-        space_tool.update(
+        space_analysis_node.update(
             "OTTriangularDistribution",
             "FromModelCenterAndCov",
             variable_names=retained_variables,
@@ -58,18 +58,20 @@ if __name__ == "__main__":
             cov=0.05,
         )
         if load_case == "Cantilever":
-            space_tool.update(
+            space_analysis_node.update(
                 "OTTriangularDistribution",
                 "FromCenterAndCov",
                 center_values={"relative_dplt_location": 0.9},
                 cov=0.05,
             )
         # Check that all input variables are in the space of parameters.
-        assert set(space_tool.parameter_space.variable_names) == set(
+        assert set(space_analysis_node.parameter_space.variable_names) == set(
             model.input_grammar.names
         )
-        print(space_tool.parameter_space)
+        print(space_analysis_node.parameter_space)
 
-        tool = DOETool()
-        tool.execute(model, space_tool.parameter_space, n_samples=10)
-        tool.result.dataset.to_csv(f"explicit_beam_{load_case.lower()}.csv", sep=SEP)
+        analysis_node = DOEAnalysisNode()
+        analysis_node.execute(model, space_analysis_node.parameter_space, n_samples=10)
+        analysis_node.result.dataset.to_csv(
+            f"explicit_beam_{load_case.lower()}.csv", sep=SEP
+        )

@@ -1,5 +1,0 @@
-id,module,name,file,doc,markers,status,message,duration
-tests/yaml_interface/test_tests_generation_from_yaml.py::test_verification_suite[analytic_beam_cantilever-tool_node0],tests.yaml_interface.test_tests_generation_from_yaml,test_verification_suite[analytic_beam_cantilever-tool_node0],tests\yaml_interface\test_tests_generation_from_yaml.py,"Check that tools defined in a mapping in a yaml file are retrieved as test
-    parameters.",parametrize,passed,,0.37874339999689255
-tests/yaml_interface/test_tests_generation_from_yaml.py::test_verification_suite[analytic_beam_threepoints-tool_node1],tests.yaml_interface.test_tests_generation_from_yaml,test_verification_suite[analytic_beam_threepoints-tool_node1],tests\yaml_interface\test_tests_generation_from_yaml.py,"Check that tools defined in a mapping in a yaml file are retrieved as test
-    parameters.",parametrize,passed,,0.1410809000080917

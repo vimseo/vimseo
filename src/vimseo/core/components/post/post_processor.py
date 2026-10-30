@@ -116,7 +116,7 @@ class PostProcessor(ExternalSoftwareComponent):
         """
         return True
 
-    def plot_output_data(self, data, x_data, y_data, save_path, save, show, fig_id):
+    def _plot_output_data(self, data, x_data, y_data, save_path, save, show, fig_id):
         """Plot output data of post-processor.
 
         Args:

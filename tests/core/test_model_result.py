@@ -63,6 +63,18 @@ def test_from_scalars_and_vectors(tmp_wd):
             assert (value == model.get_output_data()[name]).all()
 
 
+def test_simulation_without_analysis_node_run(tmp_wd):
+    """A simulation executed outside an analysis node has no analysis node run."""
+    model = create_model("MockModelPersistent", "LC1")
+    model.execute()
+    result = ModelResult.from_dict({
+        "inputs": model.get_input_data(),
+        "outputs": model.get_output_data(),
+    })
+    assert result.analysis_node_run_id == ""
+    assert result.run_id
+
+
 def test_superpose_curves(tmp_wd):
     """Check that the same curve coming from several results can be superposed."""
     xc = linspace(0, 1, 10)

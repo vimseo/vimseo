@@ -9,14 +9,14 @@
 
 # Results (RES)
 
-A tool result is a self-sufficient object: it can be persisted, reloaded, visualized and
-tabulated long after, and far from, the tool run which produced it.
+An analysis node result is a self-sufficient object: it can be persisted, reloaded, visualized and
+tabulated long after, and far from, the analysis node run which produced it.
 
-### REQ-RES-001 — A result is visualized without its tool
+### REQ-RES-001 — A result is visualized without its analysis node
 
-- **Statement:** The system shall produce the figures of a tool result from the result
-  alone, without instantiating the tool nor its model.
-- **Rationale:** The analyst reading a result is often not the one who ran the tool, and
+- **Statement:** The system shall produce the figures of an analysis node result from the result
+  alone, without instantiating the analysis node nor its model.
+- **Rationale:** The analyst reading a result is often not the one who ran the analysis node, and
   may not have the model installed.
 - **Priority:** Must
 - **Status:** Proposed
@@ -26,7 +26,7 @@ tabulated long after, and far from, the tool run which produced it.
 
 ### REQ-RES-002 — A result is tabulated
 
-- **Statement:** The system shall return the numerical values of a tool result as
+- **Statement:** The system shall return the numerical values of an analysis node result as
   tables (DataFrames).
 - **Rationale:** Figures are not enough to report or post-process values.
 - **Priority:** Must
@@ -46,7 +46,7 @@ tabulated long after, and far from, the tool run which produced it.
 
 ### REQ-RES-004 — A result is persisted and reloaded identically
 
-- **Statement:** The system shall save a tool result to a file and load it back with the
+- **Statement:** The system shall save an analysis node result to a file and load it back with the
   same content and metadata.
 - **Rationale:** Results are evidence; their content must not change between sessions.
 - **Priority:** Must
@@ -56,12 +56,12 @@ tabulated long after, and far from, the tool run which produced it.
 
 ### REQ-RES-005 — A result is addressed by a URI
 
-- **Statement:** The system shall load a tool result from a file path, an archived tool
-  run directory, or the identifier of the tool run in an archive.
+- **Statement:** The system shall load an analysis node result from a file path, an archived analysis node
+  run directory, or the identifier of the analysis node run in an archive.
 - **Rationale:** Users share and script results by reference, not by copying files.
 - **Priority:** Must
 - **Status:** Proposed
-- **Verification:** Test — `tests/storage_management/test_tool_result_uri.py`.
+- **Verification:** Test — `tests/storage_management/test_analysis_node_result_uri.py`.
 - **Satisfied by:** SPEC-007, SPEC-010
 
 ### REQ-RES-006 — The figures are exported as static images

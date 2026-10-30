@@ -22,12 +22,12 @@ and each requirement lists the canvases that satisfy it.
 | Area | File | Scope |
 |---|---|---|
 | MOD | [Models](REQ-MOD.md) | `IntegratedModel`, components, load cases, model discovery |
-| TOOL | [Tools](REQ-TOOL.md) | the `BaseTool` contract: inputs, settings, execution, subtools |
-| RES | [Results](REQ-RES.md) | tool results: visualization, tabulation, persistence, reload |
-| STO | [Storage and traceability](REQ-STO.md) | run archive, tool archive, identifiers |
+| ANALYSIS_NODE | [Analysis nodes](REQ-TOOL.md) | the `BaseAnalysisNode` contract: inputs, settings, execution, sub-analysis nodes |
+| RES | [Results](REQ-RES.md) | analysis node results: visualization, tabulation, persistence, reload |
+| STO | [Storage and traceability](REQ-STO.md) | run archive, analysis node archive, identifiers |
 | SER | [Serialization](REQ-SER.md) | settings, spaces and distributions written in clear |
 | DEP | [Deployment](REQ-DEP.md) | mandatory dependencies, extras, HPC profile, platforms |
-| WF | [Workflows](REQ-WF.md) | chaining tools, workflow files, workflow execution |
+| WF | [Workflows](REQ-WF.md) | chaining analysis nodes, workflow files, workflow execution |
 | UX | [User interfaces](REQ-UX.md) | Python API, command line, dashboards |
 | NFR | [Non-functional](REQ-NFR.md) | reproducibility, compatibility, performance, tests |
 
@@ -38,7 +38,7 @@ renumbered: a requirement which no longer applies is marked `Deprecated`, with t
 identifier of the requirement replacing it, if any.
 
 ```markdown
-### REQ-STO-003 — A tool result is traceable to the simulations it used
+### REQ-STO-003 — An analysis node result is traceable to the simulations it used
 
 - **Statement:** The system shall ...
 - **Rationale:** Why it matters for a VV&UQ user.
@@ -51,8 +51,8 @@ identifier of the requirement replacing it, if any.
 Guidelines:
 
 - One requirement states one need, with "shall" (Must) or "should" (Should, Could).
-- State the need of the user, not the design: "a tool result can be visualized
-  without its tool", not "`BaseResult` has a `visualize()` method". The design goes
+- State the need of the user, not the design: "an analysis node result can be visualized
+  without its analysis_node", not "`BaseResult` has a `visualize()` method". The design goes
   in the canvas.
 - A requirement is verifiable: name the test, the runnable example or the inspection
   which checks it.
@@ -69,9 +69,9 @@ Guidelines:
 ## Glossary
 
 - **Simulation:** one execution of a model, identified by its `run_id`.
-- **Tool run:** one execution of a tool, identified by its `tool_run_id`. A tool run
-  launched by another tool run (a subtool) is its child.
+- **Analysis node run:** one execution of an analysis node, identified by its `analysis_node_run_id`. An analysis node run
+  launched by another analysis node run (a sub-analysis node) is its child.
 - **Run archive:** the storage of the simulations (`DirectoryArchive`, `MlflowArchive`).
-- **Tool archive:** the storage of the tool results (`DirectoryToolArchive`,
-  `MlflowToolArchive`).
+- **Analysis node archive:** the storage of the analysis node results (`DirectoryAnalysisNodeArchive`,
+  `MlflowAnalysisNodeArchive`).
 - **Canvas:** a REASONS structured prompt describing one feature, in `spdd/prompt/`.

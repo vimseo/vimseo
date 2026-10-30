@@ -20,9 +20,9 @@
     "settings": {},
     "report": {},
     "model": null,
-    "tool_run_id": "4c70f18d4e5640aeab7c28305b4a8ea7",
-    "parent_tool_run_id": "",
-    "child_tool_run_ids": [],
+    "analysis_node_run_id": "4c70f18d4e5640aeab7c28305b4a8ea7",
+    "parent_analysis_node_run_id": "",
+    "child_analysis_node_run_ids": [],
     "simulation_run_ids": []
   }
 }

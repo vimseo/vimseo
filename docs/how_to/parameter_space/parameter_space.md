@@ -11,17 +11,17 @@
 
 ## Set up a parameter space
 
-A space of uncertain parameters is an input to several tools in VIMSEO:
+A space of uncertain parameters is an input to several analysis nodes in VIMSEO:
 for instance a sensitivity analysis, a DOE, a model to model code verification.
 Setting up a parameter space with a large number of variables requires to
 specify a large number of options.
-In VIMSEO, the tool in charge of generating a parameter space
-is the so called ``SpaceTool``.
+In VIMSEO, the analysis node in charge of generating a parameter space
+is the so called ``SpaceAnalysisNode``.
 The variables are in general treated by groups.
 For example, the first group has a normal distribution
 centered on the model default value,
 and second group has a uniform distribution spanning the entire variable range.
-The ``SpaceTool`` allows to set up a parameter space by successive updates.
+The ``SpaceAnalysisNode`` allows to set up a parameter space by successive updates.
 At each update, a list of variables, a ``SpaceBuilder``
 and its settings can be selected.
 Four ``SpaceBuilder`` are available:
@@ -47,7 +47,7 @@ The dashboard is the page **Parameter Space** of the command ``dashboard_results
 provided by the plugin [vimseo-dashboards](https://forge-is.pf.irt-saintexupery.com/vims/vimseo-dashboards).
 The following inputs can be used to initialize the parameter space:
   - a model
-  - a ``SpaceTool`` result
+  - a ``SpaceAnalysisNode`` result
   - a material values ``JSON`` file
 
 If the model is the input, the parameter space can be initialized to the model material

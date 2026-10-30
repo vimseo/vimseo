@@ -20,12 +20,12 @@ from __future__ import annotations
 import pytest
 from numpy import atleast_1d
 
+from vimseo.analysis_nodes.mock.mock_analysis_node import MyAnalysisNode
+from vimseo.api import load_analysis_node_results
 from vimseo.api import load_model_results
-from vimseo.api import load_tool_results
+from vimseo.api import search_analysis_node_runs
 from vimseo.api import search_model_results
-from vimseo.api import search_tool_runs
 from vimseo.problems.mock.mock_pre_run_post.mock_main import MockModel
-from vimseo.tools.mock.mock_tool import MyTool
 
 pytestmark = pytest.mark.fast
 
@@ -41,7 +41,7 @@ def archive(request, tmp_wd):
     model = MockModel("LC1", **archive)
     model.cache = None
     model.execute({"x1": atleast_1d(0.5)})
-    MyTool(**archive).execute()
+    MyAnalysisNode(**archive).execute()
     return archive
 
 
@@ -63,12 +63,14 @@ def test_unknown_run_id(archive):
 def test_references_of_the_wrong_kind(archive):
     """A reference of the other kind of result raises an error naming the function."""
     (simulation,) = search_model_results(**archive)
-    (tool_run,) = search_tool_runs(**archive)
-    with pytest.raises(ValueError, match="load_tool_results"):
-        load_model_results(tool_run["uri"], **archive)
+    (analysis_node_run,) = search_analysis_node_runs(**archive)
+    with pytest.raises(ValueError, match="load_analysis_node_results"):
+        load_model_results(analysis_node_run["uri"], **archive)
     with pytest.raises(ValueError, match="load_model_results"):
-        load_tool_results(simulation["uri"], **archive)
-    with pytest.raises(ValueError, match="load_tool_results"):
-        load_model_results(f"tool-run:{tool_run['tool_run_id']}", **archive)
+        load_analysis_node_results(simulation["uri"], **archive)
+    with pytest.raises(ValueError, match="load_analysis_node_results"):
+        load_model_results(
+            f"analysis-node-run:{analysis_node_run['analysis_node_run_id']}", **archive
+        )
     with pytest.raises(ValueError, match="load_model_results"):
-        load_tool_results(f"run:{simulation['run_id']}", **archive)
+        load_analysis_node_results(f"run:{simulation['run_id']}", **archive)

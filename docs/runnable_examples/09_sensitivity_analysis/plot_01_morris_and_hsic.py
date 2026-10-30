@@ -25,12 +25,12 @@
 Global sensitivity analysis: Morris and HSIC
 ============================================
 
-The :class:`~.SensitivityTool` ranks the inputs of a model
+The :class:`~.SensitivityAnalysisNode` ranks the inputs of a model
 by their influence on its outputs over a whole parameter space,
 with the Morris or the HSIC method.
 It either samples the model itself
 or uses the samples of a DOE prepared in advance.
-``BendingTestAnalytical`` is used to illustrate the use of this tool.
+``BendingTestAnalytical`` is used to illustrate the use of this analysis node.
 
 For a local analysis around nominal values, see the One-factor-at-a-Time example.
 
@@ -47,17 +47,19 @@ import logging
 import shutil
 
 from vimseo import EXAMPLE_RUNS_DIR
+from vimseo.analysis_nodes.doe.doe import DOEAnalysisNode
+from vimseo.analysis_nodes.doe.doe import DOEInputs
+from vimseo.analysis_nodes.doe.doe import DOESettings
+from vimseo.analysis_nodes.sensitivity.sensitivity import SensitivityAnalysisNode
+from vimseo.analysis_nodes.sensitivity.sensitivity import SensitivityAnalysisNodeInputs
+from vimseo.analysis_nodes.sensitivity.sensitivity import (
+    SensitivityAnalysisNodeSettings,
+)
+from vimseo.analysis_nodes.space.space_analysis_node import SpaceAnalysisNode
 from vimseo.api import activate_logger
 from vimseo.api import create_model
 from vimseo.api import open_model_results
 from vimseo.core.model_settings import IntegratedModelSettings
-from vimseo.tools.doe.doe import DOEInputs
-from vimseo.tools.doe.doe import DOESettings
-from vimseo.tools.doe.doe import DOETool
-from vimseo.tools.sensitivity.sensitivity import SensitivityTool
-from vimseo.tools.sensitivity.sensitivity import SensitivityToolInputs
-from vimseo.tools.sensitivity.sensitivity import SensitivityToolSettings
-from vimseo.tools.space.space_tool import SpaceTool
 
 activate_logger(level=logging.INFO)
 
@@ -83,18 +85,18 @@ model = create_model(
 # --------------------------
 # Based on the above, we create a parameter space. In this example, all the
 # parameters are defined by Uniform distributions. The parameter spaces are built
-# with the help of the SpaceTool. By default, a parameter space
+# with the help of the SpaceAnalysisNode. By default, a parameter space
 # per load case is generated (if load_cases=None):
 
-space_tool = SpaceTool(working_directory="SpaceTool_results")
-print(space_tool.get_available_space_builders())
+space_analysis_node = SpaceAnalysisNode(working_directory="SpaceAnalysisNode_results")
+print(space_analysis_node.get_available_space_builders())
 
 # %%
 # First, consider all input variables of the model except "relative_dplt_location".
 
 retained_variables = model.get_input_data_names()
 retained_variables.remove("relative_dplt_location")
-space_tool.execute(
+space_analysis_node.execute(
     distribution_name="OTTriangularDistribution",
     space_builder_name="FromModelCenterAndCov",
     variable_names=retained_variables,
@@ -106,18 +108,18 @@ space_tool.execute(
 # %%
 # Then, specifically for "relative_dplt_location".
 
-space_tool.execute(
+space_analysis_node.execute(
     distribution_name="OTTriangularDistribution",
     space_builder_name="FromCenterAndCov",
     center_values={"relative_dplt_location": 0.9},
     cov=0.05,
 )
-print(space_tool.parameter_space)
+print(space_analysis_node.parameter_space)
 
 # %%
-# Using the SensitivityTool
+# Using the SensitivityAnalysisNode
 # -------------------------
-# The tool samples the model over the parameter space
+# The analysis node samples the model over the parameter space
 # and computes the sensitivity indices through the GEMSEO API.
 # The settings of the analysis are:
 #
@@ -130,17 +132,19 @@ print(space_tool.parameter_space)
 # - ``n_samples``: the number of samples; if 0, it is deduced from the method,
 #   e.g. ``n_replicates`` times the number of inputs plus one for Morris.
 output_names = ["reaction_forces", "dplt_at_force_location", "maximum_dplt"]
-tool = SensitivityTool(working_directory="sensitivity_tool_results")
-tool.execute(
-    inputs=SensitivityToolInputs(
-        model=model, parameter_space=space_tool.parameter_space
+analysis_node = SensitivityAnalysisNode(
+    working_directory="sensitivity_analysis_node_results"
+)
+analysis_node.execute(
+    inputs=SensitivityAnalysisNodeInputs(
+        model=model, parameter_space=space_analysis_node.parameter_space
     ),
-    settings=SensitivityToolSettings(
+    settings=SensitivityAnalysisNodeSettings(
         output_names=output_names, sensitivity_algo="MorrisAnalysis", n_replicates=5
     ),
 )
-tool.save_results()
-print(tool.result)
+analysis_node.save_results()
+print(analysis_node.result)
 
 # %%
 # The Morris indices are, for each output and input component,
@@ -155,24 +159,24 @@ print(tool.result)
 # - ``min`` and ``max``: the extrema of their absolute values.
 #
 # They can be tabulated; by default, the main indices ``mu_star`` are used:
-tool.result.get_indices_dataframe()
+analysis_node.result.get_indices_dataframe()
 
 # %%
 # Standard plots of a Morris analysis can be shown:
 # a radar plot of the indices, a bar plot and a ($\mu^*$, $\sigma$) plot
 # for each output.
 # Here, the interactive bar plot:
-figures = tool.result.plot(output_names=output_names)
+figures = analysis_node.result.plot(output_names=output_names)
 figures["bar_plot"]
 
 # %%
 # Using the samples of a DOE prepared in advance
 # ----------------------------------------------
-# The samples can be computed beforehand by a :class:`~.DOETool`,
+# The samples can be computed beforehand by a :class:`~.DOEAnalysisNode`,
 # for instance on a cluster,
-# and then its result is passed to the :class:`~.SensitivityTool` as ``doe_result``:
+# and then its result is passed to the :class:`~.SensitivityAnalysisNode` as ``doe_result``:
 # the model is not executed again.
-# This result records the DOE algorithm, which the tool checks.
+# This result records the DOE algorithm, which the analysis node checks.
 #
 # For a Morris analysis, the DOE must be generated by the DOE algorithm
 # ``"MorrisDOE"``,
@@ -180,30 +184,30 @@ figures["bar_plot"]
 # Its settings are passed through ``algo_settings``,
 # here the relative step of the trajectories in the unit hypercube.
 n_replicates = 5
-doe_tool = DOETool(working_directory="morris_doe_results")
-doe_tool.execute(
-    inputs=DOEInputs(model=model, parameter_space=space_tool.parameter_space),
+doe_analysis_node = DOEAnalysisNode(working_directory="morris_doe_results")
+doe_analysis_node.execute(
+    inputs=DOEInputs(model=model, parameter_space=space_analysis_node.parameter_space),
     settings=DOESettings(
         output_names=output_names,
         algo="MorrisDOE",
-        n_samples=n_replicates * (space_tool.parameter_space.dimension + 1),
+        n_samples=n_replicates * (space_analysis_node.parameter_space.dimension + 1),
         algo_settings={"step": 0.05},
     ),
 )
-doe_tool.result.dataset
+doe_analysis_node.result.dataset
 
 # %%
 # The Morris indices divide the output variations by the step of the DOE.
 # This step is read from the settings recorded in the DOE result,
 # so it does not have to be passed again and cannot differ from the samples.
-tool = SensitivityTool(working_directory="morris_from_doe_results")
-tool.execute(
-    inputs=SensitivityToolInputs(doe_result=doe_tool.result),
-    settings=SensitivityToolSettings(
+analysis_node = SensitivityAnalysisNode(working_directory="morris_from_doe_results")
+analysis_node.execute(
+    inputs=SensitivityAnalysisNodeInputs(doe_result=doe_analysis_node.result),
+    settings=SensitivityAnalysisNodeSettings(
         output_names=output_names, sensitivity_algo="MorrisAnalysis"
     ),
 )
-tool.result.get_indices_dataframe("sigma")
+analysis_node.result.get_indices_dataframe("sigma")
 
 # %%
 # A HSIC analysis requires samples that are independent and distributed
@@ -215,9 +219,9 @@ tool.result.get_indices_dataframe("sigma")
 # An optimized Latin Hypercube Sampling or a quasi Monte Carlo sequence
 # is not suitable: it spreads its samples, which are then not independent
 # and bias the HSIC estimators.
-doe_tool = DOETool(working_directory="monte_carlo_doe_results")
-doe_tool.execute(
-    inputs=DOEInputs(model=model, parameter_space=space_tool.parameter_space),
+doe_analysis_node = DOEAnalysisNode(working_directory="monte_carlo_doe_results")
+doe_analysis_node.execute(
+    inputs=DOEInputs(model=model, parameter_space=space_analysis_node.parameter_space),
     settings=DOESettings(
         output_names=output_names, algo="OT_MONTE_CARLO", n_samples=30
     ),
@@ -226,14 +230,14 @@ doe_tool.execute(
 # %%
 # The main HSIC indices are the ``r2_hsic`` ones,
 # i.e. the HSIC indices normalized between 0 and 1.
-tool = SensitivityTool(working_directory="hsic_from_doe_results")
-tool.execute(
-    inputs=SensitivityToolInputs(doe_result=doe_tool.result),
-    settings=SensitivityToolSettings(
+analysis_node = SensitivityAnalysisNode(working_directory="hsic_from_doe_results")
+analysis_node.execute(
+    inputs=SensitivityAnalysisNodeInputs(doe_result=doe_analysis_node.result),
+    settings=SensitivityAnalysisNodeSettings(
         output_names=output_names, sensitivity_algo="HSICAnalysis"
     ),
 )
-tool.result.get_indices_dataframe()
+analysis_node.result.get_indices_dataframe()
 
 # %%
 # The HSIC indices rank the inputs.
@@ -247,7 +251,7 @@ tool.result.get_indices_dataframe()
 # The p-values estimated by permutations do not rely on an asymptotic
 # approximation, contrary to the ``"p_value_asymptotic"`` ones,
 # which require many samples:
-tool.result.get_indices_dataframe("p_value_permutation")
+analysis_node.result.get_indices_dataframe("p_value_permutation")
 
 # %%
 # Using runs searched in an MLflow archive
@@ -275,8 +279,8 @@ model.cache = None
 # %%
 # The archive is populated by a Monte Carlo sampling;
 # in practice, the runs would come from previous studies.
-DOETool(working_directory="mlflow_doe_results").execute(
-    inputs=DOEInputs(model=model, parameter_space=space_tool.parameter_space),
+DOEAnalysisNode(working_directory="mlflow_doe_results").execute(
+    inputs=DOEInputs(model=model, parameter_space=space_analysis_node.parameter_space),
     settings=DOESettings(
         output_names=output_names, algo="OT_MONTE_CARLO", n_samples=30
     ),
@@ -296,7 +300,7 @@ model_results
 # They are converted into a dataset restricted to the inputs of the parameter space
 # and to the analyzed outputs:
 dataset = model_results.to_dataset(
-    variable_names=[*space_tool.parameter_space.variable_names, *output_names]
+    variable_names=[*space_analysis_node.parameter_space.variable_names, *output_names]
 )
 dataset
 
@@ -304,17 +308,17 @@ dataset
 # The dataset is passed to the HSIC analysis.
 # Its samples must still be independent and distributed
 # according to the probability distribution of the inputs,
-# which the tool cannot check, hence a warning.
-# The tool wraps the dataset into a DOE result
+# which the analysis node cannot check, hence a warning.
+# The analysis node wraps the dataset into a DOE result
 # whose DOE algorithm is ``"Unstructured"``;
-# like a DOE executed by the tool or prepared in advance,
-# this DOE result is saved in the subdirectory ``DOETool`` of the tool.
-tool = SensitivityTool(working_directory="hsic_from_mlflow_results")
-tool.execute(
-    inputs=SensitivityToolInputs(dataset=dataset),
-    settings=SensitivityToolSettings(
+# like a DOE executed by the analysis node or prepared in advance,
+# this DOE result is saved in the subdirectory ``DOEAnalysisNode`` of the analysis node.
+analysis_node = SensitivityAnalysisNode(working_directory="hsic_from_mlflow_results")
+analysis_node.execute(
+    inputs=SensitivityAnalysisNodeInputs(dataset=dataset),
+    settings=SensitivityAnalysisNodeSettings(
         output_names=output_names, sensitivity_algo="HSICAnalysis"
     ),
 )
-tool.save_results()
-tool.result.get_indices_dataframe()
+analysis_node.save_results()
+analysis_node.result.get_indices_dataframe()

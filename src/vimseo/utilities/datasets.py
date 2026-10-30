@@ -44,8 +44,8 @@ from pydantic import BeforeValidator
 if TYPE_CHECKING:
     from collections.abc import Iterable
 
+    from vimseo.analysis_nodes.post_analysis_nodes.plot_result import PlotResult
     from vimseo.core.base_integrated_model import IntegratedModel
-    from vimseo.tools.post_tools.plot_result import PlotResult
     from vimseo.utilities.distribution import DistributionParameters
 
 SEP = ";"
@@ -133,7 +133,7 @@ class DatasetAddFromStatistics:
         nb_samples: int,
     ) -> None:
         """Add group based on statistical parameters using OpenTurns distributions."""
-        from vimseo.tools.space.random_variable_interface import (
+        from vimseo.analysis_nodes.space.random_variable_interface import (
             add_random_variable_interface,
         )
 
@@ -186,7 +186,7 @@ def plot_dataset_element(
      Returns:
          The plot result.
     """
-    from vimseo.tools.post_tools.line_plot import Lines
+    from vimseo.analysis_nodes.post_analysis_nodes.line_plot import Lines
 
     group_name = Dataset.DEFAULT_GROUP if group_name == "" else group_name
     all_variables = [*variables, abscissa_variable]
@@ -539,7 +539,7 @@ def to_dataset(
 ) -> IODataset:
     """Convert user data to a GEMSEO dataset.
 
-    This is the entry point used by the tools to accept plain Python data, so that the
+    This is the entry point used by the analysis nodes to accept plain Python data, so that the
     GEMSEO :class:`~gemseo.datasets.dataset.Dataset` API does not have to be learnt.
     The accepted forms are:
 
@@ -618,7 +618,7 @@ def resolve_io_groups(
     """Split the default group of a dataset into an input group and an output group.
 
     A dataset that already declares an input or an output group is returned unchanged,
-    so that this function can be called unconditionally by a tool. Otherwise the roles
+    so that this function can be called unconditionally by an analysis node. Otherwise the roles
     are taken from ``input_names`` and ``output_names`` when given, and from the grammars
     of ``model`` otherwise. Variables matching neither role are left in the default
     group, so that data carried along for reference, such as a batch number, is
@@ -712,9 +712,9 @@ def _coerce_to_dataset(data: Any) -> Any:
 DatasetInput = Annotated[IODataset, BeforeValidator(_coerce_to_dataset)]
 """A dataset field accepting a mapping, a DataFrame or a Dataset.
 
-Use this instead of ``Dataset`` or ``IODataset`` when declaring the field of a tool, so
+Use this instead of ``Dataset`` or ``IODataset`` when declaring the field of an analysis node, so
 that users can pass the data they already have. The conversion is carried by the
-annotation rather than by the tool, so that it also applies when the inputs model is
+annotation rather than by the analysis node, so that it also applies when the inputs model is
 built directly, as done by the workflow engine.
 """
 

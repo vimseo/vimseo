@@ -27,19 +27,25 @@ from pathlib import Path
 from pandas import read_csv
 
 from vimseo import EXAMPLE_RUNS_DIR
+from vimseo.analysis_nodes.space.space_analysis_node_result import (
+    SpaceAnalysisNodeResult,
+)
+from vimseo.analysis_nodes.validation.validation_point import NominalValuesOutputType
+from vimseo.analysis_nodes.validation.validation_point import StochasticValidationPoint
+from vimseo.analysis_nodes.validation.validation_point import (
+    StochasticValidationPointInputs,
+)
+from vimseo.analysis_nodes.validation.validation_point import (
+    StochasticValidationPointSettings,
+)
+from vimseo.analysis_nodes.validation.validation_point import read_nominal_values
 from vimseo.api import activate_logger
 from vimseo.api import create_model
 from vimseo.core.model_settings import IntegratedModelSettings
-from vimseo.io.space_io import SpaceToolFileIO
+from vimseo.io.space_io import SpaceAnalysisNodeFileIO
 from vimseo.material.material import Material
 from vimseo.material_lib import MATERIAL_LIB_DIR
 from vimseo.storage_management.base_storage_manager import PersistencyPolicy
-from vimseo.tools.space.space_tool_result import SpaceToolResult
-from vimseo.tools.validation.validation_point import NominalValuesOutputType
-from vimseo.tools.validation.validation_point import StochasticValidationPoint
-from vimseo.tools.validation.validation_point import StochasticValidationPointInputs
-from vimseo.tools.validation.validation_point import StochasticValidationPointSettings
-from vimseo.tools.validation.validation_point import read_nominal_values
 from vimseo.utilities.datasets import SEP
 from vimseo.utilities.generate_validation_reference import Bias
 from vimseo.utilities.generate_validation_reference import (
@@ -69,7 +75,7 @@ target_model = create_model(
 target_model.cache = None
 reference_dataset_cantilever = generate_reference_from_parameter_space(
     target_model,
-    SpaceToolFileIO()
+    SpaceAnalysisNodeFileIO()
     .read(file_name="bending_test_validation_input_space.json")
     .parameter_space,
     n_samples=6,
@@ -151,7 +157,7 @@ measured_data = read_csv(
 measured_data = measured_data[measured_data["batch"] == batch]
 
 # %%
-# The filtered table is passed to the tool as it is. The measured inputs and
+# The filtered table is passed to the analysis node as it is. The measured inputs and
 # outputs are named through the ``input_names`` and ``output_names`` settings
 # below, so the columns carried along for reference, such as ``batch``, need not
 # be dropped:
@@ -164,11 +170,11 @@ print("The measured data: ", measured_data)
 # The stochastic validation point can now be created and executed.
 # The model output uncertainty is estimated by sampling the input space
 # with ``n_samples`` points.
-validation_point_tool = StochasticValidationPoint(
+validation_point_analysis_node = StochasticValidationPoint(
     working_directory=Path(f"{model_name}_{load_case}")
     / f"batch_{batch}_{nominal_values['length']}",
 )
-validation_point_tool.execute(
+validation_point_analysis_node.execute(
     inputs=StochasticValidationPointInputs(
         model=model,
         measured_data=measured_data,
@@ -190,12 +196,12 @@ validation_point_tool.execute(
 
 # %%
 # Validation results can be saved on disk
-validation_point_tool.save_results(prefix=f"batch_{batch}")
+validation_point_analysis_node.save_results(prefix=f"batch_{batch}")
 
 # %%
 # The results can be plotted:
-figures = validation_point_tool.result.plot(
-    directory_path=validation_point_tool.working_directory,
+figures = validation_point_analysis_node.result.plot(
+    directory_path=validation_point_analysis_node.working_directory,
     output_names=["reaction_forces"],
     show=True,
     save=True,
@@ -214,18 +220,20 @@ figures["PDF_comparison_reaction_forces"]
 figures["CDF_comparison_reaction_forces"]
 
 # %%
-# The saved result can be visualised in the page **Tool Results**
+# The saved result can be visualised in the page **Analysis Node Results**
 # of the dashboard ``dashboard_results``, provided by the plugin vimseo-dashboards.
 
 # %%
 # The simulated input space can be exported to disk, to be visualized with
 # the page **Parameter Space** of ``dashboard_results``.
 # In HDF5 format:
-space_tool_result = SpaceToolResult(
-    parameter_space=validation_point_tool.simulated_input_space
+space_analysis_node_result = SpaceAnalysisNodeResult(
+    parameter_space=validation_point_analysis_node.simulated_input_space
 )
-space_tool_result.to_hdf5("simulated_input_space.hdf5")
+space_analysis_node_result.to_hdf5("simulated_input_space.hdf5")
 
 # %%
 # Or in json format:
-SpaceToolFileIO().write(space_tool_result, file_base_name="simulated_input_space")
+SpaceAnalysisNodeFileIO().write(
+    space_analysis_node_result, file_base_name="simulated_input_space"
+)

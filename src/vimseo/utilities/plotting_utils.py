@@ -25,16 +25,16 @@ from plotly.graph_objs import Figure
 from plotly.graph_objs import Scatter
 from plotly.subplots import make_subplots
 
-from vimseo.tools.post_tools.plot_parameters import DEFAULT_AXIS_COLOR
-from vimseo.tools.post_tools.plot_parameters import ConstantTrace
+from vimseo.analysis_nodes.post_analysis_nodes.plot_parameters import DEFAULT_AXIS_COLOR
+from vimseo.analysis_nodes.post_analysis_nodes.plot_parameters import ConstantTrace
 from vimseo.utilities.curves import Curve
 from vimseo.utilities.curves import CurveSet
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
 
-    from vimseo.tools.post_tools.plot_parameters import LineStyle
-    from vimseo.tools.post_tools.plot_parameters import TraceType
+    from vimseo.analysis_nodes.post_analysis_nodes.plot_parameters import LineStyle
+    from vimseo.analysis_nodes.post_analysis_nodes.plot_parameters import TraceType
 
 FLOAT_PRECISION = 3
 

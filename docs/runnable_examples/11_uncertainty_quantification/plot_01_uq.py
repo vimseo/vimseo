@@ -18,9 +18,9 @@
 1) Usage of the Uncertainty Quantification
 ==========================================
 
-The :class:`~.StatisticsTool` provides methods for quantifying uncertainties
+The :class:`~.StatisticsAnalysisNode` provides methods for quantifying uncertainties
 on a model output.
-The :class:`~.BendingTestAnalytical` is used to illustrate the use of this tool.
+The :class:`~.BendingTestAnalytical` is used to illustrate the use of this analysis node.
 """
 
 # %%
@@ -35,12 +35,14 @@ from matplotlib import pyplot as plt
 from numpy import array
 
 from vimseo import EXAMPLE_RUNS_DIR
+from vimseo.analysis_nodes.doe.doe import DOEAnalysisNode
+from vimseo.analysis_nodes.space.space_analysis_node import SpaceAnalysisNode
+from vimseo.analysis_nodes.statistics.statistics_analysis_node import (
+    StatisticsAnalysisNode,
+)
 from vimseo.api import activate_logger
 from vimseo.api import create_model
 from vimseo.core.model_settings import IntegratedModelSettings
-from vimseo.tools.doe.doe import DOETool
-from vimseo.tools.space.space_tool import SpaceTool
-from vimseo.tools.statistics.statistics_tool import StatisticsTool
 
 activate_logger(level=logging.INFO)
 
@@ -68,10 +70,10 @@ model.default_input_data.update({"imposed_dplt": array([-15.0])})
 # In addition to the model,
 # we need to define the uncertain space over which statistics will be computed.
 # The uncertainty is filled with independent random variables.
-# This operation is performed with the :class:`~.SpaceTool`.
+# This operation is performed with the :class:`~.SpaceAnalysisNode`.
 # Several builders can be used to construct the distributions.
-space_tool = SpaceTool(working_directory="SpaceTool_results")
-print(space_tool.get_available_space_builders())
+space_analysis_node = SpaceAnalysisNode(working_directory="SpaceAnalysisNode_results")
+print(space_analysis_node.get_available_space_builders())
 
 # %%
 # The model can be used as input such that the bounds of the model input variables
@@ -93,7 +95,7 @@ print(space_tool.get_available_space_builders())
 
 retained_variables = model.get_input_data_names()
 retained_variables.remove("relative_dplt_location")
-space_tool.execute(
+space_analysis_node.execute(
     distribution_name="OTTriangularDistribution",
     space_builder_name="FromModelCenterAndCov",
     variable_names=retained_variables,
@@ -105,17 +107,17 @@ space_tool.execute(
 # %%
 # Then, specifically for "relative_dplt_location".
 
-space_tool.execute(
+space_analysis_node.execute(
     distribution_name="OTTriangularDistribution",
     space_builder_name="FromCenterAndCov",
     center_values={"relative_dplt_location": 0.9},
     cov=0.05,
 )
-parameter_space = space_tool.parameter_space
+parameter_space = space_analysis_node.parameter_space
 
 # %%
 # Other distributions can be used and the available ones can be listed with:
-print(space_tool.get_available_distributions())
+print(space_analysis_node.get_available_distributions())
 
 # %%
 # !!! note
@@ -182,24 +184,24 @@ scatter_plot = Scatter(
 fig = scatter_plot.execute(
     show=True,
     save=False,
-    directory_path=space_tool.working_directory,
+    directory_path=space_analysis_node.working_directory,
     file_format="html",
 )
 fig
 
 # %%
-# Dedicated plots from |v| tools can also be used.
-# For instance, the :class:`~.SpaceTool` provides a scatter matrix plot
+# Dedicated plots from |v| analysis nodes can also be used.
+# For instance, the :class:`~.SpaceAnalysisNode` provides a scatter matrix plot
 # where the diagonal blocks represent the histograms of the random variables
 # while the other blocks represents the value of a variable versus another.
-space_tool.result.plot(show=True, n_samples=200)
+space_analysis_node.result.plot(show=True, n_samples=200)
 # Workaround for HTML rendering, instead of ``show=True``
 plt.show()
 
 # %%
 # !!! info "See also"
 #
-#     [Examples of visualization tools](https://gemseo.readthedocs.io/en/stable/examples/dataset/index.html)
+#     [Examples of visualization analysis_nodes](https://gemseo.readthedocs.io/en/stable/examples/dataset/index.html)
 #     to post-process a `Dataset`.
 #
 
@@ -208,8 +210,8 @@ plt.show()
 # ===================
 # Then,
 # we generate 100 input-output samples of the model
-# by sampling the discipline with the :class:`~.DOETool` executed from a design of
-# experiments (DOE). The :class:`~.DOETool` is based on :class:`~.gemseo.core.doe_scenario.DOEScenario`
+# by sampling the discipline with the :class:`~.DOEAnalysisNode` executed from a design of
+# experiments (DOE). The :class:`~.DOEAnalysisNode` is based on :class:`~.gemseo.core.doe_scenario.DOEScenario`
 # To place the samples over the input space, we can use an optimal
 # `latin hypercube sampling (LHS) <https://en.wikipedia.org/wiki/Latin_hypercube_sampling>`__ technique.
 #
@@ -224,9 +226,9 @@ plt.show()
 #     we use ``"OT_OPT_LHS"`` relying on a global optimization algorithm
 #     (simulated annealing).
 #
-doe_tool = DOETool(working_directory="doe_tool_results")
+doe_analysis_node = DOEAnalysisNode(working_directory="doe_analysis_node_results")
 output_names = ["reaction_forces"]
-dataset = doe_tool.execute(
+dataset = doe_analysis_node.execute(
     model=model,
     parameter_space=parameter_space,
     output_names=output_names,
@@ -241,12 +243,12 @@ dataset = doe_tool.execute(
 # People used to Pandas can go much further in terms of data analysis
 # (filtering, plotting, sorting, ...).
 print(dataset.describe())
-dataset.to_csv(doe_tool.working_directory / "data.csv", sep=";")
+dataset.to_csv(doe_analysis_node.working_directory / "data.csv", sep=";")
 
 # %%
 # 4. Compute statistics
 # =====================
-# The :class:`~.StatisticsTool` relies on |gemseo| to compute statistics
+# The :class:`~.StatisticsAnalysisNode` relies on |gemseo| to compute statistics
 # on a sampling. It allows to test several probability distributions
 # to find the one that best fits to the output distribution according
 # to a fitting criterion and a selection criterion.
@@ -259,13 +261,15 @@ output_name = output_names[0]
 
 # %%
 # The following options are used by default:
-pprint(StatisticsTool().options)
+pprint(StatisticsAnalysisNode().options)
 
 # %%
-# Default options can be overriden through the :meth:`~.StatisticsTool.execute` method.
+# Default options can be overriden through the :meth:`~.StatisticsAnalysisNode.execute` method.
 # Here the confidence value is modified.
-statistic_tool = StatisticsTool(working_directory="statistics_tool_results")
-results = statistic_tool.execute(
+statistic_analysis_node = StatisticsAnalysisNode(
+    working_directory="statistics_analysis_node_results"
+)
+results = statistic_analysis_node.execute(
     dataset=dataset,
     variable_names=[output_name],
     confidence=0.98,

@@ -63,7 +63,7 @@ for height in [40.0, 50.0, 60.0]:
 # How a simulation is stored in MLflow
 # ------------------------------------
 # A study is one MLflow experiment, holding the simulations of all its models and its
-# tool runs. A simulation is an MLflow run, named by its ``run_id``, with:
+# analysis node runs. A simulation is an MLflow run, named by its ``run_id``, with:
 #
 # - **metrics**: the numbers among the inputs and the outputs
 #   (``inputs.height``, ``reaction_forces``),
@@ -93,8 +93,8 @@ DataFrame(
 )[["run_id", "inputs.height"]]
 
 # %%
-# ``runs:/`` also names the tool runs: loading the run of a tool run with
-# ``load_model_results`` raises an error naming ``load_tool_results``.
+# ``runs:/`` also names the analysis node runs: loading the run of an analysis node run with
+# ``load_model_results`` raises an error naming ``load_analysis_node_results``.
 model_result = load_model_results(archived_model_runs[0]["uri"], **archive)[0]
 figures = model_result.plot()
 

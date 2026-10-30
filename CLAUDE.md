@@ -21,8 +21,8 @@ kept in sync with `pyproject.toml` (e.g. it lacks `kaleido` and `pyvista`, so te
 needing them are silently skipped).
 
 ```bash
-.tox/py312/bin/python -m pytest tests/tools/test_doe.py          # Linux
-.tox/py312/Scripts/python.exe -m pytest tests/tools/test_doe.py  # Windows
+.tox/py312/bin/python -m pytest tests/analysis_nodes/test_doe.py          # Linux
+.tox/py312/Scripts/python.exe -m pytest tests/analysis_nodes/test_doe.py  # Windows
 ```
 
 **Install (editable, with every extra and the dev dependencies):**
@@ -51,7 +51,7 @@ tox -e core-py312
 
 **Run a single test file:**
 ```bash
-pytest tests/tools/test_doe.py
+pytest tests/analysis_nodes/test_doe.py
 ```
 
 **Run tests by marker:**
@@ -80,7 +80,7 @@ tox -e dist
 
 ## Architecture
 
-VIMSEO is a VV&UQ (Verification, Validation & Uncertainty Quantification) framework. It wraps simulation models and provides analysis tools to assess simulation credibility. The library is built on top of [GEMSEO](https://gemseo.readthedocs.io/), a Python MDO library — VIMSEO models are GEMSEO `Discipline` subclasses.
+VIMSEO is a VV&UQ (Verification, Validation & Uncertainty Quantification) framework. It wraps simulation models and provides analysis nodes to assess simulation credibility. The library is built on top of [GEMSEO](https://gemseo.readthedocs.io/), a Python MDO library — VIMSEO models are GEMSEO `Discipline` subclasses.
 
 ### Model layer (`src/vimseo/core/`)
 
@@ -91,32 +91,32 @@ VIMSEO is a VV&UQ (Verification, Validation & Uncertainty Quantification) framew
 
 A `LoadCase` encapsulates the boundary conditions and parameters for a model run. Models are discovered via `ModelFactory` (GEMSEO plugin mechanism, registered via the `gemseo_plugins` entry point in `pyproject.toml`).
 
-### Tools layer (`src/vimseo/tools/`)
+### Analysis nodes layer (`src/vimseo/analysis_nodes/`)
 
-All analysis tools inherit from `BaseTool` ([base_tool.py](src/vimseo/tools/base_tool.py)). The tool pattern:
+All analysis nodes inherit from `BaseAnalysisNode` ([base_analysis_node.py](src/vimseo/analysis_nodes/base_analysis_node.py)). The analysis node pattern:
 
 - Class attributes `_INPUTS` (a `BaseInputs` subclass) and `_SETTINGS` (a `BaseSettings` subclass) define Pydantic models for validation.
 - `execute(inputs=..., settings=...)` accepts instances of those Pydantic models, or falls back to keyword arguments.
-- Results are stored in `tool.result` (a `BaseResult` subclass) and persisted via `tool.save_results()` to HDF5.
-- A result is visualized without its tool, e.g. once loaded from an archive:
+- Results are stored in `analysis_node.result` (a `BaseResult` subclass) and persisted via `analysis_node.save_results()` to HDF5.
+- A result is visualized without its analysis node, e.g. once loaded from an archive:
   `result.plot(**settings)` returns its figures (Plotly or matplotlib) and
   `result.to_dataframes()` its numerical values as DataFrames. A result class declares
   its figures in `_create_figures()` and its settings in `_PLOT_SETTINGS`, whose
   fields are flat and default to "everything"; `get_plot_choices()` gives the names
   accepted by the settings selecting names.
-- `vimseo.api.load_tool_results(refs)` / `load_model_results(refs)` load one or many
-  results from their references (identifier, `tool-run:` / `run:`, path, `runs:/`,
-  [tool_archive/uri.py](src/vimseo/storage_management/tool_archive/uri.py)) and always
-  return a collection (`ToolResults` / `ModelResults`, [results/collection.py](src/vimseo/results/collection.py));
-  `open_model_results(**archive)` / `open_tool_results` open a whole archive, explored with
+- `vimseo.api.load_analysis_node_results(refs)` / `load_model_results(refs)` load one or many
+  results from their references (identifier, `analysis-node-run:` / `run:`, path, `runs:/`,
+  [analysis_node_archive/uri.py](src/vimseo/storage_management/analysis_node_archive/uri.py)) and always
+  return a collection (`AnalysisNodeResults` / `ModelResults`, [results/collection.py](src/vimseo/results/collection.py));
+  `open_model_results(**archive)` / `open_analysis_node_results` open a whole archive, explored with
   `filter(query=...)`, `ignoring`, `varying_inputs`, `families(along=...)`, `duplicates`.
 
-**Calling tools:** prefer `tool.execute(inputs=MyToolInputs(...), settings=MyToolSettings(...))`
-(the tool's `_INPUTS` / `_SETTINGS` classes) over keyword arguments, in examples, tests and
+**Calling analysis nodes:** prefer `analysis_node.execute(inputs=MyAnalysisNodeInputs(...), settings=MyAnalysisNodeSettings(...))`
+(the analysis node's `_INPUTS` / `_SETTINGS` classes) over keyword arguments, in examples, tests and
 new code. The models validate eagerly and keep inputs and settings distinct; keyword
 arguments remain supported for backward compatibility.
 
-Available tool categories: DOE, sensitivity analysis, calibration, verification (solution + vs-data + vs-model), validation (point + case), surrogate modelling, statistics, Bayesian analysis, design value.
+Available analysis node categories: DOE, sensitivity analysis, calibration, verification (solution + vs-data + vs-model), validation (point + case), surrogate modelling, statistics, Bayesian analysis, design value.
 
 ### Storage (`src/vimseo/storage_management/`)
 
@@ -132,18 +132,18 @@ a simulation is in `{root}/{study}/{model}/{load_case}/{run_id}/results.json`, w
 `status=RUNNING` when it starts; in MLflow a study is one experiment and the runs are told apart
 by the tag `vimseo.kind`. The identifiers are time ordered (`{UTC date}_{uuid prefix}`).
 
-The **tool results** are archived separately, by `open_tool_archive()` in
-[tool_archive/__init__.py](src/vimseo/storage_management/tool_archive/__init__.py), selected
-by the `archive_manager` setting of a tool, else `config.tool_archive_manager`, else
+The **analysis node results** are archived separately, by `open_analysis_node_archive()` in
+[analysis_node_archive/__init__.py](src/vimseo/storage_management/analysis_node_archive/__init__.py), selected
+by the `archive_manager` setting of an analysis node, else `config.analysis_node_archive_manager`, else
 `config.run_archive_manager` (`"none"` disables it; the tests disable it in `conftest.py`):
-- `DirectoryToolArchive` — `{root}/{study}/tools/{tool_name}/{tool_run_id}/` holds the result HDF5
+- `DirectoryAnalysisNodeArchive` — `{root}/{study}/analysis_nodes/{analysis_node_name}/{analysis_node_run_id}/` holds the result HDF5
   and a JSON summary.
-- `MlflowToolArchive` — one MLflow run per tool run in the experiment of the study, the run of a
-  subtool nested in the run of its parent. The result HDF5 and the summary are artifacts,
+- `MlflowAnalysisNodeArchive` — one MLflow run per analysis node run in the experiment of the study, the run of a
+  sub-analysis node nested in the run of its parent. The result HDF5 and the summary are artifacts,
   the searchable fields are `vimseo.*` tags and the settings are params.
 
-A tool run is identified by its `tool_run_id` (`result.metadata.tool_run_id`); its simulations
-carry it too. `search_model_results(**archive, query=...)` / `search_tool_runs` list the runs
+An analysis node run is identified by its `analysis_node_run_id` (`result.metadata.analysis_node_run_id`); its simulations
+carry it too. `search_model_results(**archive, query=...)` / `search_analysis_node_runs` list the runs
 without loading them (the query uses the `pandas.DataFrame.query` syntax, with `or`).
 
 Scratch storage is a separate mechanism: `DirectoryScratch`
@@ -173,11 +173,11 @@ runs the core profile (mandatory dependencies only).
 
 ### Workflow engine (`src/vimseo/workflow/`)
 
-`Workflow` ([workflow.py](src/vimseo/workflow/workflow.py)) chains tools using GEMSEO's `MDAChain`. Workflows can be serialised to/from JSON and executed via the `workflow_executor` CLI entry point. The `dashboard_workflow` Streamlit app lets users build workflows interactively.
+`Workflow` ([workflow.py](src/vimseo/workflow/workflow.py)) chains analysis nodes using GEMSEO's `MDAChain`. Workflows can be serialised to/from JSON and executed via the `workflow_executor` CLI entry point. The `dashboard_workflow` Streamlit app lets users build workflows interactively.
 
 ### Settings / configuration
 
-All settings classes inherit from `BaseSettings` (Pydantic `BaseModel` with `extra="forbid"`) in [tools/base_settings.py](src/vimseo/tools/base_settings.py). Model construction settings are in `IntegratedModelSettings` ([core/model_settings.py](src/vimseo/core/model_settings.py)). Global configuration is in `src/vimseo/config/global_configuration.py` and loaded from environment variables via `pydantic-settings`.
+All settings classes inherit from `BaseSettings` (Pydantic `BaseModel` with `extra="forbid"`) in [analysis_nodes/base_settings.py](src/vimseo/analysis_nodes/base_settings.py). Model construction settings are in `IntegratedModelSettings` ([core/model_settings.py](src/vimseo/core/model_settings.py)). Global configuration is in `src/vimseo/config/global_configuration.py` and loaded from environment variables via `pydantic-settings`.
 
 ### CLI entry points
 
@@ -186,7 +186,7 @@ All settings classes inherit from `BaseSettings` (Pydantic `BaseModel` with `ext
 | `dashboard_workflow` | `vimseo.dashboards.workflow.entry_point:main` |
 | `workflow_executor` | `vimseo.workflow.workflow_executor:main` |
 | `dashboard_mlflow` | `vimseo.storage_management.mlflow_ui_entry_point:main` |
-| `visualize_tool_result` | `vimseo.tools.visualize_tool_result:main` |
+| `visualize_analysis_node_result` | `vimseo.analysis_nodes.visualize_analysis_node_result:main` |
 
 ### Test structure
 

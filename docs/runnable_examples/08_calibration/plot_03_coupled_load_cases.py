@@ -30,16 +30,18 @@ from gemseo.algos.opt.nlopt.settings.nlopt_cobyla_settings import NLOPT_COBYLA_S
 from numpy import atleast_1d
 
 from vimseo import EXAMPLE_RUNS_DIR
+from vimseo.analysis_nodes.calibration.calibration_metrics import (
+    CalibrationMetricSettings,
+)
+from vimseo.analysis_nodes.calibration.calibration_step import CalibrationStep
+from vimseo.analysis_nodes.calibration.calibration_step import CalibrationStepInputs
+from vimseo.analysis_nodes.calibration.calibration_step import CalibrationStepSettings
+from vimseo.analysis_nodes.calibration.input_data import CALIBRATION_INPUT_DATA
 from vimseo.api import activate_logger
 from vimseo.api import create_model
 from vimseo.core.model_settings import IntegratedModelSettings
-from vimseo.io.space_io import SpaceToolFileIO
+from vimseo.io.space_io import SpaceAnalysisNodeFileIO
 from vimseo.storage_management.base_storage_manager import PersistencyPolicy
-from vimseo.tools.calibration.calibration_metrics import CalibrationMetricSettings
-from vimseo.tools.calibration.calibration_step import CalibrationStep
-from vimseo.tools.calibration.calibration_step import CalibrationStepInputs
-from vimseo.tools.calibration.calibration_step import CalibrationStepSettings
-from vimseo.tools.calibration.input_data import CALIBRATION_INPUT_DATA
 from vimseo.utilities.generate_validation_reference import (
     generate_reference_from_parameter_space,
 )
@@ -55,7 +57,7 @@ activate_logger(level=logging.INFO)
 # - three point bending
 # We now generate the reference data from the model used for the calibration.
 # We define an input space in which the reference data are generated:
-space_tool_result = SpaceToolFileIO().read(
+space_analysis_node_result = SpaceAnalysisNodeFileIO().read(
     CALIBRATION_INPUT_DATA / "experimental_space_beam_cantilever.json"
 )
 
@@ -82,7 +84,7 @@ target_model_cantilever.default_input_data["young_modulus"] = atleast_1d(
 target_model_cantilever.cache = None
 reference_dataset_cantilever = generate_reference_from_parameter_space(
     target_model_cantilever,
-    space_tool_result.parameter_space,
+    space_analysis_node_result.parameter_space,
     n_samples=6,
     as_dataset=True,
 )
@@ -110,7 +112,7 @@ target_model_three_points.default_input_data["young_modulus"] = atleast_1d(
 target_model_three_points.cache = None
 reference_dataset_three_points = generate_reference_from_parameter_space(
     target_model_three_points,
-    space_tool_result.parameter_space,
+    space_analysis_node_result.parameter_space,
     n_samples=6,
     as_dataset=True,
 )

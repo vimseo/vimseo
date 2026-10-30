@@ -25,18 +25,20 @@ from __future__ import annotations
 import logging
 
 from vimseo import EXAMPLE_RUNS_DIR
+from vimseo.analysis_nodes.validation_case.validation_case import (
+    DeterministicValidationCase,
+)
+from vimseo.analysis_nodes.validation_case.validation_case import (
+    DeterministicValidationCaseInputs,
+)
+from vimseo.analysis_nodes.validation_case.validation_case import (
+    DeterministicValidationCaseSettings,
+)
 from vimseo.api import activate_logger
 from vimseo.api import create_model
 from vimseo.core.model_settings import IntegratedModelSettings
 from vimseo.problems.beam_analytic.reference_dataset_builder import (
     bending_test_analytical_reference_dataset,
-)
-from vimseo.tools.validation_case.validation_case import DeterministicValidationCase
-from vimseo.tools.validation_case.validation_case import (
-    DeterministicValidationCaseInputs,
-)
-from vimseo.tools.validation_case.validation_case import (
-    DeterministicValidationCaseSettings,
 )
 
 activate_logger(level=logging.INFO)
@@ -64,11 +66,11 @@ print("The measured data: ", reference_data)
 
 
 # %%
-# Then, the validation case tool is created and executed:
-validation_tool = DeterministicValidationCase(
+# Then, the validation case analysis node is created and executed:
+validation_analysis_node = DeterministicValidationCase(
     working_directory="deterministic_validation_case"
 )
-results = validation_tool.execute(
+results = validation_analysis_node.execute(
     inputs=DeterministicValidationCaseInputs(
         model=model,
         reference_data=reference_data,
@@ -81,7 +83,7 @@ results = validation_tool.execute(
         output_names=["reaction_forces"],
     ),
 )
-validation_tool.save_results()
+validation_analysis_node.save_results()
 
 # %%
 # Post-processing the results.
@@ -93,13 +95,13 @@ validation_tool.save_results()
 #   - a dataset containing the element-wise error metrics, together with the
 #   - the simulated data, reference data and the input samples.
 
-print("The validation result: ", validation_tool.result)
-print(validation_tool.result.element_wise_metrics)
-print(validation_tool.result.integrated_metrics)
+print("The validation result: ", validation_analysis_node.result)
+print(validation_analysis_node.result.element_wise_metrics)
+print(validation_analysis_node.result.integrated_metrics)
 
 # %%
 # Validation results can be visualized as:
-figs = validation_tool.result.plot(
+figs = validation_analysis_node.result.plot(
     metric_names=["RelativeErrorMetric"],
     output_names=["reaction_forces"],
     show=True,
