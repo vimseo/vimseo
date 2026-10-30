@@ -110,6 +110,21 @@ def test_from_yaml_invalid(tmp_path, changes, field):
         ModelDeclaration.from_yaml(file_path)
 
 
+def test_from_yaml_invalid_syntax(tmp_path):
+    """A file that is not valid YAML raises an error naming the file and the line."""
+    file_path = tmp_path / "Bad.yaml"
+    file_path.write_text("name: Bad\n  discipline: module:Class\n", encoding="utf-8")
+
+    with pytest.raises(
+        ValueError,
+        match=re.escape(
+            f"The model declaration {file_path.resolve()} is not valid YAML: "
+            "mapping values are not allowed here, line 2, column 13."
+        ),
+    ):
+        ModelDeclaration.from_yaml(file_path)
+
+
 def test_create_model_class(tmp_wd):
     """The declaration sets the class attributes, and the model uses the material."""
     declaration = ModelDeclaration.from_yaml(_write_declaration(tmp_wd))
@@ -181,7 +196,6 @@ def test_model_with_input_grammar(tmp_wd):
     json_path = write_input_grammar(file_path)
     schema = json.loads(json_path.read_text(encoding="utf-8"))
     schema["properties"]["area"]["items"].update(minimum=1.0, maximum=3.0)
-    del schema["properties"]["modulus"]
     json_path.write_text(json.dumps(schema), encoding="utf-8")
 
     model = create_model_class(ModelDeclaration.from_yaml(file_path), MODULE_NAME)(
@@ -190,6 +204,20 @@ def test_model_with_input_grammar(tmp_wd):
 
     assert model.lower_bounds == {"area": 1.0}
     assert model.upper_bounds == {"area": 3.0}
+
+
+def test_model_with_incomplete_input_grammar(tmp_wd):
+    """The JSON input grammar replaces the discipline one, so it declares all the
+    inputs."""
+    file_path = _write_declaration(tmp_wd, input_grammar="grammar.json")
+    json_path = write_input_grammar(file_path)
+    schema = json.loads(json_path.read_text(encoding="utf-8"))
+    del schema["properties"]["modulus"]
+    json_path.write_text(json.dumps(schema), encoding="utf-8")
+    cls = create_model_class(ModelDeclaration.from_yaml(file_path), MODULE_NAME)
+
+    with pytest.raises(ValueError, match=r"missing variables \['modulus'\]"):
+        cls("Dummy")
 
 
 def test_register_declared_models(tmp_wd, caplog):
@@ -224,6 +252,22 @@ def test_main_write_grammar_and_check(tmp_wd, capsys):
     assert "is not available to create_model" in out
     assert "Model DeclaredStiffness: A stiffness." in out
     assert "Lower bounds:" in out
+
+
+def test_check_models_path(tmp_wd):
+    """The command tells that a model of ``VIMSEO_MODELS_PATH`` is available."""
+    file_path = _write_declaration(tmp_wd)
+    result = subprocess.run(
+        [sys.executable, "-m", "vimseo.core.declarative_model", "check", file_path],
+        capture_output=True,
+        text=True,
+        env={**os.environ, "VIMSEO_MODELS_PATH": str(tmp_wd)},
+        cwd=tmp_wd,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert "The model DeclaredStiffness is available to create_model" in result.stdout
 
 
 def test_models_path(tmp_wd):

@@ -106,8 +106,9 @@ class ModelDeclaration(BaseModel):
 
     input_grammar: Path | None = Field(
         default=None,
-        description="The path to the JSON grammar file restricting the inputs of the "
-        "discipline, e.g. with bounds.",
+        description="The path to the JSON grammar file replacing the input grammar of "
+        "the discipline, e.g. with bounds; it declares all the inputs of the "
+        "discipline.",
     )
 
     plots: list[Annotated[list[str], Field(min_length=2)]] = Field(
@@ -126,10 +127,22 @@ class ModelDeclaration(BaseModel):
             The declaration, whose paths are made absolute.
 
         Raises:
-            ValueError: When the declaration is not valid.
+            ValueError: When the file is not valid YAML or the declaration is not
+                valid.
         """
         file_path = Path(file_path).resolve()
-        data = yaml.safe_load(file_path.read_text(encoding="utf-8")) or {}
+        try:
+            data = yaml.safe_load(file_path.read_text(encoding="utf-8")) or {}
+        except yaml.YAMLError as error:
+            msg = f"The model declaration {file_path} is not valid YAML: "
+            if isinstance(error, yaml.MarkedYAMLError) and error.problem_mark:
+                mark = error.problem_mark
+                msg += (
+                    f"{error.problem}, line {mark.line + 1}, column {mark.column + 1}."
+                )
+            else:
+                msg += f"{error}."
+            raise ValueError(msg) from None
         try:
             declaration = cls.model_validate(data)
         except ValidationError as error:
@@ -289,6 +302,11 @@ def _check(file_path: Path) -> None:
             f"The name {declaration.name} is already the one of a model of "
             f"{module_name}: rename the declared model."
         )
+    else:
+        print(
+            f"The model {declaration.name} is available to create_model "
+            "(found in VIMSEO_MODELS_PATH)."
+        )
 
     # A module name out of VIMSEO, so that the model factory ignores this class.
     cls = create_model_class(declaration, "__main__")
@@ -335,9 +353,10 @@ def main(argv: Sequence[str] | None = None) -> None:
         json_path = write_input_grammar(args.yaml_file, args.force)
         print(f"The input grammar of the discipline is written in {json_path}.")
         print(
-            "Bound inputs with 'minimum' and 'maximum' in their 'items', remove the "
-            "inputs not to restrict, and reference the file in the YAML file with "
-            f"'input_grammar: {json_path.name}'."
+            "Bound inputs with 'minimum' and 'maximum' in their 'items', keeping all "
+            "the inputs, and reference the file in the YAML file with "
+            f"'input_grammar: {json_path.name}': it replaces the input grammar of the "
+            "discipline."
         )
     else:
         _check(args.yaml_file)

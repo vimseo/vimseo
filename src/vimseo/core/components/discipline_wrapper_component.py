@@ -43,16 +43,16 @@ class DisciplineWrapperComponent(BaseComponent):
     ):
         """
         Args:
-            input_grammar_file: The path to a JSON grammar file restricting the input
-                grammar of the discipline, e.g. with bounds. Its properties replace
-                those of the same names. If empty, the component shares the input
+            input_grammar_file: The path to a JSON grammar file replacing the input
+                grammar of the discipline, e.g. with bounds; it declares all the
+                inputs of the discipline. If empty, the component shares the input
                 grammar of the discipline; otherwise, it has its own JSON grammar, and
                 the discipline validates its inputs with its own grammar after the
                 component.
 
         Raises:
-            ValueError: When the JSON grammar file does more than restrict the input
-                grammar of the discipline.
+            ValueError: When the JSON grammar file misses an input of the discipline
+                or does more than restrict its input grammar.
         """  # ruff: ignore[undocumented-param]
         super().__init__(load_case)
 
@@ -62,7 +62,7 @@ class DisciplineWrapperComponent(BaseComponent):
         else:
             grammar = to_json_grammar(discipline.input_grammar)
             check_grammar_restriction(grammar, input_grammar_file)
-            # A property of the file replaces the property of the same name.
+            # The file declares all the inputs, so it replaces all the properties.
             grammar.update_from_file(input_grammar_file)
             for name in discipline.input_grammar.required_names:
                 grammar.required_names.add(name)

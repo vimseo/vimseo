@@ -37,13 +37,13 @@ default values of the discipline inputs of the same names; each property must be
 input of the discipline.
 
 The inputs can be bounded by a JSON grammar file, declared with the
-`_INPUT_GRAMMAR_FILE` class attribute. The component wrapping the discipline then gets
-its own JSON grammar: the input grammar of the discipline, whose properties of the same
-names as those of the file are replaced, e.g. to set the `minimum` and `maximum` of the
-`items` of an input. The model input bounds are read from this grammar, and an input
-out of these bounds makes the simulation fail. The discipline still validates its inputs
-with its own grammar, so the file can only restrict it: a variable unknown to the
-discipline, a different type or a looser bound raises an error.
+`_INPUT_GRAMMAR_FILE` class attribute. This file replaces the input grammar of the
+discipline: the component wrapping the discipline gets its JSON grammar, e.g. with the
+`minimum` and `maximum` of the `items` of an input. The model input bounds are read
+from this grammar, and an input out of these bounds makes the simulation fail. The
+discipline still validates its inputs with its own grammar, so the file declares all
+the inputs of the discipline and can only restrict them: a variable unknown to the
+discipline, a missing input, a different type or a looser bound raises an error.
 
 If you have a model implemented in a Python script, you may integrate the process to **VIMSEO** by:
 
@@ -63,7 +63,7 @@ discipline_options: {n_points: 100}       # the arguments of the discipline cons
 load_case: Dummy                          # the load case, Dummy by default
 summary: A tensile coupon with a bilinear elasto-plastic behaviour.
 material: coupon_material.json            # the material JSON file
-input_grammar: TensileCoupon_input.json   # the JSON grammar file bounding the inputs
+input_grammar: TensileCoupon_input.json   # the JSON grammar file replacing the discipline one
 plots:                                    # the figures: abscissa, then ordinates
   - [strain_history, stress_history]
 ```
@@ -75,8 +75,8 @@ The command `vimseo_wrap` helps to write the declaration:
 
 - `vimseo_wrap write-grammar TensileCoupon.yaml` writes the input grammar of the
   discipline as a JSON file, with the types of the inputs. Complete it with the
-  `minimum` and `maximum` of the `items` of the inputs to bound, remove the inputs not to
-  bound, and reference the file in the YAML file with `input_grammar`.
+  `minimum` and `maximum` of the `items` of the inputs to bound, keeping all the inputs,
+  and reference the file in the YAML file with `input_grammar`.
 - `vimseo_wrap check TensileCoupon.yaml` creates the model and prints its description
   and its input bounds; it also tells whether `create_model` finds the model.
 

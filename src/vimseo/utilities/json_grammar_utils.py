@@ -38,6 +38,8 @@ if TYPE_CHECKING:
 
     from gemseo.core.grammars.base_grammar import BaseGrammar
 
+    from vimseo.material.material import Material
+
 LOGGER = logging.getLogger(__name__)
 
 
@@ -128,7 +130,10 @@ def to_json_grammar(grammar: BaseGrammar, name: str = "") -> JSONGrammar:
 
 
 def check_grammar_restriction(reference: JSONGrammar, file_path: str | Path) -> None:
-    """Check that a JSON grammar file only restricts a reference grammar.
+    """Check that a JSON grammar file can replace a reference grammar.
+
+    The file shall declare all the variables of the reference grammar and only
+    restrict them.
 
     Args:
         reference: The reference grammar.
@@ -136,8 +141,8 @@ def check_grammar_restriction(reference: JSONGrammar, file_path: str | Path) -> 
 
     Raises:
         ValueError: When the file declares a variable unknown to the reference grammar,
-            changes the type of a variable, or has a looser ``minimum`` or ``maximum``
-            than the reference one.
+            misses a variable of the reference grammar, changes the type of a variable,
+            or has a looser ``minimum`` or ``maximum`` than the reference one.
     """
     properties = json.loads(Path(file_path).read_text(encoding="utf-8"))["properties"]
     reference_properties = reference.schema["properties"]
@@ -145,6 +150,9 @@ def check_grammar_restriction(reference: JSONGrammar, file_path: str | Path) -> 
     unknown_names = sorted(properties.keys() - reference_properties.keys())
     if unknown_names:
         errors.append(f"unknown variables {unknown_names}")
+    missing_names = sorted(reference_properties.keys() - properties.keys())
+    if missing_names:
+        errors.append(f"missing variables {missing_names}")
     lower_bounds, upper_bounds, _ = load_input_bounds(reference)
     for name in sorted(properties.keys() & reference_properties.keys()):
         prop = properties[name]
@@ -173,8 +181,51 @@ def check_grammar_restriction(reference: JSONGrammar, file_path: str | Path) -> 
             )
     if errors:
         msg = (
-            f"The JSON grammar {file_path} shall only restrict the grammar "
-            f"{reference.name}: {'; '.join(errors)}."
+            f"The JSON grammar {file_path} shall declare all the variables of the "
+            f"grammar {reference.name} and only restrict them: {'; '.join(errors)}."
+        )
+        raise ValueError(msg)
+
+
+def check_material_bounds(material: Material, grammar: JSONGrammar) -> None:
+    """Check that the bounds of a material are within those of a JSON grammar.
+
+    Only the material properties with a bound in the grammar are checked, so that an
+    uncertain space built from the material yields values valid for the grammar.
+
+    Args:
+        material: The material.
+        grammar: The JSON grammar.
+
+    Raises:
+        ValueError: When a material property has a looser bound than the grammar,
+            or a value out of the grammar bounds.
+    """
+    lower_bounds, upper_bounds, _ = load_input_bounds(grammar)
+    errors = []
+    for prop in material.properties:
+        if prop.name in lower_bounds:
+            lower_bound = float(np.min(lower_bounds[prop.name]))
+            if prop.lower_bound < lower_bound:
+                errors.append(
+                    f"{prop.name}: lower bound {prop.lower_bound} looser than "
+                    f"{lower_bound}"
+                )
+            if prop.value < lower_bound:
+                errors.append(f"{prop.name}: value {prop.value} below {lower_bound}")
+        if prop.name in upper_bounds:
+            upper_bound = float(np.max(upper_bounds[prop.name]))
+            if prop.upper_bound > upper_bound:
+                errors.append(
+                    f"{prop.name}: upper bound {prop.upper_bound} looser than "
+                    f"{upper_bound}"
+                )
+            if prop.value > upper_bound:
+                errors.append(f"{prop.name}: value {prop.value} above {upper_bound}")
+    if errors:
+        msg = (
+            f"The material {material.name} shall be within the bounds of the grammar "
+            f"{grammar.name}: {'; '.join(errors)}."
         )
         raise ValueError(msg)
 

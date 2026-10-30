@@ -154,16 +154,17 @@ def _write_input_grammar(file_path, properties):
 
 
 def test_input_grammar_file(tmp_wd):
-    """The input grammar file restricts the grammar of the component, not the one of
+    """The input grammar file replaces the grammar of the component, not the one of
     the model nor the one of the discipline, keeping the default values and the
     cache."""
     file_path = _write_input_grammar(
         tmp_wd / "input.json",
         {
+            "E1": {"type": "array", "items": {"type": "number"}},
             "area": {
                 "type": "array",
                 "items": {"type": "number", "minimum": 1.0, "maximum": 3.0},
-            }
+            },
         },
     )
 
@@ -192,7 +193,7 @@ def test_input_grammar_file(tmp_wd):
 
 
 def test_input_grammar_file_only_restricts(tmp_wd):
-    """The input grammar file cannot change the type of an input."""
+    """The input grammar file cannot change the type of an input nor miss one."""
     file_path = _write_input_grammar(
         tmp_wd / "input.json", {"area": {"type": "number"}}
     )
@@ -200,5 +201,29 @@ def test_input_grammar_file_only_restricts(tmp_wd):
     class _BadModel(_ModelWithMaterial):
         _INPUT_GRAMMAR_FILE = file_path
 
-    with pytest.raises(ValueError, match="shall only restrict"):
+    with pytest.raises(
+        ValueError, match=r"missing variables \['E1'\]; area: type \('number'"
+    ):
         _BadModel()
+
+
+def test_material_bounds_within_input_grammar(tmp_wd):
+    """The bounds of the material shall be within those of the input grammar."""
+    file_path = _write_input_grammar(
+        tmp_wd / "input.json",
+        {
+            "E1": {
+                "type": "array",
+                "items": {"type": "number", "minimum": 120000.0},
+            },
+            "area": {"type": "array", "items": {"type": "number"}},
+        },
+    )
+
+    class _NarrowModel(_ModelWithMaterial):
+        _INPUT_GRAMMAR_FILE = file_path
+
+    with pytest.raises(
+        ValueError, match=r"E1: lower bound 100000\.0 looser than 120000\.0"
+    ):
+        _NarrowModel()

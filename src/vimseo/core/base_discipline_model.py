@@ -52,17 +52,17 @@ class BaseDisciplineModel(IntegratedModel):
     _EXPECTED_LOAD_CASE: ClassVar[str] = ""
 
     _INPUT_GRAMMAR_FILE: ClassVar[Path | str] = ""
-    """The path to a JSON grammar file restricting the input grammar of the discipline.
+    """The path to a JSON grammar file replacing the input grammar of the discipline.
 
-    The component wrapping the discipline gets a JSON grammar, built from the input
-    grammar of the discipline, whose properties of the same names as those of the file
-    are replaced, e.g. to bound some inputs (``minimum`` and ``maximum`` of ``items``).
-    The model input bounds are then read from this grammar, and an input out of these
-    bounds makes the simulation fail, as for a discipline with its own JSON grammar.
-    The file can only restrict the grammar of the discipline, which still validates its
-    inputs: a variable unknown to the discipline, a different type or a looser bound
-    raises a ``ValueError``. The file can be written from the discipline by the
-    command ``vimseo_wrap write-grammar``.
+    If empty, the input grammar of the discipline is used. Otherwise, the component
+    wrapping the discipline gets the JSON grammar of the file, e.g. to bound some inputs
+    (``minimum`` and ``maximum`` of ``items``). The model input bounds are then read
+    from this grammar, and an input out of these bounds makes the simulation fail, as
+    for a discipline with its own JSON grammar. The file shall declare all the inputs of
+    the discipline and only restrict them, since the discipline still validates its
+    inputs with its own grammar: a variable unknown to the discipline, a missing input,
+    a different type or a looser bound raises a ``ValueError``. The file can be written
+    from the discipline by the command ``vimseo_wrap write-grammar``.
     """
 
     def __init__(
