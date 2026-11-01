@@ -300,7 +300,7 @@ def test_run_ids_are_stored_in_the_run(tmp_wd):
     )
     assert run.data.tags[MetaDataNames.run_id] == outputs[MetaDataNames.run_id][0]
     assert run.data.tags[MetaDataNames.run_id] != run.info.run_id
-    assert run.data.tags[MetaDataNames.tool_run_id] == ""
+    assert run.data.tags[MetaDataNames.analysis_node_run_id] == ""
 
     result = model.archive_manager.get_result()
     assert (

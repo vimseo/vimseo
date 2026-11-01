@@ -1,7 +1,7 @@
 [
   {
     "name": "ParameterSpaceReader",
-    "tool_name": "ParameterSpaceReader",
+    "analysis_node_name": "ParameterSpaceReader",
     "inputs": [],
     "outputs": [
       {
@@ -9,15 +9,15 @@
         "attr_name": "parameter_space"
       }
     ],
-    "tool_settings": {
-      "file_name": "sebastien.bocquet_2025-09-22_T21-52-30_SpaceToolResult.json",
+    "analysis_node_settings": {
+      "file_name": "sebastien.bocquet_2025-09-22_T21-52-30_SpaceAnalysisNodeResult.json",
       "directory_path": "C:\\Users\\sebastien.bocquet\\PycharmProjects\\vimseo\\workflow_data"
     },
-    "tool_constructor_options": {}
+    "analysis_node_constructor_options": {}
   },
   {
-    "name": "ModelCreationTool",
-    "tool_name": "ModelCreationTool",
+    "name": "ModelCreationAnalysisNode",
+    "analysis_node_name": "ModelCreationAnalysisNode",
     "inputs": [],
     "outputs": [
       {
@@ -25,20 +25,20 @@
         "attr_name": "model"
       }
     ],
-    "tool_settings": {
+    "analysis_node_settings": {
       "name": "MockModelPersistent",
       "load_case": "LC1",
       "default_inputs": {}
     },
-    "tool_constructor_options": {
+    "analysis_node_constructor_options": {
       "root_directory": "",
       "directory_naming_method": "UUID",
       "working_directory": ""
     }
   },
   {
-    "name": "SensitivityTool",
-    "tool_name": "SensitivityTool",
+    "name": "SensitivityAnalysisNode",
+    "analysis_node_name": "SensitivityAnalysisNode",
     "inputs": [
       {
         "name": "ps1",
@@ -55,7 +55,7 @@
         "attr_name": "indices"
       }
     ],
-    "tool_settings": {
+    "analysis_node_settings": {
       "sensitivity_algo": "MorrisAnalysis",
       "output_names": [
         "y4"
@@ -63,7 +63,7 @@
       "n_replicates": 5,
       "n_samples": 0
     },
-    "tool_constructor_options": {
+    "analysis_node_constructor_options": {
       "root_directory": "",
       "directory_naming_method": "UUID",
       "working_directory": ""

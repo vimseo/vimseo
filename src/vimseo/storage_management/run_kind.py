@@ -15,9 +15,9 @@
 
 """The kinds and the statuses of the runs of an archive.
 
-A study holds the simulations and the tool runs. In an MLflow archive, they are runs of
+A study holds the simulations and the analysis node runs. In an MLflow archive, they are runs of
 the experiment of the study, told apart by the tags defined here. The statuses are the
-same for the simulations and the tool runs, in both archives.
+same for the simulations and the analysis node runs, in both archives.
 
 This module imports nothing from MLflow, so that it is available without the ``mlflow``
 extra.
@@ -31,8 +31,8 @@ KIND_TAG = "vimseo.kind"
 SIMULATION = "simulation"
 """The kind of the run of a simulation."""
 
-TOOL_RUN = "tool_run"
-"""The kind of the run of a tool."""
+ANALYSIS_NODE_RUN = "analysis_node_run"
+"""The kind of the run of an analysis node."""
 
 MODEL_TAG = "vimseo.model"
 """The tag of the run of a simulation giving the name of its model."""

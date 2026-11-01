@@ -84,10 +84,10 @@ class MetaData:
     like MLflow. A result retrieved from the cache keeps the identifier of the
     simulation that created it."""
 
-    tool_run_id: ndarray[str]
-    """Unique identifier of the tool run during which the simulation was executed.
+    analysis_node_run_id: ndarray[str]
+    """Unique identifier of the analysis node run during which the simulation was executed.
 
-    Empty if the model was not executed by a tool."""
+    Empty if the model was not executed by an analysis node."""
 
     study_name: ndarray[str]
     """The study in which the simulation is archived."""
@@ -124,7 +124,7 @@ DEFAULT_METADATA = {
         MetaDataNames.directory_scratch_root: array(["__default_scratch_root__"]),
         MetaDataNames.directory_scratch_job: array(["__default_scratch_job__"]),
         MetaDataNames.run_id: array(["__default_run_id__"]),
-        MetaDataNames.tool_run_id: array(["__default_tool_run_id__"]),
+        MetaDataNames.analysis_node_run_id: array(["__default_analysis_node_run_id__"]),
         MetaDataNames.study_name: array(["__default_study__"]),
         MetaDataNames.status: array(["__default_status__"]),
     }.items()

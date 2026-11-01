@@ -21,7 +21,7 @@ from pathlib import Path
 import pytest
 from gemseo.core.grammars.json_grammar import JSONGrammar
 
-from vimseo.io.space_io import SpaceToolFileIO
+from vimseo.io.space_io import SpaceAnalysisNodeFileIO
 from vimseo.material.material import Material
 from vimseo.material.material import create_material_from_legacy_grammar
 from vimseo.material.material_property import MaterialProperty
@@ -172,7 +172,7 @@ def test_update_from_parameter_space():
     """Check that a stochastic material can be defined from a parameter space."""
     material = Material.from_json(MATERIAL_LIB_DIR / "Mock.json")
     parameter_space = (
-        SpaceToolFileIO()
+        SpaceAnalysisNodeFileIO()
         .read(MATERIAL_TEST_REFERENCES / "Mock_E1_distribution.json")
         .parameter_space
     )

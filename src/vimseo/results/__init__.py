@@ -13,11 +13,11 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-"""The collections of results, to explore a set of model results or tool results.
+"""The collections of results, to explore a set of model results or analysis node results.
 
 They are obtained from :func:`vimseo.api.open_model_results`,
-:func:`vimseo.api.open_tool_results`, :func:`vimseo.api.load_model_results` and
-:func:`vimseo.api.load_tool_results`.
+:func:`vimseo.api.open_analysis_node_results`, :func:`vimseo.api.load_model_results` and
+:func:`vimseo.api.load_analysis_node_results`.
 """
 
 from __future__ import annotations

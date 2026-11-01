@@ -1,0 +1,455 @@
+# Copyright 2021 IRT Saint Exupery, https://www.irt-saintexupery.com
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Lesser General Public
+# License version 3 as published by the Free Software Foundation.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with this program; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
+from __future__ import annotations
+
+import re
+from collections.abc import Mapping
+from pathlib import Path
+
+import pytest
+from matplotlib.figure import Figure
+from numpy import array
+from numpy import column_stack
+from numpy import inf
+from numpy import log
+from numpy import max as np_max
+from numpy import min as np_min
+from numpy import random
+from numpy import zeros
+from numpy.testing import assert_array_equal
+from openturns import ComposedDistribution
+from openturns import Dirac
+from openturns import Uniform
+from pandas import DataFrame
+
+from vimseo.analysis_nodes.base_result import assert_results_equal
+from vimseo.analysis_nodes.bayes.bayes_analysis import BayesAnalysisNode
+from vimseo.analysis_nodes.bayes.bayes_analysis import BayesInputs
+from vimseo.analysis_nodes.bayes.bayes_analysis_result import BayesAnalysisResult
+from vimseo.storage_management.analysis_node_archive.directory_analysis_node_archive import (
+    DirectoryAnalysisNodeArchive,
+)
+from vimseo.utilities.datasets import to_dataset
+from vimseo.utilities.test_utils import check_result_visualization
+
+random.seed(1)  # ruff: ignore[numpy-legacy-random]
+
+
+@pytest.fixture
+def data() -> array:
+    """The dataset used to calibrate the probabilistic model."""
+    return random.randn(10) + 2  # ruff: ignore[numpy-legacy-random]
+
+
+@pytest.fixture
+def model() -> str:
+    """A probabilistic model to calibrate."""
+    return "Normal"
+
+
+@pytest.fixture
+def prior() -> array:
+    """A prior for the model parameters."""
+    return ComposedDistribution([Uniform(0, 5)] * 2)
+
+
+@pytest.fixture
+def bayes_analysis(model, prior, data) -> BayesAnalysisNode:
+    """A raw MCMC sampling."""
+    analysis = BayesAnalysisNode()
+    analysis.execute(likelihood_dist=model, prior_dist=prior, data=data, n_mcmc=50)
+    return analysis
+
+
+@pytest.fixture
+def processed_analysis(bayes_analysis) -> BayesAnalysisNode:
+    """A MCMC chain."""
+    bayes_analysis.post(
+        1,
+        n_mcmc=50,
+        nb_samples_ml=5,
+        nb_samples_posterior=2,
+    )
+    return bayes_analysis
+
+
+def test_missing_likelihood(tmp_wd):
+    """Check an error is raised if no model is defined."""
+    analysis = BayesAnalysisNode()
+    with pytest.raises(
+        ValueError,
+        match=re.escape("The probabilistic model is not specified."),
+    ):
+        analysis.execute()
+
+
+def test_missing_prior(tmp_wd, model):
+    """Check an error is raised if no prior is defined."""
+    analysis = BayesAnalysisNode()
+    with pytest.raises(
+        ValueError,
+        match=re.escape("The prior model is not specified."),
+    ):
+        analysis.execute(likelihood_dist=model)
+
+
+def test_dirac_prior(tmp_wd, model, data):
+    """Check an error is raised if Dirac distributions are used for priors."""
+    analysis = BayesAnalysisNode()
+    with pytest.raises(
+        ValueError,
+        match=re.escape(
+            "A prior model with Dirac distributions raises numerical errors."
+            " Use rather `frozen_options` to fix variables."
+        ),
+    ):
+        analysis.execute(
+            likelihood_dist=model,
+            data=data,
+            prior_dist=[Uniform(), Dirac(0.1)],
+            n_mcmc=2,
+        )
+
+
+def test_missing_data(tmp_wd, model, prior):
+    """Check an error is raised if no prior is available."""
+    analysis = BayesAnalysisNode()
+    with pytest.raises(
+        ValueError,
+        match=re.escape("There is no data to calibrate the model."),
+    ):
+        analysis.execute(likelihood_dist=model, prior_dist=prior)
+
+
+def test_no_correspondance_prior_likelihood(tmp_wd, prior, data):
+    """Check that the dimension of the prior corresponds to the number of model
+    parameters."""
+    analysis = BayesAnalysisNode()
+    with pytest.raises(
+        ValueError,
+        match=re.escape(
+            "The number of model parameters is not compatible"
+            " with the dimension of the prior."
+        ),
+    ):
+        analysis.execute(likelihood_dist="WeibullMin", prior_dist=prior, data=data)
+
+
+def test_execution_settings(tmp_wd, model, prior, data):
+    """Check the initialization settings of a mock inference ."""
+    analysis = BayesAnalysisNode()
+    analysis.execute(likelihood_dist=model, prior_dist=prior, data=data, n_mcmc=10)
+
+    assert analysis.result.ndim == 2
+    assert analysis.result.thin_number == 30
+    assert analysis._frozen_options == {}
+    assert_array_equal(data, array(analysis._data).ravel())
+
+
+@pytest.mark.parametrize(
+    (
+        "prior",
+        "expected_value_in",
+        "candidate_in",
+        "candidate_out",
+        "frozen_args",
+        "expected_frozen",
+        "dim",
+    ),
+    [
+        (
+            [Uniform(0, 5), Uniform(0, 5)],
+            log(0.04),
+            array([0.5, 0.5]),
+            array([-0.2, 0.2]),
+            {},
+            {},
+            2,
+        ),
+        (
+            ComposedDistribution([Uniform(0, 5)] * 2),
+            log(0.04),
+            array([0.5, 0.5]),
+            array([-0.2, 0.2]),
+            {},
+            {},
+            2,
+        ),
+        (
+            ComposedDistribution([Uniform(0, 5)]),
+            log(0.2),
+            array([0.5]),
+            array([-0.2]),
+            {"frozen_index": [1], "frozen_values": [0.1]},
+            {"free_index": [0], "frozen_index": [1], "frozen_values": [0.1]},
+            1,
+        ),
+    ],
+)
+def test_instanciation_prior(
+    tmp_wd,
+    model,
+    data,
+    prior,
+    expected_value_in,
+    candidate_in,
+    candidate_out,
+    frozen_args,
+    expected_frozen,
+    dim,
+):
+    """Check the different ways to assign the prior."""
+    analysis = BayesAnalysisNode()
+    analysis.execute(
+        likelihood_dist=model,
+        prior_dist=prior,
+        data=data,
+        n_mcmc=2,
+        frozen_variables=frozen_args,
+    )
+    assert analysis.result.ndim == dim
+    assert analysis._dist_prior.computeLogPDF(candidate_in) == expected_value_in
+    assert analysis._dist_prior.computeLogPDF(candidate_out) == -inf
+    assert analysis._frozen_options == expected_frozen
+    assert analysis.result.raw_samples.shape[2] == dim
+
+
+def test_plot_mcmc_chains(tmp_wd, bayes_analysis):
+    """Check that the MCMC chains are plotted from the result, without the analysis node,
+    before the post-processing."""
+    bayes_analysis.result.to_hdf5("result.hdf5")
+    result = BayesAnalysisResult.from_hdf5("result.hdf5")
+    assert isinstance(result.plot_mcmc_chains(), Figure)
+    assert list(result.plot()) == ["mcmc_chains"]
+
+
+@pytest.mark.parametrize(
+    ("prior", "frozen_variables", "expected"),
+    [
+        (ComposedDistribution([Uniform(0, 5)] * 2), {}, ("mu_0", "sigma_0")),
+        (
+            ComposedDistribution([Uniform(0, 5)]),
+            {"frozen_index": [0], "frozen_values": [2.0]},
+            ("sigma_0",),
+        ),
+    ],
+)
+def test_parameter_names(tmp_wd, model, data, prior, frozen_variables, expected):
+    """Check that the names of the free parameters are stored in the result."""
+    analysis = BayesAnalysisNode()
+    analysis.execute(
+        likelihood_dist=model,
+        prior_dist=prior,
+        data=data,
+        n_mcmc=2,
+        frozen_variables=frozen_variables,
+    )
+    assert analysis.result.parameter_names == expected
+
+
+def test_execution_results(tmp_wd, processed_analysis):
+    """Check the results of an inference."""
+    assert processed_analysis.result.processed_samples.shape == (30, 2)
+    assert processed_analysis.result.raw_samples.shape == (50, 30, 2)
+    censored_samples = array(
+        processed_analysis.result.posterior_predictive.getConditioningDistribution().getParameter()
+    )
+    assert (
+        int(censored_samples.shape[0] / (processed_analysis.result.ndim + 1)) <= 2_000
+    )
+    assert (
+        np_min(processed_analysis.result.raw_samples[:, :, 0])
+        > processed_analysis._dist_prior.getRange().getLowerBound()[0]
+    )
+    assert (
+        np_min(processed_analysis.result.raw_samples[:, :, 1])
+        > processed_analysis._dist_prior.getRange().getLowerBound()[1]
+    )
+    assert (
+        np_max(processed_analysis.result.raw_samples[:, :, 0])
+        < processed_analysis._dist_prior.getRange().getUpperBound()[0]
+    )
+    assert (
+        np_max(processed_analysis.result.raw_samples[:, :, 1])
+        < processed_analysis._dist_prior.getRange().getUpperBound()[1]
+    )
+
+    attributes = dir(processed_analysis.result)
+    assert "lppd" in attributes
+    assert "ml" in attributes
+
+
+def test_error_cropping(tmp_wd, bayes_analysis):
+    """Check that an error is raised when not enough samples are generated."""
+    mock_samples = zeros((10, 30, 2))
+    with pytest.raises(
+        ValueError,
+        match=re.escape("Not enough MCMC samples have been generated."),
+    ):
+        bayes_analysis.cropping(mock_samples, thin=30, burnin=1, dim=2)
+
+
+def test_lppd(tmp_wd, bayes_analysis):
+    """Check the returned lppd."""
+    assert bayes_analysis.lppd(burnin=1, n_mcmc=40) > 0
+
+
+def test_marginal_likelihood(tmp_wd, processed_analysis):
+    """Check the returned marginal likelihood."""
+    assert processed_analysis.marginal_likelihood(10) > 0
+
+
+def test_maximum_size_posterior_predictive(tmp_wd, processed_analysis):
+    """Check the maximum size of posterior samples for the function."""
+    with pytest.raises(
+        ValueError,
+        match=re.escape(
+            "The construction of the posterior predictive distribution "
+            "is limited to 2000 due to very large consumption and long computational "
+            "time."
+        ),
+    ):
+        processed_analysis.build_posterior_predictive(2001)
+
+
+@pytest.mark.parametrize("plot_directory", ["", "foo"])
+def test_plot_results_return_type(tmp_wd, model, prior, data, plot_directory):
+    """Check that plot_results output is a dictionary."""
+    analysis = BayesAnalysisNode()
+    analysis.execute(likelihood_dist=model, prior_dist=prior, data=data, n_mcmc=50)
+    analysis.post(
+        1,
+        n_mcmc=50,
+        nb_samples_ml=5,
+        nb_samples_posterior=2,
+    )
+    assert analysis.working_directory.absolute().exists()
+    plot_checks = analysis.result.plot(directory_path=plot_directory, save=True)
+    assert isinstance(plot_checks, Mapping)
+    assert list(plot_checks) == [
+        "mcmc_chains",
+        "posterior_samples",
+        "posterior_predictive",
+    ]
+    assert "posterior_predictive" in plot_checks
+    assert isinstance(plot_checks["posterior_samples"], Figure)
+    assert isinstance(plot_checks["posterior_predictive"], Figure)
+    directory = Path(plot_directory or Path.cwd())
+    assert (directory / "posterior_samples.png").is_file()
+    assert (directory / "posterior_predictive.png").is_file()
+
+
+def test_plot_posterior_distribution(tmp_wd, processed_analysis):
+    """Check that the posterior distribution is plotted with the parameter names."""
+    figure = processed_analysis.result.plot_posterior_distribution()
+    assert isinstance(figure, Figure)
+    assert figure.axes[0].get_xlabel() == "mu_0"
+
+
+def test_plot_predictive_distribution(tmp_wd, processed_analysis):
+    """Check that the posterior predictive distribution is plotted versus the data."""
+    figure = processed_analysis.result.plot_predictive_distribution(
+        n_disc=200, variable_name="X"
+    )
+    assert isinstance(figure, Figure)
+    assert len(figure.axes) == 2
+    assert figure.axes[1].get_xlabel() == "X"
+
+
+def test_post_republishes_the_result(tmp_wd, model, prior, data):
+    """Check that the post-processing is archived with the result of the analysis node run."""
+    analysis = BayesAnalysisNode(
+        archive_manager="DirectoryArchive", directory_archive_root="archive"
+    )
+    analysis.execute(likelihood_dist=model, prior_dist=prior, data=data, n_mcmc=50)
+    analysis.post(1, n_mcmc=50, nb_samples_ml=5, nb_samples_posterior=2)
+    result = DirectoryAnalysisNodeArchive("archive").get_analysis_node_result(
+        analysis.result.metadata.analysis_node_run_id
+    )
+    assert result.processed_samples is not None
+    assert result.metadata.misc["post"] == {
+        "burnin": 1,
+        "n_mcmc": 50,
+        "nb_samples_ml": 5,
+        "nb_samples_posterior": 2,
+    }
+    assert set(result.plot()) == {
+        "mcmc_chains",
+        "posterior_samples",
+        "posterior_predictive",
+    }
+
+
+def test_serialization(tmp_wd, bayes_analysis):
+    """Check that a Bayes analysis result can be serialized to hdf5."""
+    bayes_analysis.result.to_hdf5("result.hdf5")
+    serialized_result = BayesAnalysisResult.from_hdf5("result.hdf5")
+    assert_results_equal(bayes_analysis.result, serialized_result)
+
+
+@pytest.mark.parametrize(
+    "to_user_data",
+    [
+        lambda data: data,
+        list,
+        lambda data: {"young_modulus": data},
+        lambda data: DataFrame({"young_modulus": data}),
+        lambda data: to_dataset({"young_modulus": data}),
+    ],
+)
+def test_data_forms(data, to_user_data):
+    """Check that the data can be passed in the forms accepted by the other analysis nodes."""
+    assert_array_equal(BayesInputs(data=to_user_data(data)).data, data)
+
+
+def test_data_mapping_execution(tmp_wd, model, prior, data):
+    """Check that a mapping is accepted on the keyword argument path of execute."""
+    analysis = BayesAnalysisNode()
+    analysis.execute(
+        likelihood_dist=model, prior_dist=prior, data={"x": data}, n_mcmc=10
+    )
+    assert_array_equal(array(analysis._data).ravel(), data)
+
+
+@pytest.mark.parametrize(
+    "user_data",
+    [
+        {"x": [1.0, 2.0], "y": [3.0, 4.0]},
+        {"x": column_stack([[1.0, 2.0], [3.0, 4.0]])},
+    ],
+)
+def test_data_not_a_single_scalar_variable(user_data):
+    """Check that data that are not the sample of a single scalar variable raise."""
+    with pytest.raises(ValueError, match="must hold a single scalar variable"):
+        BayesInputs(data=user_data)
+
+
+def test_result_visualization(tmp_wd, processed_analysis):
+    """Check that a Bayes result can be visualized once loaded from a file."""
+    check_result_visualization(processed_analysis.result, "visualization")
+    tables = processed_analysis.result.to_dataframes()
+    assert set(tables["criteria"].index) == {"lppd", "ml"}
+    assert "median" in tables["posterior"].columns
+
+
+def test_key_values(tmp_wd, processed_analysis):
+    key_values = processed_analysis.result.get_key_values()
+    assert set(key_values) == {
+        "lppd",
+        "ml",
+        "posterior_mean.mu_0",
+        "posterior_mean.sigma_0",
+    }

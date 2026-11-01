@@ -226,7 +226,7 @@ def get_available_models(load_case: str = "") -> list[str]:
 
 def get_available_plots():
     """The available plots, deriving from ``Plotter``."""
-    from vimseo.tools.post_tools.plot_factory import PlotFactory
+    from vimseo.analysis_nodes.post_analysis_nodes.plot_factory import PlotFactory
 
     class_names = PlotFactory().class_names
     class_names.remove("Plotter")
@@ -240,12 +240,12 @@ def get_available_metrics():
     return MetricFactory().class_names
 
 
-def get_available_tools():
-    """The available tools."""
-    from vimseo.tools.tools_factory import ToolsFactory
+def get_available_analysis_nodes():
+    """The available analysis nodes."""
+    from vimseo.analysis_nodes.analysis_nodes_factory import AnalysisNodesFactory
 
-    class_names = ToolsFactory().class_names
-    class_names.remove("BaseTool")
+    class_names = AnalysisNodesFactory().class_names
+    class_names.remove("BaseAnalysisNode")
     return class_names
 
 
@@ -254,7 +254,9 @@ def _resolve_archive(
 ) -> tuple[str, str | Path]:
     """Return the archive settings, with the defaults of the configuration."""
     from vimseo.config.global_configuration import _configuration as config
-    from vimseo.storage_management.tool_archive.uri import get_default_archive_root
+    from vimseo.storage_management.analysis_node_archive.uri import (
+        get_default_archive_root,
+    )
 
     return (
         archive_manager or config.run_archive_manager,
@@ -298,7 +300,7 @@ def search_model_results(
 ) -> list[dict]:
     """Search the archived simulations, without loading their results.
 
-    Its counterpart for the tool runs is :func:`search_tool_runs`.
+    Its counterpart for the analysis node runs is :func:`search_analysis_node_runs`.
 
     Args:
         archive_manager: The archive manager of the simulations, ``"DirectoryArchive"``
@@ -316,7 +318,7 @@ def search_model_results(
     Returns:
         One summary per simulation, from the oldest to the newest: ``run_id``,
         ``study_name``, ``model_name``, ``load_case``, ``status``, ``datetime``,
-        ``tool_run_id``, ``uri`` (to load it with :func:`load_model_results`), some
+        ``analysis_node_run_id``, ``uri`` (to load it with :func:`load_model_results`), some
         metadata, and the scalar inputs and outputs as ``inputs.{name}`` and
         ``outputs.{name}``.
     """
@@ -360,76 +362,88 @@ def _get_query_names(query: str, prefix: str) -> list[str]:
     return [name for name in re.findall(r"`([^`]+)`", query) if name.startswith(prefix)]
 
 
-def search_tool_runs(
+def search_analysis_node_runs(
     archive_manager: str = "",
     directory_archive_root: str | Path = "",
     study_name: str = "",
-    tool_name: str = "",
+    analysis_node_name: str = "",
     status: str = "",
     query: str = "",
 ) -> list[dict]:
-    """Search the archived tool runs, without loading their results.
+    """Search the archived analysis node runs, without loading their results.
 
     Its counterpart for the simulations is :func:`search_model_results`.
 
     Args:
-        archive_manager: The archive manager of the tool results. If empty, the one of
+        archive_manager: The archive manager of the analysis node results. If empty, the one of
             the configuration.
         directory_archive_root: The root directory of the archive. If empty, the one
             of the configuration.
         study_name: The study. If empty, every study.
-        tool_name: The name of the tool. If empty, every tool.
-        status: The status of the tool runs. If empty, every status.
+        analysis_node_name: The name of the analysis node. If empty, every analysis node.
+        status: The status of the analysis node runs. If empty, every status.
         query: A query on the summaries, see :mod:`vimseo.results.query`; the
             settings are ``inputs.{name}`` and the key values ``outputs.{name}``.
 
     Returns:
-        One summary per tool run, from the oldest to the newest, with its ``uri``
-        (to load it with :func:`load_tool_results`).
+        One summary per analysis node run, from the oldest to the newest, with its ``uri``
+        (to load it with :func:`load_analysis_node_results`).
     """
     from pandas import DataFrame
 
-    from vimseo.results.collection import create_tool_summary
+    from vimseo.results.collection import create_analysis_node_summary
     from vimseo.results.query import apply_query
-    from vimseo.storage_management.tool_archive.uri import get_default_archive_manager
+    from vimseo.storage_management.analysis_node_archive.uri import (
+        get_default_archive_manager,
+    )
 
-    tool_archive_manager = open_tool_archive(
+    analysis_node_archive_manager = open_analysis_node_archive(
         archive_manager or get_default_archive_manager(), directory_archive_root
     )
     summaries = sorted(
-        tool_archive_manager.search_tool_runs(
-            tool_name=tool_name, status=status, study_name=study_name
+        analysis_node_archive_manager.search_analysis_node_runs(
+            analysis_node_name=analysis_node_name, status=status, study_name=study_name
         ),
-        key=operator.itemgetter("tool_run_id"),
+        key=operator.itemgetter("analysis_node_run_id"),
     )
     if not query:
         return summaries
-    flat = DataFrame([create_tool_summary(summary) for summary in summaries])
-    kept = set(apply_query(flat, query)["tool_run_id"]) if not flat.empty else set()
-    return [summary for summary in summaries if summary["tool_run_id"] in kept]
+    flat = DataFrame([create_analysis_node_summary(summary) for summary in summaries])
+    kept = (
+        set(apply_query(flat, query)["analysis_node_run_id"])
+        if not flat.empty
+        else set()
+    )
+    return [summary for summary in summaries if summary["analysis_node_run_id"] in kept]
 
 
-def open_tool_archive(
+def open_analysis_node_archive(
     archive_manager: str = "",
     directory_archive_root: str | Path = "",
     study_name: str = "",
 ):
-    """Open the archive manager of the tool results.
+    """Open the archive manager of the analysis node results.
 
     Args:
         archive_manager: The archive manager. If empty, the one of the configuration.
         directory_archive_root: The root directory of the archive. If empty, the one
             of the configuration.
-        study_name: The study of the tool runs written through the archive manager.
+        study_name: The study of the analysis node runs written through the archive manager.
             If empty, the one of the configuration.
 
     Returns:
-        The archive manager of the tool results, to search the tool runs and read
+        The archive manager of the analysis node results, to search the analysis node runs and read
         their results.
     """
-    from vimseo.storage_management.tool_archive import open_tool_archive as open_
-    from vimseo.storage_management.tool_archive.uri import get_default_archive_manager
-    from vimseo.storage_management.tool_archive.uri import get_default_archive_root
+    from vimseo.storage_management.analysis_node_archive import (
+        open_analysis_node_archive as open_,
+    )
+    from vimseo.storage_management.analysis_node_archive.uri import (
+        get_default_archive_manager,
+    )
+    from vimseo.storage_management.analysis_node_archive.uri import (
+        get_default_archive_root,
+    )
 
     return open_(
         archive_manager or get_default_archive_manager(),
@@ -450,7 +464,7 @@ class _ModelResultLoader:
 
     def __call__(self, summary) -> ModelResult:
         from vimseo.core.model_result import ModelResult
-        from vimseo.storage_management.tool_archive.uri import load_model_data
+        from vimseo.storage_management.analysis_node_archive.uri import load_model_data
 
         key = (summary["model_name"], summary["load_case"])
         if key not in self.__models:
@@ -503,7 +517,7 @@ def open_model_results(
     ).filter(query, failed, **metadata)
 
 
-def open_tool_results(
+def open_analysis_node_results(
     archive_manager: str = "",
     directory_archive_root: str | Path = "",
     study_name: str = "",
@@ -511,44 +525,48 @@ def open_tool_results(
     failed: bool | None = None,
     **metadata,
 ):
-    """Open the tool results of an archive, as a collection.
+    """Open the analysis node results of an archive, as a collection.
 
     Args:
-        archive_manager: The archive manager of the tool results. If empty, the one of
+        archive_manager: The archive manager of the analysis node results. If empty, the one of
             the configuration.
         directory_archive_root: The root directory of the archive. If empty, the one
             of the configuration.
         study_name: The study. If empty, every study.
         query: A query on the summaries, see :mod:`vimseo.results.query`.
-        failed: Whether to keep only the failed tool runs (``True``), only the others
+        failed: Whether to keep only the failed analysis node runs (``True``), only the others
             (``False``) or both (``None``).
-        **metadata: Values of metadata, e.g. ``tool_name="DOETool"``.
+        **metadata: Values of metadata, e.g. ``analysis_node_name="DOEAnalysisNode"``.
 
     Returns:
-        The tool results, a :class:`.ToolResults`.
+        The analysis node results, a :class:`.AnalysisNodeResults`.
     """
     from pandas import DataFrame
 
-    from vimseo.results.collection import ToolResults
-    from vimseo.results.collection import create_tool_summary
-    from vimseo.storage_management.tool_archive.uri import load_tool_result
+    from vimseo.results.collection import AnalysisNodeResults
+    from vimseo.results.collection import create_analysis_node_summary
+    from vimseo.storage_management.analysis_node_archive.uri import (
+        load_analysis_node_result,
+    )
 
     summaries = [
-        create_tool_summary(summary)
-        for summary in search_tool_runs(
+        create_analysis_node_summary(summary)
+        for summary in search_analysis_node_runs(
             archive_manager, directory_archive_root, study_name
         )
     ]
 
     def load(summary):
-        return load_tool_result(
+        return load_analysis_node_result(
             summary["uri"],
             archive_manager=archive_manager,
             directory_archive_root=directory_archive_root,
         )
 
-    return ToolResults(
-        DataFrame(summaries, columns=None if summaries else ["tool_run_id", "status"]),
+    return AnalysisNodeResults(
+        DataFrame(
+            summaries, columns=None if summaries else ["analysis_node_run_id", "status"]
+        ),
         load,
     ).filter(query, failed, **metadata)
 
@@ -569,10 +587,10 @@ def load_model_results(
     """Load model results from their references, without executing their models.
 
     A reference is a ``run_id``, ``run:{run_id}``, the job directory of a simulation
-    or ``runs:/{mlflow_run_id}`` (see :mod:`vimseo.storage_management.tool_archive.uri`),
+    or ``runs:/{mlflow_run_id}`` (see :mod:`vimseo.storage_management.analysis_node_archive.uri`),
     e.g. the ``uri`` of a summary of :func:`search_model_results` or the
-    ``simulation_run_ids`` of a tool result. The class of a model must be installed.
-    Its counterpart for the tool results is :func:`load_tool_results`.
+    ``simulation_run_ids`` of an analysis node result. The class of a model must be installed.
+    Its counterpart for the analysis node results is :func:`load_analysis_node_results`.
 
     Args:
         references: One reference or a sequence of references.
@@ -594,8 +612,8 @@ def load_model_results(
 
     from vimseo.core.model_result import ModelResult
     from vimseo.results.collection import ModelResults
+    from vimseo.storage_management.analysis_node_archive.uri import load_model_data
     from vimseo.storage_management.base_archive_storage import create_simulation_summary
-    from vimseo.storage_management.tool_archive.uri import load_model_data
 
     models = {}
     results = {}
@@ -633,23 +651,23 @@ def _from_model_data(model_result_class, data, models):
     return model_result_class.from_dict(data, model=models[key])
 
 
-def load_tool_results(
+def load_analysis_node_results(
     references,
     archive_manager: str = "",
     directory_archive_root: str | Path = "",
     study_name: str = "",
 ):
-    """Load tool results from their references, without their tools.
+    """Load analysis node results from their references, without their analysis nodes.
 
-    A reference is a ``tool_run_id``, ``tool-run:{tool_run_id}``, a result file, the
-    directory of a tool run or ``runs:/{mlflow_run_id}`` (see
-    :mod:`vimseo.storage_management.tool_archive.uri`), e.g. the ``uri`` of a summary
-    of :func:`search_tool_runs`. Its counterpart for the model results is
+    A reference is a ``analysis_node_run_id``, ``analysis-node-run:{analysis_node_run_id}``, a result file, the
+    directory of an analysis node run or ``runs:/{mlflow_run_id}`` (see
+    :mod:`vimseo.storage_management.analysis_node_archive.uri`), e.g. the ``uri`` of a summary
+    of :func:`search_analysis_node_runs`. Its counterpart for the model results is
     :func:`load_model_results`.
 
     Args:
         references: One reference or a sequence of references.
-        archive_manager: The archive manager of the tool results, used by the
+        archive_manager: The archive manager of the analysis node results, used by the
             identifiers. If empty, guess it from the archive.
         directory_archive_root: The root directory of the archive. If empty, the one
             of the configuration.
@@ -657,41 +675,49 @@ def load_tool_results(
             function; the results are searched in every study, whatever its value.
 
     Returns:
-        The tool results, a :class:`.ToolResults` in the order of the references,
-        even for a single reference: ``load_tool_results(ref)[0]``.
+        The analysis node results, a :class:`.AnalysisNodeResults` in the order of the references,
+        even for a single reference: ``load_analysis_node_results(ref)[0]``.
     """
     from pandas import DataFrame
 
-    from vimseo.results.collection import ToolResults
-    from vimseo.results.collection import create_tool_summary
-    from vimseo.storage_management.tool_archive.base_tool_archive import create_summary
-    from vimseo.storage_management.tool_archive.uri import load_tool_result
+    from vimseo.results.collection import AnalysisNodeResults
+    from vimseo.results.collection import create_analysis_node_summary
+    from vimseo.storage_management.analysis_node_archive.base_analysis_node_archive import (
+        create_summary,
+    )
+    from vimseo.storage_management.analysis_node_archive.uri import (
+        load_analysis_node_result,
+    )
 
     results = {}
     summaries = []
     for reference in _as_references(references):
-        result = load_tool_result(
+        result = load_analysis_node_result(
             reference,
             archive_manager=archive_manager,
             directory_archive_root=directory_archive_root,
         )
         metadata = result.metadata
-        summary = create_tool_summary({
+        summary = create_analysis_node_summary({
             **create_summary(
                 "",
-                metadata.tool_run_id,
-                metadata.parent_tool_run_id,
+                metadata.analysis_node_run_id,
+                metadata.parent_analysis_node_run_id,
                 "FINISHED",
                 result=result,
             ),
-            "tool_name": metadata.misc.get("tool_name", type(result).__name__),
+            "analysis_node_name": metadata.misc.get(
+                "analysis_node_name", type(result).__name__
+            ),
             "uri": str(reference),
         })
-        results[summary["tool_run_id"]] = result
+        results[summary["analysis_node_run_id"]] = result
         summaries.append(summary)
-    return ToolResults(
-        DataFrame(summaries, columns=None if summaries else ["tool_run_id", "status"]),
-        lambda summary: results[summary["tool_run_id"]],
+    return AnalysisNodeResults(
+        DataFrame(
+            summaries, columns=None if summaries else ["analysis_node_run_id", "status"]
+        ),
+        lambda summary: results[summary["analysis_node_run_id"]],
         cache=dict(results),
     )
 

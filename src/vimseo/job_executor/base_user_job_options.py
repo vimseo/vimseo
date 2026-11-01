@@ -19,7 +19,7 @@ from __future__ import annotations
 
 from pydantic import Field
 
-from vimseo.tools.base_settings import BaseSettings
+from vimseo.analysis_nodes.base_settings import BaseSettings
 
 
 class BaseUserJobSettings(BaseSettings):

@@ -11,7 +11,7 @@
 
 ### REQ-NFR-001 — A study is reproducible
 
-- **Statement:** The archive of a tool run should hold everything needed to re-execute
+- **Statement:** The archive of an analysis node run should hold everything needed to re-execute
   it: the settings, the inputs, the version of VIMSEO and of the models.
 - **Rationale:** Reproducibility is a credibility criterion of a simulation.
 - **Priority:** Should

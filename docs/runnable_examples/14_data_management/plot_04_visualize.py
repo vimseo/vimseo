@@ -18,7 +18,7 @@
 Plot the results
 ================
 
-Draw the figures and the tables of a model result and of a tool result, from Python
+Draw the figures and the tables of a model result and of an analysis node result, from Python
 and from the dashboards.
 """
 
@@ -30,15 +30,15 @@ import shutil
 from gemseo.algos.parameter_space import ParameterSpace
 
 from vimseo import EXAMPLE_RUNS_DIR
+from vimseo.analysis_nodes.doe.doe import DOEAnalysisNode
 from vimseo.api import create_model
 from vimseo.api import load_model_results
 from vimseo.api import search_model_results
-from vimseo.tools.doe.doe import DOETool
 
 # %%
 # Generate the results
 # --------------------
-# A DOE of a beam in bending gives a tool result, and a model result per simulation:
+# A DOE of a beam in bending gives an analysis node result, and a model result per simulation:
 archive = {
     "archive_manager": "DirectoryArchive",
     "directory_archive_root": EXAMPLE_RUNS_DIR / "archive/data_management/visualize",
@@ -56,11 +56,13 @@ parameter_space = ParameterSpace()
 parameter_space.add_random_variable(
     "height", "OTUniformDistribution", minimum=30.0, maximum=60.0
 )
-doe = DOETool(**archive)
+doe = DOEAnalysisNode(**archive)
 doe.execute(model=model, parameter_space=parameter_space, n_samples=5)
 
-tool_result = doe.result
-model_results = load_model_results(tool_result.metadata.simulation_run_ids, **archive)
+analysis_node_result = doe.result
+model_results = load_model_results(
+    analysis_node_result.metadata.simulation_run_ids, **archive
+)
 model_result = model_results[0]
 
 # %%
@@ -107,18 +109,18 @@ figures["energy_strain_history_and_2_more_vs_displacement_history"]
 figures["crack_propagation"]
 
 # %%
-# ### Figures of a tool result
-# A tool result draws the figures of its tool, with the settings of its tool. A DOE
+# ### Figures of an analysis node result
+# An analysis node result draws the figures of its analysis node, with the settings of its analysis node. A DOE
 # result draws a scatter matrix of its scalar variables, the scalar outputs versus the
 # input varying between the samples, and the curves of the model superposed over the
 # samples:
-figures = tool_result.plot()
+figures = analysis_node_result.plot()
 list(figures)
 
 # %%
 # Its settings select the outputs, the abscissa of the parametric study and the
 # variables of the scatter matrix:
-tool_result.get_plot_choices()
+analysis_node_result.get_plot_choices()
 
 # %%
 # A parametric study is drawn for a *family* of samples, differing by the abscissa
@@ -131,12 +133,14 @@ tool_result.get_plot_choices()
 # like a LHS, has no family: only its scatter matrix is relevant.
 
 # %%
-figures = tool_result.plot(scatter_matrix_variable_names=["height", "reaction_forces"])
+figures = analysis_node_result.plot(
+    scatter_matrix_variable_names=["height", "reaction_forces"]
+)
 figures["scatter_matrix"]
 
 # %%
 # The figures are written to files with ``save=True``:
-figures = tool_result.plot(
+figures = analysis_node_result.plot(
     save=True, directory_path=EXAMPLE_RUNS_DIR / "visualization/data_management"
 )
 
@@ -153,8 +157,8 @@ figures["moment_vs_moment_grid"]
 # Tables
 # ------
 # ``to_dataframes()`` returns the numerical values of a result as ``DataFrame``
-# objects, by name. The tables of a tool result depend on its tool:
-tables = tool_result.to_dataframes()
+# objects, by name. The tables of an analysis node result depend on its analysis node:
+tables = analysis_node_result.to_dataframes()
 list(tables)
 
 # %%
@@ -174,5 +178,5 @@ tables["outputs"]
 #
 # | Need | Command |
 # | --- | --- |
-# | Browse the model results of an archive, refined by study, model, load case, status or query, or any tool result, e.g. a validation case, or edit a parameter space (package `vimseo-dashboards`) | `dashboard_results` |
-# | Browse the model results and the tool runs of an MLflow archive | `dashboard_mlflow` |
+# | Browse the model results of an archive, refined by study, model, load case, status or query, or any analysis node result, e.g. a validation case, or edit a parameter space (package `vimseo-dashboards`) | `dashboard_results` |
+# | Browse the model results and the analysis node runs of an MLflow archive | `dashboard_mlflow` |

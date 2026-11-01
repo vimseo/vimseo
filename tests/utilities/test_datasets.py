@@ -31,6 +31,7 @@ from vimseo.utilities.datasets import decode_vector
 from vimseo.utilities.datasets import encode_vector
 from vimseo.utilities.datasets import generate_dataset
 from vimseo.utilities.datasets import list_to_str
+from vimseo.utilities.datasets import plot_dataset_element
 
 
 @pytest.fixture
@@ -66,6 +67,17 @@ def mock_dataset_with_duplicated_names():
         variable_name="a", group_name=IODataset.INPUT_GROUP, data=[1.0, 5.0]
     )
     return dataset
+
+
+def test_plot_dataset_element(tmp_wd, mock_dataset, monkeypatch):
+    """A sample of vector variables is plotted as lines."""
+    from plotly.graph_objs import Figure
+
+    monkeypatch.setattr(Figure, "show", lambda self: None)
+    result = plot_dataset_element(
+        mock_dataset, 1, ["d"], "c[foo]", group_name=IODataset.OUTPUT_GROUP
+    )
+    assert result.figure is not None
 
 
 def test_dataset_to_dataframe(mock_dataset):

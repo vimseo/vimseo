@@ -18,7 +18,7 @@
 Usage of Bayesian inference
 ==============================
 
-The :class:`~.BayesTool` provides methods to perform the calibration
+The :class:`~.BayesAnalysisNode` provides methods to perform the calibration
 under uncertainties of a model.
 """
 
@@ -30,10 +30,12 @@ from openturns import ComposedDistribution
 from openturns import Uniform
 from strenum import StrEnum
 
+from vimseo.analysis_nodes.bayes.bayes_analysis import BayesAnalysisNode
+from vimseo.analysis_nodes.bayes.bayes_analysis_result import PosteriorChecks
+from vimseo.analysis_nodes.statistics.statistics_analysis_node import (
+    StatisticsAnalysisNode,
+)
 from vimseo.api import activate_logger
-from vimseo.tools.bayes.bayes_analysis import BayesTool
-from vimseo.tools.bayes.bayes_analysis_result import PosteriorChecks
-from vimseo.tools.statistics.statistics_tool import StatisticsTool
 
 random.seed(0)  # ruff: ignore[numpy-legacy-random]
 
@@ -49,7 +51,7 @@ N_MCMC = 100
 data_modulus = random.logistic(150000, 8000, 8)  # ruff: ignore[numpy-legacy-random]
 
 # %%
-# Both tools used below, the statistics tool and the Bayes tool, take these data in
+# Both analysis nodes used below, the statistics analysis node and the Bayes analysis node, take these data in
 # the same form: a mapping of the variable name to its measured values.
 measured_data = {"young_modulus": data_modulus}
 
@@ -64,9 +66,9 @@ class Models(StrEnum):
     LOG_NORMAL = "LogNormal"
 
 
-analysis_n = BayesTool(working_directory="normal_model")
-analysis_l = BayesTool(working_directory="lognormal_model")
-analysis_w = BayesTool(working_directory="weibullmin_model")
+analysis_n = BayesAnalysisNode(working_directory="normal_model")
+analysis_l = BayesAnalysisNode(working_directory="lognormal_model")
+analysis_w = BayesAnalysisNode(working_directory="weibullmin_model")
 
 # %%
 # For each model,
@@ -78,8 +80,8 @@ analysis_w = BayesTool(working_directory="weibullmin_model")
 # we compute the frequentist estimates
 # of the model parameters.
 # The result of the frequentist estimate for the Normal model:
-statistic_tool = StatisticsTool()
-results_normal = statistic_tool.execute(
+statistic_analysis_node = StatisticsAnalysisNode()
+results_normal = statistic_analysis_node.execute(
     dataset=measured_data, tested_distributions=["Normal"]
 )
 
@@ -90,7 +92,7 @@ prior_normal = ComposedDistribution([Uniform(110000, 160000), Uniform(2000, 1200
 # %%
 # Similarly for the Weibull Min model:
 # the frequentist estimate:
-results_weibull = statistic_tool.execute(
+results_weibull = statistic_analysis_node.execute(
     dataset=measured_data, tested_distributions=["WeibullMin"]
 )
 
@@ -104,7 +106,7 @@ prior_weibull = ComposedDistribution([
 
 # %%
 # And for the Log Normal model:
-results_lognormal = statistic_tool.execute(
+results_lognormal = statistic_analysis_node.execute(
     dataset=measured_data, tested_distributions=["LogNormal"]
 )
 
@@ -278,7 +280,7 @@ dict_frozen = {"frozen_index": [2], "frozen_values": [0]}
 # We can now sample as earlier
 # the posterior distribution
 # of the parameters of the new models.
-analysis_w_b = BayesTool(working_directory="weibullmin_2_frozen")
+analysis_w_b = BayesAnalysisNode(working_directory="weibullmin_2_frozen")
 analysis_w_b.execute(
     likelihood_dist=Models.WEIBULL_MIN,
     prior_dist=prior_weibull_b,
@@ -289,7 +291,7 @@ analysis_w_b.execute(
 analysis_w_b.save_results()
 
 prior_lognormal_b = ComposedDistribution([Uniform(2, 20), Uniform(0.005, 0.5)])
-analysis_l_b = BayesTool(working_directory="lognormal_2_frozen")
+analysis_l_b = BayesAnalysisNode(working_directory="lognormal_2_frozen")
 analysis_l_b.execute(
     likelihood_dist=Models.LOG_NORMAL,
     prior_dist=prior_lognormal_b,

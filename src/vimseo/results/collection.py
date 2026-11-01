@@ -13,7 +13,7 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-"""The collections of results: a set of model results or of tool results.
+"""The collections of results: a set of model results or of analysis node results.
 
 A collection is immutable: every verb returns a new collection or a new object
 (``DataFrame``, :class:`.Families`, figures), and nothing is deleted from the archive.
@@ -44,7 +44,7 @@ if TYPE_CHECKING:
     from collections.abc import Iterable
     from pathlib import Path
 
-    from vimseo.tools.result_visualization import Figure
+    from vimseo.analysis_nodes.result_visualization import Figure
 
 LOGGER = logging.getLogger(__name__)
 
@@ -90,7 +90,7 @@ class FamilyKey(Mapping):
 
 
 class ResultsCollection(Generic[T]):
-    """An immutable collection of results, model results or tool results."""
+    """An immutable collection of results, model results or analysis node results."""
 
     _ID_COLUMN: ClassVar[str] = "run_id"
     """The column of the identifiers of the results."""
@@ -177,7 +177,7 @@ class ResultsCollection(Generic[T]):
         return f"{text})"
 
     _NAME_COLUMN: ClassVar[str] = "model_name"
-    """The column of the names of the models or of the tools."""
+    """The column of the names of the models or of the analysis nodes."""
 
     def filter(
         self, query: str = "", failed: bool | None = None, **metadata: Any
@@ -292,7 +292,7 @@ class ResultsCollection(Generic[T]):
 
     def _plot_family(self, along: str, title: str = "") -> dict[str, Figure]:
         """Return the figures of the results as a family varying along an input."""
-        from vimseo.tools.result_visualization import plot_family
+        from vimseo.analysis_nodes.result_visualization import plot_family
 
         summaries = self.__summaries.sort_values(
             f"{INPUT_PREFIX}{along}", kind="stable"
@@ -418,26 +418,26 @@ class ModelResults(ResultsCollection["ModelResult"]):
         return cache
 
 
-class ToolResults(ResultsCollection["BaseResult"]):
-    """A collection of tool results, the results of tool runs.
+class AnalysisNodeResults(ResultsCollection["BaseResult"]):
+    """A collection of analysis node results, the results of analysis node runs.
 
-    The inputs of a tool run are its scalar settings and the identity of its model;
+    The inputs of an analysis node run are its scalar settings and the identity of its model;
     its outputs are its key values (see :meth:`.BaseResult.get_key_values`). The
-    collection of the results of a single tool has only the inputs and the outputs of
-    this tool, not those of the other tools of the archive.
+    collection of the results of a single analysis node has only the inputs and the outputs of
+    this analysis node, not those of the other analysis nodes of the archive.
     """
 
-    _ID_COLUMN = "tool_run_id"
-    _KIND = "tool results"
-    _NAME_COLUMN = "tool_name"
+    _ID_COLUMN = "analysis_node_run_id"
+    _KIND = "analysis_node results"
+    _NAME_COLUMN = "analysis_node_name"
 
     @staticmethod
     def _prune(summaries: DataFrame) -> DataFrame:
-        # The summaries of an archive hold the inputs and outputs of all its tools,
-        # missing for the runs of the other tools.
+        # The summaries of an archive hold the inputs and outputs of all its analysis nodes,
+        # missing for the runs of the other analysis nodes.
         if (
-            "tool_name" not in summaries.columns
-            or summaries["tool_name"].nunique() != 1
+            "analysis_node_name" not in summaries.columns
+            or summaries["analysis_node_name"].nunique() != 1
         ):
             return summaries
         foreign = [
@@ -449,11 +449,11 @@ class ToolResults(ResultsCollection["BaseResult"]):
         return summaries.drop(columns=foreign)
 
     def _check_homogeneous(self) -> None:
-        tool_names = set(self.summaries.get("tool_name", ()))
-        if len(tool_names) > 1:
+        analysis_node_names = set(self.summaries.get("analysis_node_name", ()))
+        if len(analysis_node_names) > 1:
             msg = (
-                f"The tool results come from several tools, {sorted(tool_names)}: "
-                "select one with filter(tool_name=...)."
+                f"The analysis node results come from several analysis nodes, {sorted(analysis_node_names)}: "
+                "select one with filter(analysis_node_name=...)."
             )
             raise ValueError(msg)
 
@@ -467,21 +467,21 @@ class ToolResults(ResultsCollection["BaseResult"]):
         varying = list(self.varying_inputs().index)
         if len(varying) != 1:
             LOGGER.warning(
-                f"The tool results vary along {varying}: plot their families instead."
+                f"The analysis node results vary along {varying}: plot their families instead."
             )
             return {}
         return self._plot_family(varying[0])
 
-    def children(self, tool_run_id: str) -> ToolResults:
-        """Return the results of the subtools of a tool run.
+    def children(self, analysis_node_run_id: str) -> AnalysisNodeResults:
+        """Return the results of the sub-analysis nodes of an analysis node run.
 
         Args:
-            tool_run_id: The identifier of the tool run of the parent.
+            analysis_node_run_id: The identifier of the analysis node run of the parent.
         """
-        return self.filter(parent_tool_run_id=tool_run_id)
+        return self.filter(parent_analysis_node_run_id=analysis_node_run_id)
 
     def model_results(self, **archive: Any) -> ModelResults:
-        """Return the model results of the simulations of the tool runs.
+        """Return the model results of the simulations of the analysis node runs.
 
         Args:
             **archive: The archive settings of the simulations, see
@@ -597,24 +597,24 @@ def _concat(tables: list[DataFrame]) -> DataFrame:
     return concat(tables)
 
 
-def create_tool_summary(summary: Mapping[str, Any]) -> dict[str, Any]:
-    """Create the summary of a tool run for a collection, from its archived summary.
+def create_analysis_node_summary(summary: Mapping[str, Any]) -> dict[str, Any]:
+    """Create the summary of an analysis node run for a collection, from its archived summary.
 
     Args:
-        summary: The summary of the tool run, see :func:`.create_summary`.
+        summary: The summary of the analysis node run, see :func:`.create_summary`.
 
     Returns:
-        The identity of the tool run, its scalar settings as ``inputs.{name}`` and its
+        The identity of the analysis node run, its scalar settings as ``inputs.{name}`` and its
         key values as ``outputs.{name}``.
     """
     model = summary.get("model") or {}
     flat = {
-        "tool_run_id": summary.get("tool_run_id", ""),
-        "tool_name": summary.get("tool_name", ""),
+        "analysis_node_run_id": summary.get("analysis_node_run_id", ""),
+        "analysis_node_name": summary.get("analysis_node_name", ""),
         "study_name": summary.get("study_name", ""),
         "status": summary.get("status", ""),
         "datetime": summary.get("datetime", ""),
-        "parent_tool_run_id": summary.get("parent_tool_run_id", ""),
+        "parent_analysis_node_run_id": summary.get("parent_analysis_node_run_id", ""),
         "result_class": summary.get("result_class", ""),
         "model_name": model.get("name", ""),
         "load_case": model.get("load_case", ""),

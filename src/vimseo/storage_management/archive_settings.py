@@ -19,18 +19,18 @@ from pathlib import Path
 
 from pydantic import Field
 
+from vimseo.analysis_nodes.base_settings import BaseSettings
 from vimseo.config.global_configuration import _configuration as config
 from vimseo.storage_management.base_storage_manager import PersistencyPolicy
-from vimseo.tools.base_settings import BaseSettings
 
 DEFAULT_ARCHIVE_ROOT = "default_archive/"
 
 
 class ArchiveLocationSettings(BaseSettings):
-    """The location of an archive, shared by the models and the tools.
+    """The location of an archive, shared by the models and the analysis nodes.
 
-    A model and a tool configured with the same values archive their results, the
-    simulations and the tool runs, in the same archive.
+    A model and an analysis node configured with the same values archive their results, the
+    simulations and the analysis node runs, in the same archive.
     """
 
     archive_manager: str | None = Field(

@@ -1,7 +1,7 @@
 [
   {
-    "name": "SpaceTool",
-    "tool_name": "SpaceTool",
+    "name": "SpaceAnalysisNode",
+    "analysis_node_name": "SpaceAnalysisNode",
     "inputs": [
       {
         "name": "model1",
@@ -14,7 +14,7 @@
         "attr_name": "parameter_space"
       }
     ],
-    "tool_settings": {
+    "analysis_node_settings": {
       "distribution_name": "OTTriangularDistribution",
       "space_builder_name": "FromModelCenterAndCov",
       "minimum_values": {},
@@ -32,15 +32,15 @@
       "lower_bounds": {},
       "upper_bounds": {}
     },
-    "tool_constructor_options": {
+    "analysis_node_constructor_options": {
       "root_directory": "",
       "directory_naming_method": "UUID",
       "working_directory": ""
     }
   },
   {
-    "name": "ModelCreationTool",
-    "tool_name": "ModelCreationTool",
+    "name": "ModelCreationAnalysisNode",
+    "analysis_node_name": "ModelCreationAnalysisNode",
     "inputs": [],
     "outputs": [
       {
@@ -48,20 +48,20 @@
         "attr_name": "model"
       }
     ],
-    "tool_settings": {
+    "analysis_node_settings": {
       "name": "BendingTestAnalytical",
       "load_case": "ThreePoints",
       "default_inputs": {}
     },
-    "tool_constructor_options": {
+    "analysis_node_constructor_options": {
       "root_directory": "",
       "directory_naming_method": "UUID",
       "working_directory": ""
     }
   },
   {
-    "name": "SensitivityTool",
-    "tool_name": "SensitivityTool",
+    "name": "SensitivityAnalysisNode",
+    "analysis_node_name": "SensitivityAnalysisNode",
     "inputs": [
       {
         "name": "space1",
@@ -78,7 +78,7 @@
         "attr_name": "indices"
       }
     ],
-    "tool_settings": {
+    "analysis_node_settings": {
       "output_names": [
         "reaction_forces"
       ],
@@ -87,7 +87,7 @@
       "sensitivity_algo": "MorrisAnalysis",
       "n_replicates": 5
     },
-    "tool_constructor_options": {
+    "analysis_node_constructor_options": {
       "root_directory": "",
       "directory_naming_method": "UUID",
       "working_directory": ""

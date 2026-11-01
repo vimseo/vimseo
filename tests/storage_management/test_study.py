@@ -24,15 +24,15 @@ import re
 import pytest
 from numpy import atleast_1d
 
+from vimseo.analysis_nodes.mock.mock_analysis_node import MyAnalysisNode
+from vimseo.analysis_nodes.mock.mock_analysis_node import MyBaseCompositeAnalysisNode
 from vimseo.config.configuration_settings import DEFAULT_STUDY_NAME
 from vimseo.config.configuration_settings import VimseoSettings
 from vimseo.config.global_configuration import _configuration as config
 from vimseo.core.model_metadata import MetaDataNames
 from vimseo.core.run_context import new_run_id
 from vimseo.problems.mock.mock_pre_run_post.mock_main import MockModel
-from vimseo.storage_management.tool_archive import open_tool_archive
-from vimseo.tools.mock.mock_tool import MyBaseCompositeTool
-from vimseo.tools.mock.mock_tool import MyTool
+from vimseo.storage_management.analysis_node_archive import open_analysis_node_archive
 
 pytestmark = pytest.mark.fast
 
@@ -124,40 +124,46 @@ def test_a_cached_execution_archives_nothing(tmp_wd):
     assert len(list((tmp_wd / "archive").glob("*/*/*/*/results.json"))) == 1
 
 
-def test_subtools_inherit_the_study(tmp_wd):
-    """A subtool without study uses the one of its parent; an explicit one wins."""
-    inherited = MyTool(name="inherited", archive_manager="DirectoryArchive")
-    explicit = MyTool(
+def test_sub_analysis_nodes_inherit_the_study(tmp_wd):
+    """A sub-analysis node without study uses the one of its parent; an explicit one wins."""
+    inherited = MyAnalysisNode(name="inherited", archive_manager="DirectoryArchive")
+    explicit = MyAnalysisNode(
         name="explicit", archive_manager="DirectoryArchive", study_name="other"
     )
-    MyBaseCompositeTool(
-        subtools=[inherited, explicit],
+    MyBaseCompositeAnalysisNode(
+        sub_analysis_nodes=[inherited, explicit],
         archive_manager="DirectoryArchive",
         directory_archive_root=tmp_wd / "archive",
         study_name="layup_A",
     )
-    assert inherited._tool_archive_manager.study_name == "layup_A"
-    assert explicit._tool_archive_manager.study_name == "other"
+    assert inherited._analysis_node_archive_manager.study_name == "layup_A"
+    assert explicit._analysis_node_archive_manager.study_name == "other"
 
 
-def test_tool_runs_are_searched_by_study(tmp_wd):
-    """The tool runs of every study are found, and a study filters them."""
+def test_analysis_node_runs_are_searched_by_study(tmp_wd):
+    """The analysis node runs of every study are found, and a study filters them."""
     root = tmp_wd / "archive"
     for study_name in ("layup_A", "layup_B"):
-        MyTool(
+        MyAnalysisNode(
             archive_manager="DirectoryArchive",
             directory_archive_root=root,
             study_name=study_name,
         ).execute()
-    archive = open_tool_archive("DirectoryArchive", root)
-    assert {run["study_name"] for run in archive.search_tool_runs()} == {
+    archive = open_analysis_node_archive("DirectoryArchive", root)
+    assert {run["study_name"] for run in archive.search_analysis_node_runs()} == {
         "layup_A",
         "layup_B",
     }
-    (run,) = archive.search_tool_runs(study_name="layup_B")
-    assert (root / "layup_B" / "tools" / "MyTool" / run["tool_run_id"]).is_dir()
-    # A tool run is found by its identifier whatever its study.
-    assert archive.get_tool_result(run["tool_run_id"]) is not None
+    (run,) = archive.search_analysis_node_runs(study_name="layup_B")
+    assert (
+        root
+        / "layup_B"
+        / "analysis_nodes"
+        / "MyAnalysisNode"
+        / run["analysis_node_run_id"]
+    ).is_dir()
+    # An analysis node run is found by its identifier whatever its study.
+    assert archive.get_analysis_node_result(run["analysis_node_run_id"]) is not None
 
 
 def test_two_models_in_one_mlflow_study(tmp_wd):

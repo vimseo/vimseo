@@ -35,7 +35,7 @@ if TYPE_CHECKING:
     from collections.abc import Iterable
     from collections.abc import Sequence
 
-    from vimseo.tools.post_tools.plot_parameters import Plot
+    from vimseo.analysis_nodes.post_analysis_nodes.plot_parameters import Plot
 
 
 @dataclass

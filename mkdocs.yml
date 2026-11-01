@@ -141,7 +141,7 @@ nav:
 - Requirements:
     - Overview: requirements/index.md
     - Models: requirements/REQ-MOD.md
-    - Tools: requirements/REQ-TOOL.md
+    - Analysis nodes: requirements/REQ-TOOL.md
     - Results: requirements/REQ-RES.md
     - Storage and traceability: requirements/REQ-STO.md
     - Serialization: requirements/REQ-SER.md

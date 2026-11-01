@@ -20,18 +20,19 @@ from __future__ import annotations
 import pytest
 from numpy import atleast_1d
 
+from vimseo.analysis_nodes.mock.mock_analysis_node import MyAnalysisNode
+from vimseo.analysis_nodes.mock.mock_analysis_node import MyBaseCompositeAnalysisNode
 from vimseo.api import create_model
+from vimseo.api import load_analysis_node_results
 from vimseo.api import load_model_results
-from vimseo.api import load_tool_results
+from vimseo.api import open_analysis_node_results
 from vimseo.api import open_model_results
-from vimseo.api import open_tool_results
+from vimseo.api import search_analysis_node_runs
 from vimseo.api import search_model_results
-from vimseo.api import search_tool_runs
+from vimseo.results.collection import AnalysisNodeResults
 from vimseo.results.collection import Families
 from vimseo.results.collection import FamilyKey
 from vimseo.results.collection import ModelResults
-from vimseo.results.collection import ToolResults
-from vimseo.tools.mock.mock_tool import MyTool
 
 pytestmark = pytest.mark.fast
 
@@ -162,42 +163,62 @@ def test_search_and_load(archive):
     assert [result.run_id for result in loaded] == run_ids
 
 
-def test_tool_results(tmp_wd):
-    """The tool results are a collection too, compared on their settings."""
+def test_analysis_node_results(tmp_wd):
+    """The analysis node results are a collection too, compared on their settings."""
     archive = {
         "archive_manager": "DirectoryArchive",
         "directory_archive_root": tmp_wd / "archive",
-        "study_name": "tools",
+        "study_name": "analysis_nodes",
     }
     for foo in ("a", "b"):
-        MyTool(**archive).execute(foo=foo)
-    tool_results = open_tool_results(**archive)
-    assert isinstance(tool_results, ToolResults)
-    assert len(tool_results) == 2
-    assert "foo" in tool_results.varying_inputs().index
+        MyAnalysisNode(**archive).execute(foo=foo)
+    analysis_node_results = open_analysis_node_results(**archive)
+    assert isinstance(analysis_node_results, AnalysisNodeResults)
+    assert len(analysis_node_results) == 2
+    assert "foo" in analysis_node_results.varying_inputs().index
 
-    tool_run_id = tool_results.summaries["tool_run_id"][0]
-    loaded = load_tool_results(tool_run_id, **archive)
-    assert loaded[0].metadata.tool_run_id == tool_run_id
-    assert len(search_tool_runs(**archive, query="`inputs.foo` == 'b'")) == 1
+    analysis_node_run_id = analysis_node_results.summaries["analysis_node_run_id"][0]
+    loaded = load_analysis_node_results(analysis_node_run_id, **archive)
+    assert loaded[0].metadata.analysis_node_run_id == analysis_node_run_id
+    assert len(search_analysis_node_runs(**archive, query="`inputs.foo` == 'b'")) == 1
 
 
-def _create_tool_results() -> ToolResults:
-    """Create the tool results of an archive holding a DOE and a design value."""
+def test_analysis_node_results_children(tmp_wd):
+    """The results of the sub-analysis nodes of a run are loaded from the archive."""
+    archive = {
+        "archive_manager": "DirectoryArchive",
+        "directory_archive_root": tmp_wd / "archive",
+    }
+    sub_analysis_node = MyAnalysisNode()
+    composite = MyBaseCompositeAnalysisNode(
+        sub_analysis_nodes=[sub_analysis_node], **archive
+    )
+    composite.execute()
+
+    children = open_analysis_node_results(**archive).children(
+        composite.result.metadata.analysis_node_run_id
+    )
+    sub_run_id = sub_analysis_node.result.metadata.analysis_node_run_id
+    assert list(children.summaries["analysis_node_run_id"]) == [sub_run_id]
+    assert children[0].metadata.analysis_node_run_id == sub_run_id
+
+
+def _create_analysis_node_results() -> AnalysisNodeResults:
+    """Create the analysis node results of an archive holding a DOE and a design value."""
     from pandas import DataFrame
 
-    return ToolResults(
+    return AnalysisNodeResults(
         DataFrame([
             {
-                "tool_run_id": "doe",
-                "tool_name": "DOETool",
+                "analysis_node_run_id": "doe",
+                "analysis_node_name": "DOEAnalysisNode",
                 "status": "FINISHED",
                 "inputs.n_samples": 10,
                 "outputs.n_samples": 10.0,
             },
             {
-                "tool_run_id": "design_value",
-                "tool_name": "DesignValueTool",
+                "analysis_node_run_id": "design_value",
+                "analysis_node_name": "DesignValueAnalysisNode",
                 "status": "FINISHED",
                 "inputs.n_samples": 10,
                 "outputs.mean": 1.0,
@@ -207,33 +228,51 @@ def _create_tool_results() -> ToolResults:
     )
 
 
-def test_tool_results_of_one_tool_have_its_columns_only():
-    """The columns of the other tools are dropped from the results of one tool."""
-    tool_results = _create_tool_results()
-    assert "outputs.mean" in tool_results.summaries.columns
-    design_values = tool_results.filter(tool_name="DesignValueTool")
+def test_analysis_node_results_of_one_analysis_node_have_its_columns_only():
+    """The columns of the other analysis nodes are dropped from the results of one analysis node."""
+    analysis_node_results = _create_analysis_node_results()
+    assert "outputs.mean" in analysis_node_results.summaries.columns
+    design_values = analysis_node_results.filter(
+        analysis_node_name="DesignValueAnalysisNode"
+    )
     assert "outputs.n_samples" not in design_values.summaries.columns
     assert list(design_values.to_dataframe().columns[-2:]) == ["n_samples", "mean"]
-    assert "outputs.mean" not in tool_results.filter(tool_name="DOETool").summaries
+    assert (
+        "outputs.mean"
+        not in analysis_node_results.filter(
+            analysis_node_name="DOEAnalysisNode"
+        ).summaries
+    )
 
 
 def test_to_dataframe_keeps_the_prefixes_of_homonyms():
     """An input and an output with the same name keep their prefixes."""
-    table = _create_tool_results().filter(tool_name="DOETool").to_dataframe()
+    table = (
+        _create_analysis_node_results()
+        .filter(analysis_node_name="DOEAnalysisNode")
+        .to_dataframe()
+    )
     assert {"inputs.n_samples", "outputs.n_samples"} <= set(table.columns)
     assert "n_samples" not in table.columns
 
 
-def test_tool_results_of_several_tools(tmp_wd):
-    """Comparing the results of several tools raises an error."""
-    from vimseo.tools.mock.mock_tool import MyToolNoInputs
+def test_analysis_node_results_of_several_analysis_nodes(tmp_wd):
+    """Comparing the results of several analysis nodes raises an error."""
+    from vimseo.analysis_nodes.mock.mock_analysis_node import MyAnalysisNodeNoInputs
 
     archive = {
         "archive_manager": "DirectoryArchive",
         "directory_archive_root": tmp_wd / "archive",
     }
-    MyTool(**archive).execute()
-    MyToolNoInputs(**archive).execute()
-    with pytest.raises(ValueError, match="filter\\(tool_name"):
-        open_tool_results(**archive).varying_inputs()
-    assert len(open_tool_results(**archive).filter(tool_name="MyTool")) == 1
+    MyAnalysisNode(**archive).execute()
+    MyAnalysisNodeNoInputs(**archive).execute()
+    with pytest.raises(ValueError, match="filter\\(analysis_node_name"):
+        open_analysis_node_results(**archive).varying_inputs()
+    assert (
+        len(
+            open_analysis_node_results(**archive).filter(
+                analysis_node_name="MyAnalysisNode"
+            )
+        )
+        == 1
+    )

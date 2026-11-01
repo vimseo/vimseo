@@ -33,9 +33,11 @@ from pydantic import Field
 from pydantic import confloat
 from pydantic import create_model
 
+from vimseo.analysis_nodes.space.random_variable_interface import (
+    add_random_variable_interface,
+)
 from vimseo.material.material_property import MaterialProperty
 from vimseo.material.material_relation import MaterialRelation
-from vimseo.tools.space.random_variable_interface import add_random_variable_interface
 from vimseo.utilities.distribution import DEFAULT_MIN_MAX
 from vimseo.utilities.distribution import DistributionParameters
 from vimseo.utilities.json_grammar_utils import BaseJsonIO

@@ -17,7 +17,7 @@ into `CHANGELOG.md` and deletes them.
 
 ## Naming
 
-`+<short-slug>.<type>.md`, for example `+base-tool-protected-api.changed.md`.
+`+<short-slug>.<type>.md`, for example `+base-analysis-node-protected-api.changed.md`.
 
 - The `+` prefix marks an "orphan" fragment, not tied to a GitHub issue/PR number
   (a fragment is written in the same PR that makes the change, before the PR number

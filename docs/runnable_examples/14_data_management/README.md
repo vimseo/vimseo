@@ -11,7 +11,7 @@
 
 Every result of VIMSEO goes through the same roundtrip: **generate**, **save**,
 **load**, **plot**. It reads the same for the results of a model and the results of a
-tool, and for the two archives, `DirectoryArchive` and `MlflowArchive`.
+analysis node, and for the two archives, `DirectoryArchive` and `MlflowArchive`.
 
 Reading path:
 
@@ -20,5 +20,5 @@ Reading path:
    `plot_02_save_and_find`, `plot_03_load`, `plot_04_visualize`.
 3. The details of each archive, for each kind of result:
    `plot_05_model_results_in_directories`, `plot_06_model_results_in_mlflow`,
-   `plot_07_tool_results_in_directories`, `plot_08_tool_results_in_mlflow`.
+   `plot_07_analysis_node_results_in_directories`, `plot_08_analysis_node_results_in_mlflow`.
 4. Explore a set of results: `plot_09_explore_results`.

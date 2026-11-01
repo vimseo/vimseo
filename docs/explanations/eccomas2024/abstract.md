@@ -24,7 +24,7 @@ simulations in the certification test pyramid. As a result, the simulation of co
 must reach a high level of credibility.
 
 VV&UQ builds and assesses credibility of models through methodologies ([1], [2]) which bring
-to play several components like Numerical Simulation tools and Mathematical algorithms, High
+to play several components like Numerical Simulation analysis nodes and Mathematical algorithms, High
 Performance Computing submission and monitoring, and so forth. The notions of traceability
 (of both functional capabilities (like models) and data), data visualisation and standardized
 taxonomy to describe the manipulated quantities and methods are also significantly contributing

@@ -9,11 +9,11 @@
 
 # Workflows (WF)
 
-A workflow chains tools into a study which can be saved, shared and re-executed.
+A workflow chains analysis nodes into a study which can be saved, shared and re-executed.
 
 ### REQ-WF-001 — A workflow is described in a file
 
-- **Statement:** The system shall save a workflow of tools to a file and execute it from
+- **Statement:** The system shall save a workflow of analysis nodes to a file and execute it from
   that file, from Python or from the command line.
 - **Rationale:** A study must be reproducible by someone else, on another machine.
 - **Priority:** Must
@@ -21,10 +21,10 @@ A workflow chains tools into a study which can be saved, shared and re-executed.
 - **Verification:** Test — `tests/workflow/`.
 - **Satisfied by:** —
 
-### REQ-WF-002 — The tool runs of a workflow are traceable
+### REQ-WF-002 — The analysis node runs of a workflow are traceable
 
-- **Statement:** The tool runs executed by a workflow should be archived and linked as
-  any other tool run (REQ-STO-004, REQ-STO-005).
+- **Statement:** The analysis node runs executed by a workflow should be archived and linked as
+  any other analysis node run (REQ-STO-004, REQ-STO-005).
 - **Rationale:** A workflow is the top of the evidence tree of a study.
 - **Priority:** Should
 - **Status:** Proposed

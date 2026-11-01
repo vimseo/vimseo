@@ -25,12 +25,12 @@ The verification is based on the relationship between the material properties de
 and the model's outputs such as max_strength. For instance, when considering the response
 simulated with the OpfmCube model under a pure longitudinal load (PST on 0° laminate),
 the material property Xt should be equal to the max_strength output.
-The code verification relies on the VIMSEO ``CodeVerificationAgainstData`` tool, where an example is given
+The code verification relies on the VIMSEO ``CodeVerificationAgainstData`` analysis node, where an example is given
 [here](http://docvimscomposites.ipf7135.irt-aese.local/generated/examples/code_verification/plot_opfm_cube_pst0_vs_data.html).
 
 The error between ``Xt`` and ``max_strength`` is computed for two values of the numerical
 parameter ``nb_intervals``, which controls the convergence of the subroutine.
-The reference dataset that needs to be specified to the ``CodeVerificationAgainstData`` tool
+The reference dataset that needs to be specified to the ``CodeVerificationAgainstData`` analysis node
 is composed of three variables:
   - the inputs ``Xt`` and ``nb_intervals``
   - the output ``max_strength``

@@ -30,15 +30,15 @@ Here is a full example, covering every available setting:
 | `VIMSEO_SOLVERS__<name>__COMMAND_RUN` | The command used by the solver `<name>` to run a job | `""` |
 | `VIMSEO_SOLVERS__<name>__COMMAND_PRE` | The command used by the solver `<name>` for its pre-processing step | `""` |
 | `VIMSEO_SOLVERS__<name>__COMMAND_POST` | The command used by the solver `<name>` for its post-processing step | `""` |
-| `VIMSEO_ROOT_DIRECTORY` | The root directory where tool results are written | `""` |
-| `VIMSEO_WORKING_DIRECTORY` | The working directory where tool results are written. If empty, results are exported to unique directories created under the root directory; if set, results are exported under this path | `""` |
+| `VIMSEO_ROOT_DIRECTORY` | The root directory where analysis node results are written | `""` |
+| `VIMSEO_WORKING_DIRECTORY` | The working directory where analysis node results are written. If empty, results are exported to unique directories created under the root directory; if set, results are exported under this path | `""` |
 | `VIMSEO_RUN_ARCHIVE_MANAGER` | The archive manager backend of the simulations (e.g. `"DirectoryArchive"`, `"MlflowArchive"`) | `"DirectoryArchive"` |
 | `VIMSEO_DATABASE__MODE` | The database mode, `"Local"` or `"Team"` | `"Local"` |
 | `VIMSEO_DATABASE__LOCAL_URI` | The URI of the local MLflow tracking server | `""` |
 | `VIMSEO_DATABASE__TEAM_URI` | The URI of the team's shared MLflow tracking server | `"https://mlflow.irt-aese.local/"` |
 | `VIMSEO_DATABASE__USERNAME` | The username used to authenticate against the MLflow tracking server | `""` |
 | `VIMSEO_DATABASE__PASSWORD` | The password used to authenticate against the MLflow tracking server | `""` |
-| `VIMSEO_STUDY_NAME` | The study in which the simulations and the tool runs are archived | `"default_study"` |
+| `VIMSEO_STUDY_NAME` | The study in which the simulations and the analysis node runs are archived | `"default_study"` |
 | `VIMSEO_DATABASE__USE_INSECURE_TLS` | Whether to skip TLS certificate verification | `False` |
 | `VIMSEO_DATABASE__SSL_CERTIFICATE_FILE` | Path to a custom SSL certificate file | `""` |
 

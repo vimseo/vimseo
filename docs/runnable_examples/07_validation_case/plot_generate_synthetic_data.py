@@ -43,9 +43,9 @@ from gemseo.datasets.io_dataset import IODataset
 from numpy import atleast_1d
 
 from vimseo import EXAMPLE_RUNS_DIR
+from vimseo.analysis_nodes.space.space_analysis_node import SpaceAnalysisNode
 from vimseo.api import create_model
 from vimseo.core.model_settings import IntegratedModelSettings
-from vimseo.tools.space.space_tool import SpaceTool
 from vimseo.utilities.datasets import SEP
 from vimseo.utilities.generate_validation_reference import Bias
 from vimseo.utilities.generate_validation_reference import (
@@ -54,20 +54,22 @@ from vimseo.utilities.generate_validation_reference import (
 
 # %%
 # Load a parameter space to sample from.
-space_tool_result = SpaceTool.load_results("bending_test_validation_input_space.json")
-print(space_tool_result)
+space_analysis_node_result = SpaceAnalysisNode.load_results(
+    "bending_test_validation_input_space.json"
+)
+print(space_analysis_node_result)
 
 # %%
 # Generate 3 samples of input data from the parameter space,
 # and create a dataset with the input data.
-input_data = space_tool_result.parameter_space.compute_samples(
+input_data = space_analysis_node_result.parameter_space.compute_samples(
     n_samples=3, as_dict=False
 )
 reference_data = IODataset()
 reference_data.add_group(
     IODataset.INPUT_GROUP,
     input_data,
-    space_tool_result.parameter_space.uncertain_variables,
+    space_analysis_node_result.parameter_space.uncertain_variables,
 )
 
 # %%

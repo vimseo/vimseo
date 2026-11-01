@@ -1,7 +1,7 @@
 [
   {
-    "name": "SpaceTool",
-    "tool_name": "SpaceTool",
+    "name": "SpaceAnalysisNode",
+    "analysis_node_name": "SpaceAnalysisNode",
     "inputs": [
       {
         "name": "m1",
@@ -14,12 +14,12 @@
         "attr_name": "parameter_space"
       }
     ],
-    "tool_constructor_options": {
+    "analysis_node_constructor_options": {
       "root_directory": "",
       "directory_naming_method": "UUID",
       "working_directory": ""
     },
-    "tool_settings": {
+    "analysis_node_settings": {
       "distribution_name": "OTTriangularDistribution",
       "space_builder_name": "FromModelCenterAndCov",
       "minimum_values": {},
@@ -38,8 +38,8 @@
     }
   },
   {
-    "name": "ModelCreationTool",
-    "tool_name": "ModelCreationTool",
+    "name": "ModelCreationAnalysisNode",
+    "analysis_node_name": "ModelCreationAnalysisNode",
     "inputs": [],
     "outputs": [
       {
@@ -47,20 +47,20 @@
         "attr_name": "model"
       }
     ],
-    "tool_constructor_options": {
+    "analysis_node_constructor_options": {
       "root_directory": "",
       "directory_naming_method": "UUID",
       "working_directory": ""
     },
-    "tool_settings": {
+    "analysis_node_settings": {
       "name": "BendingTestAnalytical",
       "load_case": "Cantilever",
       "default_inputs": {}
     }
   },
   {
-    "name": "SensitivityTool",
-    "tool_name": "SensitivityTool",
+    "name": "SensitivityAnalysisNode",
+    "analysis_node_name": "SensitivityAnalysisNode",
     "inputs": [
       {
         "name": "m1",
@@ -77,12 +77,12 @@
         "attr_name": "result"
       }
     ],
-    "tool_constructor_options": {
+    "analysis_node_constructor_options": {
       "root_directory": "",
       "directory_naming_method": "UUID",
       "working_directory": ""
     },
-    "tool_settings": {
+    "analysis_node_settings": {
       "output_names": [
         "reaction_forces"
       ],

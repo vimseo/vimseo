@@ -25,11 +25,11 @@ from numpy import linspace
 from numpy import max as np_max
 from numpy import min as np_min
 
+from vimseo.analysis_nodes.post_analysis_nodes.plot_parameters import ConstantTrace
+from vimseo.analysis_nodes.post_analysis_nodes.plot_parameters import LineStyle
+from vimseo.analysis_nodes.post_analysis_nodes.plot_parameters import Plot
+from vimseo.analysis_nodes.post_analysis_nodes.plot_parameters import Trace
 from vimseo.core.base_discipline_model import BaseDisciplineModel
-from vimseo.tools.post_tools.plot_parameters import ConstantTrace
-from vimseo.tools.post_tools.plot_parameters import LineStyle
-from vimseo.tools.post_tools.plot_parameters import Plot
-from vimseo.tools.post_tools.plot_parameters import Trace
 from vimseo.utilities.curves_generator import expressions_convexity
 from vimseo.utilities.curves_generator import expressions_oscillate
 from vimseo.utilities.curves_generator import get_history

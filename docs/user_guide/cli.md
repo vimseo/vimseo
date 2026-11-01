@@ -16,10 +16,10 @@ The following commands can be run in a terminal:
 | ``dashboard_workflow``    | Opens a dashboard to prepare a workflow |
 | ``workflow_executor``    |  Runs a workflow (exported as a ``JSON`` file) |
 | ``dashboard_mlflow``    | Opens the ``MLflow`` interface to explore the stored experiments |
-| ``visualize_tool_result``    | Writes the figures, the tables and the metadata of tool results in a directory, from their URIs (result file, tool run directory, ``tool-run:{tool_run_id}`` or ``runs:/{mlflow_run_id}``) |
+| ``visualize_analysis_node_result``    | Writes the figures, the tables and the metadata of analysis node results in a directory, from their URIs (result file, analysis node run directory, ``analysis-node-run:{analysis_node_run_id}`` or ``runs:/{mlflow_run_id}``) |
 
 The package [vimseo-dashboards](https://forge-is.pf.irt-saintexupery.com/vims/vimseo-dashboards) adds
-``dashboard_results``, which explores any tool result loaded from a file, an archive
+``dashboard_results``, which explores any analysis node result loaded from a file, an archive
 or a URI (with a specific view for a validation case), edits a parameter space, and
 explores the model results of an archive (``DirectoryArchive`` or ``MlflowArchive``):
 every result is listed, then refined by study, model, load case, status or query.

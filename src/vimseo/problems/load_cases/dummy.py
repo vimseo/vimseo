@@ -19,9 +19,9 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 from typing import ClassVar
 
+from vimseo.analysis_nodes.post_analysis_nodes.plot_parameters import Plot
+from vimseo.analysis_nodes.post_analysis_nodes.plot_parameters import Trace
 from vimseo.core.load_case import LoadCase
-from vimseo.tools.post_tools.plot_parameters import Plot
-from vimseo.tools.post_tools.plot_parameters import Trace
 
 if TYPE_CHECKING:
     from collections.abc import Sequence

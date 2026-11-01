@@ -19,9 +19,9 @@ import pytest
 from gemseo.datasets.io_dataset import IODataset
 from pandas import DataFrame
 
+from vimseo.analysis_nodes.io.reader_file_dataframe import ReaderFileDataFrame
+from vimseo.analysis_nodes.io.reader_file_dataset import ReaderFileGemseoDataset
 from vimseo.io.test_data import IO_DATA_DIR
-from vimseo.tools.io.reader_file_dataframe import ReaderFileDataFrame
-from vimseo.tools.io.reader_file_dataset import ReaderFileGemseoDataset
 from vimseo.utilities.datasets import SEP
 
 

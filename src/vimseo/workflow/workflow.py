@@ -13,7 +13,7 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-"""Chaining GEMSEO wrapped tools to run a workflow of tools."""
+"""Chaining GEMSEO wrapped analysis nodes to run a workflow of analysis nodes."""
 
 from __future__ import annotations
 
@@ -27,7 +27,9 @@ from gemseo.core.grammars.required_names import RequiredNames
 from gemseo.mda.mda_chain import MDAChain
 from gemseo.utils.string_tools import MultiLineString
 
-from vimseo.tools.io.reader_tools_factory import ReaderToolsFactory
+from vimseo.analysis_nodes.io.reader_analysis_nodes_factory import (
+    ReaderAnalysisNodesFactory,
+)
 from vimseo.workflow.workflow_step import WorkflowStep
 
 if TYPE_CHECKING:
@@ -36,7 +38,7 @@ if TYPE_CHECKING:
 
 
 class Workflow(metaclass=GoogleDocstringInheritanceMeta):
-    """A workflow of tools."""
+    """A workflow of analysis nodes."""
 
     def __init__(self, steps: Iterable[WorkflowStep]):
         self.__steps = steps
@@ -84,8 +86,8 @@ class Workflow(metaclass=GoogleDocstringInheritanceMeta):
         return str(msg)
 
     def _set_input_file_dir_path(self, path: str | Path):
-        """Set the setting ``directory_path`` of the reader tools to the passed value."""
-        reader_tool_names = ReaderToolsFactory().class_names
+        """Set the setting ``directory_path`` of the reader analysis nodes to the passed value."""
+        reader_analysis_node_names = ReaderAnalysisNodesFactory().class_names
         for step in self.__steps:
-            if step._tool_name in reader_tool_names:
-                step._tool_settings.directory_path = str(path)
+            if step._analysis_node_name in reader_analysis_node_names:
+                step._analysis_node_settings.directory_path = str(path)

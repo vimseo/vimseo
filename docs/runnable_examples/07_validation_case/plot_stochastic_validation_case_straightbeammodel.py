@@ -27,7 +27,7 @@ to take into account:
 - the uncertainty on model inputs
 
 and propagate these uncertainties through the model.
-On the output quantity of interest, this validation tool uses specific metrics
+On the output quantity of interest, this validation analysis node uses specific metrics
 that can handle stochastic variables.
 It compares the cumulative distribution function (CDF)
 of these variables and outputs scalar metrics such as the area between the two CDFs,
@@ -42,21 +42,27 @@ import logging
 from gemseo.datasets.io_dataset import IODataset
 
 from vimseo import EXAMPLE_RUNS_DIR
+from vimseo.analysis_nodes.io.reader_file_dataframe import ReaderFileDataFrame
+from vimseo.analysis_nodes.io.reader_file_dataframe import ReaderFileDataFrameSettings
+from vimseo.analysis_nodes.validation.validation_point import NominalValuesOutputType
+from vimseo.analysis_nodes.validation.validation_point import StochasticValidationPoint
+from vimseo.analysis_nodes.validation.validation_point import (
+    StochasticValidationPointInputs,
+)
+from vimseo.analysis_nodes.validation.validation_point import (
+    StochasticValidationPointSettings,
+)
+from vimseo.analysis_nodes.validation.validation_point import read_nominal_values
+from vimseo.analysis_nodes.validation_case.validation_case_result import (
+    ValidationCaseResult,
+)
 from vimseo.api import activate_logger
 from vimseo.api import create_model
 from vimseo.core.model_settings import IntegratedModelSettings
-from vimseo.io.space_io import SpaceToolFileIO
+from vimseo.io.space_io import SpaceAnalysisNodeFileIO
 from vimseo.material.material import Material
 from vimseo.material_lib import MATERIAL_LIB_DIR
 from vimseo.storage_management.base_storage_manager import PersistencyPolicy
-from vimseo.tools.io.reader_file_dataframe import ReaderFileDataFrame
-from vimseo.tools.io.reader_file_dataframe import ReaderFileDataFrameSettings
-from vimseo.tools.validation.validation_point import NominalValuesOutputType
-from vimseo.tools.validation.validation_point import StochasticValidationPoint
-from vimseo.tools.validation.validation_point import StochasticValidationPointInputs
-from vimseo.tools.validation.validation_point import StochasticValidationPointSettings
-from vimseo.tools.validation.validation_point import read_nominal_values
-from vimseo.tools.validation_case.validation_case_result import ValidationCaseResult
 from vimseo.utilities.datasets import SEP
 from vimseo.utilities.generate_validation_reference import Bias
 from vimseo.utilities.generate_validation_reference import (
@@ -82,7 +88,7 @@ target_model.cache = None
 for mult_factor, batch in zip([1.01, 1.02, 1.03], [1, 2, 3], strict=False):
     reference_dataset_cantilever = generate_reference_from_parameter_space(
         target_model,
-        SpaceToolFileIO()
+        SpaceAnalysisNodeFileIO()
         .read(file_name="bending_test_validation_input_space.json")
         .parameter_space,
         n_samples=6,
@@ -158,7 +164,7 @@ for batch, reference_data in zip(
     print(f"The reference data for batch {batch}: ", reference_data)
 
     # If the reference data contain nominal values for the model inputs,
-    # it is possible to extract them as a dictionary and pass it to the tool.
+    # it is possible to extract them as a dictionary and pass it to the analysis node.
     # The model default inputs are then set to these nominal values.
     # The ``read_nominal_values`` function allows to read
     # the nominal values in the reference data, using averaging
@@ -172,7 +178,7 @@ for batch, reference_data in zip(
         output_type=NominalValuesOutputType.DICTIONARY,
     )
     # Otherwise, the user can define the nominal values as a dictionary,
-    # and pass it to the tool.
+    # and pass it to the analysis node.
 
     result = StochasticValidationPoint().execute(
         inputs=StochasticValidationPointInputs(

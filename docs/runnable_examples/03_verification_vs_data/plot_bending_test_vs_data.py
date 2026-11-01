@@ -15,11 +15,11 @@
 # WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 """
-Usage of the model-versus-data code verification tool on a Finite-Element (Abaqus) model
+Usage of the model-versus-data code verification analysis node on a Finite-Element (Abaqus) model
 =========================================================================================
 
 Check an Abaqus cantilever beam model versus a reference dataset with the
-'CodeVerificationAgainstData' tool.
+'CodeVerificationAgainstData' analysis node.
 """
 
 # %%
@@ -30,10 +30,12 @@ import logging
 from gemseo.utils.directory_creator import DirectoryNamingMethod
 
 from vimseo import EXAMPLE_RUNS_DIR
+from vimseo.analysis_nodes.verification.verification_vs_data import (
+    CodeVerificationAgainstData,
+)
 from vimseo.api import activate_logger
 from vimseo.api import create_model
 from vimseo.core.model_settings import IntegratedModelSettings
-from vimseo.tools.verification.verification_vs_data import CodeVerificationAgainstData
 
 # %%
 # We first define the logger level:
@@ -56,7 +58,7 @@ model = create_model(
 
 # %%
 # We also need reference data. A mapping of variable names to values is enough:
-# the tool reads the grammars of the model to tell its inputs from its outputs,
+# the analysis node reads the grammars of the model to tell its inputs from its outputs,
 # so the roles do not have to be declared. The same data read from a csv file
 # with ``pandas.read_csv`` could be passed directly as well.
 reference_data = {
@@ -68,7 +70,7 @@ reference_data = {
 
 # %%
 # All inputs to the verification are now available.
-# We create the verification tool we are interested in.
+# We create the verification analysis node we are interested in.
 verificator = CodeVerificationAgainstData(
     directory_naming_method=DirectoryNamingMethod.NUMBERED,
     working_directory="CodeVerificationAgainstData_results",
@@ -104,9 +106,9 @@ verificator.save_results()
 # %%
 # The saved results can be loaded in a dashboard to be explored.
 # The dashboard is opened by typing ``dashboard_results`` in a terminal
-# (page **Tool Results**); it is provided by the plugin vimseo-dashboards.
+# (page **Analysis Node Results**); it is provided by the plugin vimseo-dashboards.
 # The figures and the tables can also be written in a directory by typing
-# ``visualize_tool_result --uri path/to/the/result.hdf5``.
+# ``visualize_analysis_node_result --uri path/to/the/result.hdf5``.
 
 # %%
 # The results can also be plotted from the Python API.

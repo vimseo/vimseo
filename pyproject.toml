@@ -26,7 +26,7 @@ dependencies = [
     "sympy",
     "gemseo-calibration >= 4.0.1, < 5",
     "plotly >= 5.15.0, <= 5.24.0",
-    # Static image export of the plotly figures (visualize_tool_result --format png).
+    # Static image export of the plotly figures (visualize_analysis_node_result --format png).
     # kaleido >= 1 requires plotly >= 6.1, and kaleido 0.2.1 fails to start its
     # subprocess or hangs on Windows.
     "kaleido == 0.2.1 ; sys_platform != 'win32'",
@@ -115,7 +115,7 @@ gemseo_plugins = { vimseo = "vimseo" }
 dashboard_workflow = "vimseo.dashboards.workflow.entry_point:main"
 workflow_executor = "vimseo.workflow.workflow_executor:main"
 dashboard_mlflow = "vimseo.storage_management.mlflow_ui_entry_point:main"
-visualize_tool_result = "vimseo.tools.visualize_tool_result:main"
+visualize_analysis_node_result = "vimseo.analysis_nodes.visualize_analysis_node_result:main"
 
 [build-system]
 requires = [

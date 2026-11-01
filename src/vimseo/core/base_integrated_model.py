@@ -49,6 +49,8 @@ from numpy import inf
 from pandas import DataFrame
 from strenum import StrEnum
 
+from vimseo.analysis_nodes.post_analysis_nodes.plot_parameters import Plot
+from vimseo.analysis_nodes.post_analysis_nodes.plot_parameters import merge_plots
 from vimseo.core.gemseo_discipline_wrapper import GemseoDisciplineWrapper
 from vimseo.core.load_case_factory import LoadCaseFactory
 from vimseo.core.model_description import ModelDescription
@@ -56,7 +58,7 @@ from vimseo.core.model_metadata import DEFAULT_METADATA
 from vimseo.core.model_metadata import MetaData
 from vimseo.core.model_metadata import MetaDataNames
 from vimseo.core.model_settings import IntegratedModelSettings
-from vimseo.core.run_context import current_tool_run
+from vimseo.core.run_context import current_analysis_node_run
 from vimseo.core.run_context import new_run_id
 from vimseo.core.run_context import record_simulation_from_outputs
 from vimseo.material.material import Material
@@ -64,8 +66,6 @@ from vimseo.material.material_registry import resolve_material
 from vimseo.storage_management import get_archive_class
 from vimseo.storage_management import run_kind
 from vimseo.storage_management.scratch_storage import DirectoryScratch
-from vimseo.tools.post_tools.plot_parameters import Plot
-from vimseo.tools.post_tools.plot_parameters import merge_plots
 from vimseo.utilities.json_grammar_utils import load_input_bounds
 from vimseo.utilities.plotting_utils import superpose_curves
 from vimseo.utilities.user import get_user_name
@@ -322,7 +322,7 @@ class IntegratedModel(GemseoDisciplineWrapper):
         self._run_time = np.nan
 
         self._run_id = ""
-        self._tool_run_id = ""
+        self._analysis_node_run_id = ""
 
         self._datetime = datetime.today()
 
@@ -576,7 +576,7 @@ class IntegratedModel(GemseoDisciplineWrapper):
     ) -> DisciplineData:
         output_data = super().execute(input_data)
         # Done here and not in ``_run``, which is skipped when the outputs are
-        # retrieved from the cache: the simulation is used by the tool all the same.
+        # retrieved from the cache: the simulation is used by the analysis node all the same.
         record_simulation_from_outputs(output_data)
         return output_data
 
@@ -585,8 +585,10 @@ class IntegratedModel(GemseoDisciplineWrapper):
 
         # A new identifier for each simulation really run (not the cached ones).
         self._run_id = new_run_id()
-        tool_run = current_tool_run()
-        self._tool_run_id = "" if tool_run is None else tool_run.tool_run_id
+        analysis_node_run = current_analysis_node_run()
+        self._analysis_node_run_id = (
+            "" if analysis_node_run is None else analysis_node_run.analysis_node_run_id
+        )
 
         if self._whether_use_scratch_dir():
             self._scratch_manager.create_job_directory()
@@ -603,7 +605,7 @@ class IntegratedModel(GemseoDisciplineWrapper):
                 MetaDataNames.job_name: self._job_name,
                 MetaDataNames.date: datetime.today().isoformat(" "),
                 MetaDataNames.run_id: self._run_id,
-                MetaDataNames.tool_run_id: self._tool_run_id,
+                MetaDataNames.analysis_node_run_id: self._analysis_node_run_id,
                 MetaDataNames.study_name: self._archive_manager.study_name,
             },
         )
@@ -948,7 +950,7 @@ class IntegratedModel(GemseoDisciplineWrapper):
                 str(self._scratch_manager.job_directory)
             ]),
             MetaDataNames.run_id: array([self._run_id]),
-            MetaDataNames.tool_run_id: array([self._tool_run_id]),
+            MetaDataNames.analysis_node_run_id: array([self._analysis_node_run_id]),
             MetaDataNames.study_name: array([self._archive_manager.study_name]),
             MetaDataNames.status: array([run_kind.FINISHED]),
         })

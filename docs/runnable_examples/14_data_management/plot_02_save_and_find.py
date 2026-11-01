@@ -30,15 +30,15 @@ from gemseo.algos.parameter_space import ParameterSpace
 from pandas import DataFrame
 
 from vimseo import EXAMPLE_RUNS_DIR
+from vimseo.analysis_nodes.doe.doe import DOEAnalysisNode
 from vimseo.api import create_model
+from vimseo.api import search_analysis_node_runs
 from vimseo.api import search_model_results
-from vimseo.api import search_tool_runs
-from vimseo.tools.doe.doe import DOETool
 
 # %%
 # Where the results go
 # --------------------
-# Three settings, shared by the models and the tools, say where a result is saved:
+# Three settings, shared by the models and the analysis nodes, say where a result is saved:
 #
 # - ``archive_manager``: ``"DirectoryArchive"`` (the default) or ``"MlflowArchive"``,
 # - ``directory_archive_root``: the root of the archive,
@@ -67,13 +67,13 @@ for study_name in ["layup_A", "layup_B"]:
         study_name=study_name,
         cache_file_path=archive["directory_archive_root"] / f"{study_name}_cache.hdf",
     )
-    doe = DOETool(**archive, study_name=study_name)
+    doe = DOEAnalysisNode(**archive, study_name=study_name)
     doe.execute(model=model, parameter_space=parameter_space, n_samples=3)
 
 # %%
 # Saving is automatic
 # -------------------
-# Nothing has to be called to save a result: each simulation and each tool run is
+# Nothing has to be called to save a result: each simulation and each analysis node run is
 # archived when it ends. A simulation is archived when it starts too, with the status
 # ``RUNNING``, so that a simulation interrupted by a crash stays visible. A simulation
 # served by the cache of the model is not archived again.
@@ -86,7 +86,9 @@ for study_name in ["layup_A", "layup_B"]:
 archived_model_runs = search_model_results(
     **archive, model_name="BendingTestAnalytical"
 )
-DataFrame(archived_model_runs)[["run_id", "study_name", "load_case", "tool_run_id"]]
+DataFrame(archived_model_runs)[
+    ["run_id", "study_name", "load_case", "analysis_node_run_id"]
+]
 
 # %%
 # A query selects the simulations on their inputs, outputs and metadata, with ``and``,
@@ -99,11 +101,13 @@ DataFrame(
 )[["run_id", "study_name", "inputs.height", "outputs.reaction_forces"]]
 
 # %%
-# Find the tool results
+# Find the analysis node results
 # ---------------------
-# ``search_tool_runs`` does the same for the tool runs, here in one study only:
-archived_tool_runs = search_tool_runs(**archive, study_name="layup_A")
-DataFrame(archived_tool_runs)[["tool_run_id", "tool_name", "status", "key_values"]]
+# ``search_analysis_node_runs`` does the same for the analysis node runs, here in one study only:
+archived_analysis_node_runs = search_analysis_node_runs(**archive, study_name="layup_A")
+DataFrame(archived_analysis_node_runs)[
+    ["analysis_node_run_id", "analysis_node_name", "status", "key_values"]
+]
 
 # %%
 # A summary carries the ``uri`` of its result, used to load it: see the next example.

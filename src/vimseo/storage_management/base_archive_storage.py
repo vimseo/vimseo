@@ -102,7 +102,7 @@ def create_simulation_summary(
 
     Returns:
         The summary: ``run_id``, ``study_name``, ``model_name``, ``load_case``,
-        ``status``, ``datetime``, ``tool_run_id``, ``uri``, the metadata of
+        ``status``, ``datetime``, ``analysis_node_run_id``, ``uri``, the metadata of
         :data:`SUMMARY_METADATA_NAMES`, and the scalar inputs and outputs as
         ``inputs.{name}`` and ``outputs.{name}``.
     """
@@ -114,7 +114,9 @@ def create_simulation_summary(
         "load_case": str(metadata.get(MetaDataNames.load_case, "")),
         "status": str(metadata.get(MetaDataNames.status, "FINISHED")),
         "datetime": str(metadata.get(MetaDataNames.date, "")),
-        "tool_run_id": str(metadata.get(MetaDataNames.tool_run_id, "")),
+        "analysis_node_run_id": str(
+            metadata.get(MetaDataNames.analysis_node_run_id, "")
+        ),
         "uri": uri,
     }
     summary.update({
@@ -227,7 +229,7 @@ class BaseArchiveManager(BaseStorageManager):
         """Return the archived results of simulations from their ``run_id``.
 
         The ``run_id`` of a simulation is a metadata of its result. It is also the
-        identifier listed in the ``simulation_run_ids`` of the metadata of a tool
+        identifier listed in the ``simulation_run_ids`` of the metadata of an analysis node
         result. The whole archive is searched, whatever the study.
 
         Args:

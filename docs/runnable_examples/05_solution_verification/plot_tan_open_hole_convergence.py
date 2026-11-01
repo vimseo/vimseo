@@ -19,7 +19,7 @@ Solution verification of the analytic Tan open-hole model
 =========================================================
 
 Assess the discretization error of the :class:`TanOpenHole` model with the
-``DiscretizationSolutionVerification`` tool, which is based on the
+``DiscretizationSolutionVerification`` analysis node, which is based on the
 [Richardson extrapolation](../../../references/solution_verification/solution_verification_method.md#richardson-extrapolation)
 [@richardson1911_finite_differences]
 [@krysl2022_confidence_intervals_richardson], and compare two
@@ -31,7 +31,7 @@ field-derived quantities:
   node that happens to fall closest to the stress concentration jumps around as
   the grid changes, this quantity is *non-monotone* -- a sawtooth.
   Richardson extrapolation cannot be computed for a sawtooth,
-  so the tool will fall back to a palliative estimator.
+  so the analysis node will fall back to a palliative estimator.
 
 From the analytic solution, the model computes grid nodes evaluations
 and interpolates a field. Any value at a grid node is therefore exact,
@@ -58,13 +58,13 @@ from pandas import DataFrame
 from plotly.subplots import make_subplots
 
 from vimseo import EXAMPLE_RUNS_DIR
+from vimseo.analysis_nodes.verification.solution_verification import (
+    DiscretizationSolutionVerification,
+)
 from vimseo.api import activate_logger
 from vimseo.api import create_model
 from vimseo.core.model_result import ModelResult
 from vimseo.core.model_settings import IntegratedModelSettings
-from vimseo.tools.verification.solution_verification import (
-    DiscretizationSolutionVerification,
-)
 
 # %%
 # First we set the logger level:
@@ -154,10 +154,10 @@ convergence_table = DataFrame({
 print(convergence_table)
 
 # %%
-# The table is passed to the tool as it is. Tools accept the data a user already
+# The table is passed to the analysis node as it is. Analysis nodes accept the data a user already
 # has -- a mapping of variable names to values, a ``DataFrame``, or a GEMSEO
 # ``Dataset`` -- so the dictionary built above would work just as well here. The
-# tool knows which variable plays which role from its own settings, so nothing
+# analysis node knows which variable plays which role from its own settings, so nothing
 # has to be tagged as an input or an output.
 
 # %%
@@ -188,7 +188,7 @@ print(
     f"Robust median: q_converged={extrapolation['q_converged_robust']:.2f} "
     f"+/- {extrapolation['q_converged_robust_band']:.2g}"
 )
-# The tool selects Richardson when available and falls back to a palliative
+# The analysis node selects Richardson when available and falls back to a palliative
 # otherwise; ``q_converged_method`` says which one was used.
 print(
     f"Selected converged value: {extrapolation['q_converged']:.2f} "
@@ -236,7 +236,7 @@ print(
     f"Robust median: q_converged={extrapolation_peak['q_converged_robust']:.2f} "
     f"+/- {extrapolation_peak['q_converged_robust_band']:.2g}"
 )
-# Richardson failed here, so the tool falls back to a palliative and says so.
+# Richardson failed here, so the analysis node falls back to a palliative and says so.
 print(
     f"Selected converged value: {extrapolation_peak['q_converged']:.2f} "
     f"(method: {extrapolation_peak['q_converged_method']})"

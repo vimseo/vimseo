@@ -21,8 +21,10 @@ from typing import ClassVar
 
 from vimseo.api import activate_logger
 from vimseo.api import create_model
+from vimseo.api import get_available_analysis_nodes
 from vimseo.api import get_available_load_cases
 from vimseo.api import get_available_models
+from vimseo.api import get_available_plots
 from vimseo.core.model_settings import IntegratedModelSettings
 from vimseo.problems.load_cases import DUMMY_LOAD_CASE_NAME
 
@@ -75,6 +77,18 @@ def test_available_load_cases(tmp_wd):
         "Cantilever",
         "ThreePoints",
     ]
+
+
+def test_available_plots():
+    plots = get_available_plots()
+    assert "Lines" in plots
+    assert "Plotter" not in plots
+
+
+def test_available_analysis_nodes():
+    analysis_nodes = get_available_analysis_nodes()
+    assert "DOEAnalysisNode" in analysis_nodes
+    assert "BaseAnalysisNode" not in analysis_nodes
 
 
 def test_available_models(tmp_wd):

@@ -87,8 +87,8 @@ pip install git+https://forge-is.pf.irt-saintexupery.com/vims/vimseo-dashboards.
 
 **vimseo-dashboards** provides the command `dashboard_results`, whose pages are:
 
-- **Tool Results**: the values and the figures of a tool result,
-  loaded from a file, an archive of tool runs or a URI;
+- **Analysis Node Results**: the values and the figures of an analysis node result,
+  loaded from a file, an archive of analysis node runs or a URI;
 - **Parameter Space**: the edition of a parameter space;
 - **Model Results**: the model results of an archive, refined by study, model,
   load case, status or query.
@@ -146,7 +146,7 @@ and in general any model using mesh discretisation. A wrapper specific to models
 
 - A wrapper for analysis methods: standard analysis methods are already integrated
 to run VV&UQ workflows (see figure below), namely _code and solution verification_, _uncertainty quantification_,
-_sensitivity analysis_, _surrogate modelling_ or _stochastic validation_. Other analysis tools allows to exploit validated simulations to support design offices
+_sensitivity analysis_, _surrogate modelling_ or _stochastic validation_. Other analysis nodes allows to exploit validated simulations to support design offices
 (e.g. generate virtual allowables).
 
 ![VV&UQ process](/docs/images/vvuq_process.png "ASME VVUQ 10-2019")
@@ -204,9 +204,9 @@ from __future__ import annotations
 
 from vimseo.api import create_model
 from vimseo.core.model_settings import IntegratedModelSettings
-from vimseo.tools.doe.doe import DOEInputs
-from vimseo.tools.doe.doe import DOESettings
-from vimseo.tools.doe.doe import DOETool
+from vimseo.analysis_nodes.doe.doe import DOEInputs
+from vimseo.analysis_nodes.doe.doe import DOESettings
+from vimseo.analysis_nodes.doe.doe import DOEAnalysisNode
 
 model_name = "BendingTestAnalytical"
 load_case = "Cantilever"
@@ -220,17 +220,17 @@ model = create_model(
     ),
 )
 
-tool = DOETool()
-tool.execute(
+analysis_node = DOEAnalysisNode()
+analysis_node.execute(
     inputs=DOEInputs(
         model=model, parameter_space=model.material.to_parameter_space()
     ),
     settings=DOESettings(n_samples=20),
 )
-tool.execute()
-tool.save_results()
+analysis_node.execute()
+analysis_node.save_results()
 # The numerical values of the result, as tables:
-tool.result.to_dataframes()
+analysis_node.result.to_dataframes()
 ```
 
 The database GUI is then opened to explore the results:
@@ -305,7 +305,7 @@ is used, which is a key aspect when validating several models using the same mod
 geometries and boundary conditions.
 - **Storage**: of model results and analysis results
 - **Scalability for heavy numerical models**: with custom HPC executors for each HPC platform and solver.
-- **Building block analysis tools for UQ&M and VV&UQ workflows**:
+- **Building block analysis nodes for UQ&M and VV&UQ workflows**:
 - **Identification of model parameters through user-defined calibration sequence:** with uncertainty
 information on the calibrated quantities and versatile calibration metrics taking scalar, vector or curve outputs.
 - **Easy creation of standard VV&UQ workflows**:

@@ -13,14 +13,14 @@ What is archived must remain readable by a human and by another version of VIMSE
 
 ### REQ-SER-001 — Settings are serialized in clear
 
-- **Statement:** The system shall write the settings and inputs of a tool run in a
+- **Statement:** The system shall write the settings and inputs of an analysis node run in a
   human-readable form (JSON-compatible values), not as pickled objects, including
   Pydantic models, enumerations and paths.
 - **Rationale:** An archive must be auditable without Python, and pickles break across
   versions.
 - **Priority:** Must
 - **Status:** Proposed
-- **Verification:** Test — `tests/tools/test_serialization.py`.
+- **Verification:** Test — `tests/analysis_nodes/test_serialization.py`.
 - **Satisfied by:** SPEC-001
 
 ### REQ-SER-002 — Parameter spaces and distributions are serialized in clear
@@ -37,7 +37,7 @@ What is archived must remain readable by a human and by another version of VIMSE
 
 - **Statement:** A value which cannot be serialized in clear should be stored with an
   explicit fallback (e.g. its representation) rather than making the archive fail.
-- **Rationale:** Archiving must never lose a tool run because of one exotic setting.
+- **Rationale:** Archiving must never lose an analysis node run because of one exotic setting.
 - **Priority:** Should
 - **Status:** Proposed
 - **Verification:** Test.

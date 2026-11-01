@@ -18,7 +18,7 @@ r"""
 Local sensitivity analysis: One-factor-at-a-Time
 ================================================
 
-The :class:`~.OATSensitivityTool` measures the influence of each input of a model
+The :class:`~.OATSensitivityAnalysisNode` measures the influence of each input of a model
 around nominal values: from a center $x_0$,
 each input component $i$ varies alone by a physical step $h_i$,
 the other ones remaining at the center.
@@ -47,16 +47,16 @@ from __future__ import annotations
 import logging
 
 from vimseo import EXAMPLE_RUNS_DIR
+from vimseo.analysis_nodes.doe.doe import DOEAnalysisNode
+from vimseo.analysis_nodes.doe.doe import DOEInputs
+from vimseo.analysis_nodes.doe.doe import DOESettings
+from vimseo.analysis_nodes.sensitivity.oat_sensitivity import OATSensitivityAnalysisNode
+from vimseo.analysis_nodes.sensitivity.oat_sensitivity import OATSensitivityInputs
+from vimseo.analysis_nodes.sensitivity.oat_sensitivity import OATSensitivitySettings
+from vimseo.analysis_nodes.space.space_analysis_node import SpaceAnalysisNode
 from vimseo.api import activate_logger
 from vimseo.api import create_model
 from vimseo.core.model_settings import IntegratedModelSettings
-from vimseo.tools.doe.doe import DOEInputs
-from vimseo.tools.doe.doe import DOESettings
-from vimseo.tools.doe.doe import DOETool
-from vimseo.tools.sensitivity.oat_sensitivity import OATSensitivityInputs
-from vimseo.tools.sensitivity.oat_sensitivity import OATSensitivitySettings
-from vimseo.tools.sensitivity.oat_sensitivity import OATSensitivityTool
-from vimseo.tools.space.space_tool import SpaceTool
 
 activate_logger(level=logging.INFO)
 
@@ -84,10 +84,10 @@ model = create_model(
 # as in the Morris example.
 # Its random variables are centered on these values,
 # which are therefore the default center of the star.
-space_tool = SpaceTool(working_directory="SpaceTool_results")
+space_analysis_node = SpaceAnalysisNode(working_directory="SpaceAnalysisNode_results")
 retained_variables = model.get_input_data_names()
 retained_variables.remove("relative_dplt_location")
-space_tool.execute(
+space_analysis_node.execute(
     distribution_name="OTTriangularDistribution",
     space_builder_name="FromModelCenterAndCov",
     variable_names=retained_variables,
@@ -95,18 +95,18 @@ space_tool.execute(
     model=model,
     cov=0.05,
 )
-space_tool.execute(
+space_analysis_node.execute(
     distribution_name="OTTriangularDistribution",
     space_builder_name="FromCenterAndCov",
     center_values={"relative_dplt_location": 0.9},
     cov=0.05,
 )
-print(space_tool.parameter_space)
+print(space_analysis_node.parameter_space)
 
 # %%
-# Using the OATSensitivityTool
+# Using the OATSensitivityAnalysisNode
 # ----------------------------
-# The tool executes the star DOE (DOE algorithm ``"StarDOE"``) on the model.
+# The analysis node executes the star DOE (DOE algorithm ``"StarDOE"``) on the model.
 # The settings of the star are:
 #
 # - ``center``: the physical values of the center, by input name;
@@ -134,17 +134,17 @@ print(space_tool.parameter_space)
 # so the relative step is set to $2\%$.
 # The center of ``height`` is moved from its default value 40 to 41.
 output_names = ["reaction_forces", "dplt_at_force_location", "maximum_dplt"]
-tool = OATSensitivityTool(working_directory="oat_sensitivity_results")
-tool.execute(
+analysis_node = OATSensitivityAnalysisNode(working_directory="oat_sensitivity_results")
+analysis_node.execute(
     inputs=OATSensitivityInputs(
-        model=model, parameter_space=space_tool.parameter_space
+        model=model, parameter_space=space_analysis_node.parameter_space
     ),
     settings=OATSensitivitySettings(
         output_names=output_names, center={"height": 41.0}, relative_step=0.02
     ),
 )
-tool.save_results()
-print(tool.result)
+analysis_node.save_results()
+print(analysis_node.result)
 
 # %%
 # The inputs are ranked by decreasing absolute centered variation ``delta_f``.
@@ -164,24 +164,24 @@ print(tool.result)
 # - ``gradient``: the centered finite-difference estimation of the derivative.
 #
 # They can be tabulated:
-tool.result.get_indices_dataframe("relative_delta_f")
+analysis_node.result.get_indices_dataframe("relative_delta_f")
 
 # %%
 # The tornado diagram of an output shows its variations
 # from the center of the star, the most influential inputs at the top:
-figures = tool.result.plot(output_names=["reaction_forces"])
+figures = analysis_node.result.plot(output_names=["reaction_forces"])
 figures["tornado_reaction_forces"]
 
 # %%
 # Using the samples of a star DOE prepared in advance
 # ---------------------------------------------------
-# The star DOE can also be executed beforehand by a :class:`~.DOETool`
+# The star DOE can also be executed beforehand by a :class:`~.DOEAnalysisNode`
 # with the DOE algorithm ``"StarDOE"``, whose settings are passed through
 # ``algo_settings``.
 # Here, a one-sided star.
-doe_tool = DOETool(working_directory="star_doe_results")
-doe_tool.execute(
-    inputs=DOEInputs(model=model, parameter_space=space_tool.parameter_space),
+doe_analysis_node = DOEAnalysisNode(working_directory="star_doe_results")
+doe_analysis_node.execute(
+    inputs=DOEInputs(model=model, parameter_space=space_analysis_node.parameter_space),
     settings=DOESettings(
         output_names=output_names,
         algo="StarDOE",
@@ -192,13 +192,13 @@ doe_tool.execute(
         },
     ),
 )
-doe_tool.result.dataset
+doe_analysis_node.result.dataset
 
 # %%
-# Its result is passed to the :class:`~.OATSensitivityTool` as ``doe_result``:
+# Its result is passed to the :class:`~.OATSensitivityAnalysisNode` as ``doe_result``:
 # the model is not executed again.
-# This result records the DOE algorithm, which the tool checks,
-# and its settings, from which the tool reads whether the star is two-sided.
-tool = OATSensitivityTool(working_directory="oat_from_doe_results")
-tool.execute(inputs=OATSensitivityInputs(doe_result=doe_tool.result))
-tool.result.get_indices_dataframe("gradient")
+# This result records the DOE algorithm, which the analysis node checks,
+# and its settings, from which the analysis node reads whether the star is two-sided.
+analysis_node = OATSensitivityAnalysisNode(working_directory="oat_from_doe_results")
+analysis_node.execute(inputs=OATSensitivityInputs(doe_result=doe_analysis_node.result))
+analysis_node.result.get_indices_dataframe("gradient")

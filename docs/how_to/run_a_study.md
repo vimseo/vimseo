@@ -36,8 +36,8 @@ model = create_model(
 ```
 
 In addition, since the layup strongly controls the physics of the
-laminate, it may be interesting to separate the tool results and the
-individual simulations per layup. Give the model and the tools the same
+laminate, it may be interesting to separate the analysis node results and the
+individual simulations per layup. Give the model and the analysis nodes the same
 `study_name`, one per layup: they are archived in the same archive, under
 `{directory_archive_root}/{study_name}/` (or in the MLflow experiment
 `{study_name}`), and stay linked to each other.
@@ -56,12 +56,12 @@ model = create_model(
 )
 ```
 
-And create the tool like this:
+And create the analysis node like this:
 
 ```
-from vimseo.tools.sensitivity.sensitivity import SensitivityTool
+from vimseo.analysis_nodes.sensitivity.sensitivity import SensitivityAnalysisNode
 
-tool = SensitivityTool(study_name=study_name)
+analysis_node = SensitivityAnalysisNode(study_name=study_name)
 ```
 
 The study of a whole script can also be set once, with the environment variable
@@ -264,7 +264,7 @@ activated:
     may be wrong if you remove another entry than the last ones. The problem
     is that you may try to delete non-existing entries when you will view
     the cache again, after having deleted entries. If `cache_delete_entry`
-    bugs, you can also use the `hdfview` tool, which is a standard tool for
+    bugs, you can also use the `hdfview` analysis node, which is a standard analysis node for
     `hdf5` file manipulation. `hdfview` allows to delete hdf groups and thus
     can be used in replacement of `cache_delete_entry`.
 

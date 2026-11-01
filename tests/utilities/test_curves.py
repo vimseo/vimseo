@@ -24,9 +24,9 @@ from numpy import linspace
 from numpy import zeros
 from numpy.testing import assert_array_equal
 
-from vimseo.tools.post_tools.plot_parameters import ConstantTrace
-from vimseo.tools.post_tools.plot_parameters import Plot
-from vimseo.tools.post_tools.plot_parameters import Trace
+from vimseo.analysis_nodes.post_analysis_nodes.plot_parameters import ConstantTrace
+from vimseo.analysis_nodes.post_analysis_nodes.plot_parameters import Plot
+from vimseo.analysis_nodes.post_analysis_nodes.plot_parameters import Trace
 from vimseo.utilities.curves import Curve
 from vimseo.utilities.curves import CurveSet
 from vimseo.utilities.curves import _resolve_constants
