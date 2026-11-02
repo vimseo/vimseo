@@ -20,8 +20,6 @@ import sys
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-import pytest
-
 from vimseo.api import create_model
 from vimseo.core.base_integrated_model import IntegratedModelSettings
 from vimseo.core.model_metadata import MetaDataNames
@@ -91,6 +89,10 @@ def check_model_outputs(
     model.plot_results(
         save=True, show=False, directory_path=model._archive_manager.job_directory
     )
+
+    # pytest is a dev dependency: a top-level import would make the models importing
+    # this module vanish from the factory where it is not installed.
+    import pytest
 
     for output_name, expected_output in expected_outputs.items():
         # Instead of directly specifying the expected output value, it is possible
