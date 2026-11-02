@@ -77,6 +77,10 @@ Asking for a feature whose extra is missing raises an error naming the extra to 
 [vimseo-dashboards](https://forge-is.pf.irt-saintexupery.com/vims/vimseo-dashboards),
 are not necessarily released for it.
 
+The plugins, **vimseo-dashboards** included, are hosted on a private forge. To get
+access, ask sebastien.bocquet@irt-saintexupery.com or
+ludovic.barriere@irt-saintexupery.com.
+
 To benefit from the latest developments, install **VIMSEO** from its branch `main`
 and the plugins from their branch `develop`:
 
