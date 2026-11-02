@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema",
+  "type": "object",
+  "properties": {
+    "width": {
+      "type": "array",
+      "items": {
+        "type": "number",
+        "minimum": 0.5,
+        "maximum": 10.0
+      },
+      "description": "The width."
+    },
+    "height": {
+      "type": "array",
+      "items": {
+        "type": "number",
+        "minimum": 0.5,
+        "maximum": 10.0
+      },
+      "description": "The height."
+    }
+  }
+}

@@ -34,7 +34,8 @@ The cache of the discipline is disabled: the model manages the cache.
 A material is declared with the `MATERIAL_FILE` class attribute, or passed to the
 constructor (`material=...`, also through `create_model`). Its property values become the
 default values of the discipline inputs of the same names; each property must be an
-input of the discipline.
+input of the discipline. See the example
+[Wrap a GEMSEO discipline with a material](../generated/runnable_examples/02_integrated_models/plot_05_discipline_with_material.md).
 
 The inputs can be bounded by a JSON grammar file, declared with the
 `_INPUT_GRAMMAR_FILE` class attribute. This file replaces the input grammar of the
@@ -91,6 +92,9 @@ model = create_model("TensileCoupon", "Dummy")
 
 No development installation is needed: the discipline module is imported from
 `discipline_path` when it is not installed.
+
+See the example
+[Declare a model wrapping a GEMSEO discipline in a YAML file](../generated/runnable_examples/02_integrated_models/plot_06_declarative_model.md).
 
 ## Integration of a pure Python model as a pre-run-post component model
 
