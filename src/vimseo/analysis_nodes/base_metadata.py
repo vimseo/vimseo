@@ -37,7 +37,9 @@ class BaseMetadata(metaclass=GoogleDocstringInheritanceMeta):
     """Miscellaneous."""
 
     def __post_init__(self):
+        # Keep the values passed at construction, e.g. when reloading from a file.
         self.generic = {
             "datetime": datetime.now().strftime("%d-%m-%Y_%H-%M-%S"),
             "version": vimseo.__version__,
+            **self.generic,
         }
