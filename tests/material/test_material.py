@@ -299,3 +299,12 @@ def test_create_material_from_legacy_grammar():
     values = material.get_values_as_dict()
     assert values["young_modulus"] == 2.1e5  # ruff: ignore[float-equality-comparison]
     assert values["nu_p"] == 0.3  # ruff: ignore[float-equality-comparison]
+
+
+def test_material_relation_keeps_metadata_on_reload(tmp_wd):
+    """Check that reloading a material relation keeps its original generic metadata."""
+    mat_rel = MaterialRelation(name="Ta6v")
+    mat_rel.metadata.generic["datetime"] = "01-01-2000_00-00-00"
+    mat_rel.to_json(file_name="mat_rel.json")
+    mat_rel_loaded = MaterialRelation.from_json("mat_rel.json")
+    assert mat_rel_loaded.metadata.generic == mat_rel.metadata.generic
