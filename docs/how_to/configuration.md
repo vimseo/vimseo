@@ -33,6 +33,7 @@ Here is a full example, covering every available setting:
 | `VIMSEO_ROOT_DIRECTORY` | The root directory where analysis node results are written | `""` |
 | `VIMSEO_WORKING_DIRECTORY` | The working directory where analysis node results are written. If empty, results are exported to unique directories created under the root directory; if set, results are exported under this path | `""` |
 | `VIMSEO_RUN_ARCHIVE_MANAGER` | The archive manager backend of the simulations (e.g. `"DirectoryArchive"`, `"MlflowArchive"`) | `"DirectoryArchive"` |
+| `VIMSEO_MODELS_PATH` | The directories of the YAML files declaring models that wrap a GEMSEO discipline, separated by `;` on Windows and `:` otherwise | `""` |
 | `VIMSEO_DATABASE__MODE` | The database mode, `"Local"` or `"Team"` | `"Local"` |
 | `VIMSEO_DATABASE__LOCAL_URI` | The URI of the local MLflow tracking server | `""` |
 | `VIMSEO_DATABASE__TEAM_URI` | The URI of the team's shared MLflow tracking server | `"https://mlflow.irt-aese.local/"` |

@@ -308,3 +308,13 @@ def test_material_relation_keeps_metadata_on_reload(tmp_wd):
     mat_rel.to_json(file_name="mat_rel.json")
     mat_rel_loaded = MaterialRelation.from_json("mat_rel.json")
     assert mat_rel_loaded.metadata.generic == mat_rel.metadata.generic
+
+
+def test_material_property_value_out_of_bounds():
+    """A material property value shall be within the bounds of the property."""
+    with pytest.raises(
+        ValueError,
+        match=r"The value 3\.0 of the material property E is out of its bounds "
+        r"\[0\.0, 2\.0\]\.",
+    ):
+        MaterialProperty(name="E", value=3.0, lower_bound=0.0, upper_bound=2.0)

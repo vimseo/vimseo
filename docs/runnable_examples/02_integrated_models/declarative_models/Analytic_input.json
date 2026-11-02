@@ -1,0 +1,29 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema",
+  "type": "object",
+  "properties": {
+    "a": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "description": ""
+    },
+    "b": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "description": ""
+    },
+    "x": {
+      "type": "array",
+      "items": {
+        "type": "number",
+        "minimum": -3.0,
+        "maximum": 3.0
+      },
+      "description": ""
+    }
+  }
+}

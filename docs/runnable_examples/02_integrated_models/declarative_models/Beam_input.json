@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/schema#",
+  "type": "object",
+  "properties": {
+    "length": {
+      "type": "array",
+      "items": {
+        "type": "number",
+        "minimum": 500.0,
+        "maximum": 2000.0
+      },
+      "description": "The length [mm]."
+    },
+    "width": {
+      "type": "array",
+      "items": {
+        "type": "number",
+        "minimum": 10.0,
+        "maximum": 200.0
+      },
+      "description": "The width [mm]."
+    },
+    "height": {
+      "type": "array",
+      "items": {
+        "type": "number",
+        "minimum": 10.0,
+        "maximum": 400.0
+      },
+      "description": "The height [mm]."
+    },
+    "young_modulus": {
+      "type": "array",
+      "items": {
+        "type": "number",
+        "minimum": 100000.0,
+        "maximum": 300000.0
+      },
+      "description": "The Young modulus [MPa]."
+    },
+    "force": {
+      "type": "array",
+      "items": {
+        "type": "number",
+        "minimum": 0.0,
+        "maximum": 5000.0
+      },
+      "description": "The tip load [N]."
+    }
+  }
+}

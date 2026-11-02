@@ -1,0 +1,9 @@
+name: DeclaredBeam
+discipline: wrapping_disciplines:CantileverBeam
+discipline_path: .
+discipline_options: {n_points: 50}
+summary: A cantilever beam, wrapped from a discipline with an unbounded JSONGrammar.
+material: steel.json
+input_grammar: Beam_input.json
+plots:
+  - [x, deflection]

@@ -1,0 +1,8 @@
+name: DeclaredAnalytic
+discipline: gemseo.disciplines.analytic:AnalyticDiscipline
+discipline_options:
+  expressions:
+    y: "a * x**2 + b"
+    z: "sin(x) * a"
+summary: An analytic discipline declared without any Python code.
+input_grammar: Analytic_input.json

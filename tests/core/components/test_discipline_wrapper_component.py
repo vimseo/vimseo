@@ -15,7 +15,13 @@
 
 from __future__ import annotations
 
+import json
+
+import pytest
+from gemseo.core.grammars.errors import InvalidDataError
+from gemseo.core.grammars.json_grammar import JSONGrammar
 from gemseo.disciplines.analytic import AnalyticDiscipline
+from numpy import array
 
 from vimseo.api import create_model
 from vimseo.core.components.discipline_wrapper_component import (
@@ -38,3 +44,41 @@ def test_job_executor_forwards_the_wrapped_models_one(tmp_wd):
     component = DisciplineWrapperComponent(LoadCase(name="LC1"), inner_model)
 
     assert component.job_executor is inner_model.job_executor
+
+
+def test_input_grammar_is_shared_without_file(tmp_wd):
+    """Without input grammar file, the component shares the discipline grammar."""
+    discipline = AnalyticDiscipline({"y": "x+1"})
+    component = DisciplineWrapperComponent(LoadCase(name="LC1"), discipline)
+
+    assert component.input_grammar is discipline.input_grammar
+
+
+def test_input_grammar_file(tmp_wd):
+    """With an input grammar file, the component has its own JSON grammar, restricted
+    by the file and keeping the default values of the discipline, whose grammar is
+    unchanged."""
+    discipline = AnalyticDiscipline({"y": "x+1"})
+    discipline.default_input_data["x"] = array([2.0])
+    file_path = tmp_wd / "input.json"
+    file_path.write_text(
+        json.dumps({
+            "type": "object",
+            "properties": {
+                "x": {"type": "array", "items": {"type": "number", "minimum": 0.0}}
+            },
+        })
+    )
+
+    component = DisciplineWrapperComponent(
+        LoadCase(name="LC1"), discipline, input_grammar_file=file_path
+    )
+
+    grammar = component.input_grammar
+    assert isinstance(grammar, JSONGrammar)
+    assert grammar is not discipline.input_grammar
+    assert grammar.schema["properties"]["x"]["items"]["minimum"] == 0.0  # ruff: ignore[float-equality-comparison]
+    assert component.default_input_data["x"][0] == 2.0  # ruff: ignore[float-equality-comparison]
+    assert component.execute()["y"][0] == 3.0  # ruff: ignore[float-equality-comparison]
+    with pytest.raises(InvalidDataError, match=r"must be bigger than or equal to 0\.0"):
+        component.execute({"x": array([-1.0])})

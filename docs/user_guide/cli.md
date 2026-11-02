@@ -16,6 +16,7 @@ The following commands can be run in a terminal:
 | ``dashboard_workflow``    | Opens a dashboard to prepare a workflow |
 | ``workflow_executor``    |  Runs a workflow (exported as a ``JSON`` file) |
 | ``dashboard_mlflow``    | Opens the ``MLflow`` interface to explore the stored experiments |
+| ``vimseo_wrap``    | Writes the JSON input grammar of a model declared in a YAML file from its GEMSEO discipline (``write-grammar``), and checks the declaration (``check``) |
 | ``visualize_analysis_node_result``    | Writes the figures, the tables and the metadata of analysis node results in a directory, from their URIs (result file, analysis node run directory, ``analysis-node-run:{analysis_node_run_id}`` or ``runs:/{mlflow_run_id}``) |
 
 The package [vimseo-dashboards](https://forge-is.pf.irt-saintexupery.com/vims/vimseo-dashboards) adds
