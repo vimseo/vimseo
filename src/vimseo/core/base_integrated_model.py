@@ -24,8 +24,10 @@ from copy import copy
 from copy import deepcopy
 from dataclasses import asdict
 from datetime import datetime
+from datetime import timezone
 from pathlib import Path
 from re import match
+from shutil import copy2
 from subprocess import CalledProcessError
 from time import time
 from typing import TYPE_CHECKING
@@ -33,6 +35,7 @@ from typing import ClassVar
 
 import numpy as np
 from gemseo import READ_ONLY_EMPTY_DICT
+from gemseo.caches.hdf5_cache import HDF5Cache
 from gemseo.caches.simple_cache import SimpleCache
 from gemseo.core.chains.chain import MDOChain
 from gemseo.core.discipline.base_discipline import CacheType
@@ -75,7 +78,6 @@ if TYPE_CHECKING:
     from collections.abc import Mapping
     from collections.abc import Sequence
 
-    from gemseo.caches.hdf5_cache import HDF5Cache
     from gemseo.core.discipline.discipline_data import DisciplineData
     from gemseo.typing import StrKeyMapping
     from plotly.graph_objs import Figure
@@ -579,6 +581,49 @@ class IntegratedModel(GemseoDisciplineWrapper):
         # retrieved from the cache: the simulation is used by the analysis node all the same.
         record_simulation_from_outputs(output_data)
         return output_data
+
+    def _can_load_cache(self, input_data: StrKeyMapping) -> bool:
+        # Overridden to detect a cache written by an older version of the model,
+        # whose outputs do not match the output grammar any more
+        # (e.g. after an output or a metadata is renamed):
+        # such a cache is backed up and cleared, and the model is executed.
+        try:
+            cache_entry = self.cache[input_data]
+        except KeyError:
+            # An output of the cached entry is not in the output grammar any more.
+            cache_entry = None
+        else:
+            if not cache_entry.outputs:
+                return False
+
+        if (
+            cache_entry is None
+            or not self.output_grammar.required_names <= cache_entry.outputs.keys()
+        ):
+            self.__discard_stale_cache()
+            return False
+
+        self._set_data_from_cache(cache_entry)
+        return True
+
+    def __discard_stale_cache(self) -> None:
+        """Back up the cache file and clear the cache."""
+        message = (
+            f"The cache of {self.name} holds outputs that do not match "
+            "its output grammar, e.g. written by an older version of the model"
+        )
+        cache_file_path = Path(self._cache_file_path)
+        if isinstance(self.cache, HDF5Cache) and cache_file_path.is_file():
+            # A copy rather than a move, since the file may be held open.
+            backup_path = cache_file_path.with_name(
+                f"{cache_file_path.stem}.stale-"
+                f"{datetime.now(timezone.utc):%Y%m%dT%H%M%S}{cache_file_path.suffix}"
+            )
+            copy2(cache_file_path, backup_path)
+            message += f"; it is backed up to {backup_path}"
+
+        LOGGER.warning("%s, then cleared.", message)
+        self.cache.clear()
 
     def _run(self, input_data):
         start_time = time()

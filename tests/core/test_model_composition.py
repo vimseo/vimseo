@@ -18,7 +18,6 @@
 from __future__ import annotations
 
 import pytest
-from gemseo.core.grammars.errors import InvalidDataError
 from numpy import atleast_1d
 
 from vimseo.api import create_model
@@ -115,13 +114,13 @@ def test_model_composition_cache_hit_roundtrips_all_outputs(tmp_wd, tmp_path):
 
 
 @pytest.mark.fast
-def test_model_composition_stale_cache_raises(tmp_wd, tmp_path):
-    """A cache written before the grammar gained an output fails to validate.
+def test_model_composition_stale_cache_is_discarded(tmp_wd, tmp_path, caplog):
+    """A cache written before the grammar gained an output is discarded.
 
     An HDF cache produced by an
     older version of the model is missing outputs that the current output grammar
-    requires. On the cache hit GEMSEO restores the stale (incomplete) data and the
-    output-grammar validation raises.
+    requires. Instead of restoring the stale (incomplete) data, the model backs up and
+    clears the cache, then executes.
     """
     cache_file = tmp_path / "with_post.hdf"
 
@@ -144,5 +143,8 @@ def test_model_composition_stale_cache_raises(tmp_wd, tmp_path):
         tmp_path,
     )
 
-    with pytest.raises(InvalidDataError):
-        new_composition.execute()
+    output = new_composition.execute()
+
+    assert "extra_output" in output
+    assert "do not match its output grammar" in caplog.text
+    assert len(list(tmp_path.glob("with_post.stale-*.hdf"))) == 1

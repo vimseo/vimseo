@@ -406,3 +406,41 @@ def test_error_code_default(tmp_wd, monkeypatch):
         model.get_output_data()[MetaDataNames.error_code][0]
         == IntegratedModel._ERROR_CODE_DEFAULT
     )
+
+
+def _rename_cached_output(entry_outputs, name):
+    """Rename an output of a cache entry, as a renaming of the model output would."""
+    entry_outputs.move(name, f"old_{name}")
+
+
+def _remove_cached_output(entry_outputs, name):
+    """Remove an output of a cache entry, as an addition of a model output would."""
+    del entry_outputs[name]
+
+
+@pytest.mark.parametrize("make_stale", [_rename_cached_output, _remove_cached_output])
+def test_stale_cache(tmp_wd, caplog, make_stale):
+    """Check that a cache whose outputs do not match the output grammar any more is
+    backed up, cleared and filled again, instead of failing."""
+    import h5py
+
+    cache_path = tmp_wd / "cache.hdf"
+    create_model("MockModel", "LC1", cache_file_path=cache_path).execute()
+    with h5py.File(cache_path, "a") as file:
+        entry_outputs = next(iter(file["node"].values()))["outputs"]
+        make_stale(entry_outputs, MetaDataNames.analysis_node_run_id.value)
+
+    model = create_model("MockModel", "LC1", cache_file_path=cache_path)
+    model.execute()
+
+    assert "do not match its output grammar" in caplog.text
+    assert len(list(tmp_wd.glob("cache.stale-*.hdf"))) == 1
+    assert len(model.cache) == 1
+    entry = model.cache.last_entry
+    assert MetaDataNames.analysis_node_run_id in entry.outputs
+
+    # The repaired cache is used.
+    caplog.clear()
+    model.execute()
+    assert "do not match" not in caplog.text
+    assert len(model.cache) == 1
