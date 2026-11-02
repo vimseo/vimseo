@@ -15,7 +15,7 @@
 <div align="center">
 <h3>
     <a href="https://vimseo.github.io/vimseo/">documentation</a> |
-    <a href="https://vimseo.github.io/vimseo/generated/runnable_examples/02_integrated_models">examples</a>
+    <a href="generated/runnable_examples/02_integrated_models">examples</a>
 </h3>
 </div>
 </div>
@@ -70,6 +70,28 @@ The rest is shipped by optional dependencies, the *extras*:
 Install them all at once with `pip install "vimseo[all]"`.
 
 Asking for a feature whose extra is missing raises an error naming the extra to install.
+
+### Plugins
+
+`pip install vimseo` installs the latest release of **VIMSEO**. Its plugins, such as
+[vimseo-dashboards](https://forge-is.pf.irt-saintexupery.com/vims/vimseo-dashboards),
+are not necessarily released for it.
+
+To benefit from the latest developments, install **VIMSEO** from its branch `main`
+and the plugins from their branch `develop`:
+
+```
+pip install "vimseo[dashboard,mlflow] @ git+https://github.com/vimseo/vimseo.git@main"
+pip install git+https://forge-is.pf.irt-saintexupery.com/vims/vimseo-dashboards.git@develop
+```
+
+**vimseo-dashboards** provides the command `dashboard_results`, whose pages are:
+
+- **Analysis Node Results**: the values and the figures of an analysis node result,
+  loaded from a file, an archive of analysis node runs or a URI;
+- **Parameter Space**: the edition of a parameter space;
+- **Model Results**: the model results of an archive, refined by study, model,
+  load case, status or query.
 
 ---
 **NOTE**
@@ -294,14 +316,14 @@ information on the calibrated quantities and versatile calibration metrics takin
 
 ## Using **VIMSEO**
 
-- **[References](https://vimseo.github.io/vimseo/generated/runnable_examples/01_models/)
-and [API](https://vimseo.github.io/vimseo/reference/vimseo/)**: get the description and definition of concepts and API.
-- **[How-to](https://vimseo.github.io/vimseo/generated/runnable_examples/02_integrated_models/)**: solve practical problems by exploring runnable examples and how-to.
+- **[References](generated/runnable_examples/01_models/)
+and [API](reference/vimseo/)**: get the description and definition of concepts and API.
+- **[How-to](generated/runnable_examples/02_integrated_models/)**: solve practical problems by exploring runnable examples and how-to.
 
 ## Learning **VIMSEO**
 
-- **[Tutorials](https://vimseo.github.io/vimseo/tutorials/vvuq_study/introduction/)
-and [Explanations](https://vimseo.github.io/vimseo/explanations/asme2025/abstract/)**:
+- **[Tutorials](tutorials/vvuq_study/introduction/)
+and [Explanations](explanations/asme2025/abstract/)**:
 learn through discussions and tutorials about key topics.
 
 ## Roadmap

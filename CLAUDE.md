@@ -25,6 +25,15 @@ needing them are silently skipped).
 .tox/py312/Scripts/python.exe -m pytest tests/analysis_nodes/test_doe.py  # Windows
 ```
 
+**Scripts on Windows:** wrap the body of any standalone script (scratch scripts,
+utilities) in `if __name__ == "__main__":`. The GEMSEO HDF5 caches spawn a
+process, and Windows starts it with the `spawn` method, which re-imports the main module:
+an unguarded script re-executes itself in the child and fails.
+**Exception:** the gallery examples (`docs/runnable_examples/**/plot_*.py`) are not
+guarded, since indenting their body would break their `# %%` cells. On Windows, do not
+run them with `python plot_xxx.py`: run them through a guarded runner, e.g. a script
+calling `runpy.run_path(path, run_name="example")` under `if __name__ == "__main__":`.
+
 **Install (editable, with every extra and the dev dependencies):**
 ```bash
 uv pip install -e ".[all]" --group dev
