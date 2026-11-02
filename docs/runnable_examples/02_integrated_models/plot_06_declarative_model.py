@@ -40,10 +40,21 @@ from numpy import array
 from vimseo import EXAMPLE_RUNS_DIR
 from vimseo.core.declarative_model import ModelDeclaration
 from vimseo.core.declarative_model import create_model_class
+from vimseo.core.declarative_model import main as vimseo_wrap
 from vimseo.core.model_settings import IntegratedModelSettings
 
 MODELS_DIR = Path("declarative_models")
 RUNS_DIR = EXAMPLE_RUNS_DIR / "declarative_model"
+RUNS_DIR.mkdir(parents=True, exist_ok=True)
+
+# %%
+# In normal use, a declared model is created by its name with ``create_model``, as any
+# VIMSEO model, once the directory of its YAML file is in the environment variable
+# ``VIMSEO_MODELS_PATH`` (see the last section). This example rather uses the helper
+# below, only so that it runs as is: the helper creates the class of the model from
+# its YAML file, without setting ``VIMSEO_MODELS_PATH``, and stores the archive, the
+# scratch and the cache of the model in the directory of the runs of the example.
+# It is not meant to be reused in your own scripts.
 
 
 def create_declared_model(declaration: ModelDeclaration):
@@ -68,32 +79,86 @@ def create_declared_model(declaration: ModelDeclaration):
 print((MODELS_DIR / "Rectangle.yaml").read_text())
 
 # %%
-# The declaration is read from the YAML file, and the class of the model is created
-# from it. In normal use, the model is rather created by its name (see the last
-# section).
+# The declaration is read from the YAML file, and the model is created from it:
 
-declaration = ModelDeclaration.from_yaml(MODELS_DIR / "Rectangle.yaml")
-model = create_declared_model(declaration)
+model = create_declared_model(ModelDeclaration.from_yaml(MODELS_DIR / "Rectangle.yaml"))
 print(model.description)
 model.execute()
 print(model.get_output_data()["area"])
 
 # %%
+# The discipline ``Rectangle`` has a ``SimpleGrammar``, which gives the types of its
+# inputs but no bounds, so the inputs of the model are not bounded:
+
+print(model.lower_bounds)
+print(model.upper_bounds)
+
+# %%
 # Bound the inputs with a JSON grammar
 # ------------------------------------
 #
-# The discipline ``Rectangle`` has a ``SimpleGrammar``, which gives the types of its
-# inputs but no bounds. The JSON grammar file declared by ``input_grammar`` replaces
-# the input grammar of the discipline, here to bound its inputs. The command
-# ``vimseo_wrap write-grammar Rectangle.yaml`` writes this file from the discipline,
-# with the types of all its inputs; the ``minimum`` and ``maximum`` of the ``items``
-# of the inputs to bound are then added by hand:
+# The discipline ``CantileverBeam`` computes the deflection of a cantilever beam under
+# a tip load. Its ``JSONGrammar`` is built from its default values, so it gives the
+# types of its inputs but no bounds either. The JSON grammar file declared by
+# ``input_grammar`` replaces the input grammar of the discipline, here to bound its
+# inputs. Here is the YAML file of the model, which also declares an option of the
+# constructor of the discipline, a material and a figure, presented in the next
+# section:
 
-print((MODELS_DIR / "Rectangle_input.json").read_text())
+print((MODELS_DIR / "Beam.yaml").read_text())
 
 # %%
-# The model bounds are read from this grammar:
+# The JSON grammar file is written in three steps.
+#
+# 1. Write the grammar of the discipline with the command
+#    ``vimseo_wrap write-grammar Beam.yaml``. It writes the file declared by
+#    ``input_grammar``, or ``{name}_input.json`` next to the YAML file when this key is
+#    missing, as here, where the model is first declared without ``input_grammar``:
 
+draft_yaml_path = RUNS_DIR / "Beam.yaml"
+draft_yaml_path.write_text(
+    "name: DeclaredBeam\n"
+    "discipline: wrapping_disciplines:CantileverBeam\n"
+    f"discipline_path: {MODELS_DIR.resolve().as_posix()}\n"
+)
+vimseo_wrap(["write-grammar", str(draft_yaml_path), "--force"])
+
+# %%
+#    The file declares all the inputs of the discipline with their types, and an empty
+#    description:
+
+print((RUNS_DIR / "DeclaredBeam_input.json").read_text())
+
+# %%
+# 2. Add the bounds by hand, with the keys ``minimum`` and ``maximum``, and optionally
+#    a description. An input of a GEMSEO discipline is a NumPy array, so its property
+#    in the grammar is of type ``array``: the bounds apply to its components, and are
+#    thus set in the block ``items`` describing them, beside their
+#    ``"type": "number"``, not at the level of the property itself:
+#
+#    .. code-block:: json
+#
+#        "force": {
+#          "type": "array",
+#          "items": {
+#            "type": "number",
+#            "minimum": 0.0,
+#            "maximum": 5000.0
+#          },
+#          "description": "The tip load [N]."
+#        }
+#
+#    A ``minimum`` or a ``maximum`` set beside ``"type": "array"`` would not bound the
+#    values and would be ignored by VIMSEO. Here is the completed file:
+
+print((MODELS_DIR / "Beam_input.json").read_text())
+
+# %%
+# 3. Reference the file in the YAML file, with ``input_grammar: Beam_input.json``.
+#
+# The model bounds are then read from this grammar:
+
+model = create_declared_model(ModelDeclaration.from_yaml(MODELS_DIR / "Beam.yaml"))
 print(model.lower_bounds)
 print(model.upper_bounds)
 
@@ -101,7 +166,7 @@ print(model.upper_bounds)
 # and an input out of these bounds makes the simulation fail:
 
 try:
-    model.execute({"width": array([20.0])})
+    model.execute({"force": array([10000.0])})
 except InvalidDataError as error:
     print(error)
 
@@ -112,11 +177,11 @@ except InvalidDataError as error:
 # bound raises a ``ValueError`` when the model is created. For instance, without the
 # input ``height``:
 
-grammar = json.loads((MODELS_DIR / "Rectangle_input.json").read_text())
+grammar = json.loads((MODELS_DIR / "Beam_input.json").read_text())
 del grammar["properties"]["height"]
-RUNS_DIR.mkdir(parents=True, exist_ok=True)
-incomplete_grammar_path = RUNS_DIR / "Rectangle_incomplete_input.json"
+incomplete_grammar_path = RUNS_DIR / "Beam_incomplete_input.json"
 incomplete_grammar_path.write_text(json.dumps(grammar))
+declaration = ModelDeclaration.from_yaml(MODELS_DIR / "Beam.yaml")
 try:
     create_declared_model(
         declaration.model_copy(update={"input_grammar": incomplete_grammar_path})
@@ -125,32 +190,28 @@ except ValueError as error:
     print(error)
 
 # %%
-# Discipline options, material and figures
-# ----------------------------------------
+# Material and figures
+# --------------------
 #
-# The discipline ``CantileverBeam`` computes the deflection of a cantilever beam under
-# a tip load. Its grammar is built from its default values, so it has no bounds either.
-# The declaration passes an option to the constructor of the discipline, gives a
-# material, and declares a figure, as the names of its abscissa and ordinates:
-
-print((MODELS_DIR / "Beam.yaml").read_text())
-
-# %%
-# The properties of the material are named after inputs of the discipline. Its values
-# are the default values of these inputs, which are classified as material variables:
+# The material declared by ``material`` is a JSON file, whose format is described in
+# [Material file format](../../../references/materials/material_file_format.md).
+# The properties of the material are named after inputs of the discipline. Their
+# values are the default values of these inputs, which are classified as material
+# variables:
 
 print((MODELS_DIR / "steel.json").read_text())
-model = create_declared_model(ModelDeclaration.from_yaml(MODELS_DIR / "Beam.yaml"))
 print(model.description)
 
 # %%
-# The bounds of the material properties shall be within those of the input grammar.
-# Its stochastic properties define an uncertain space:
+# The bounds of the material properties shall be within those of the input grammar,
+# which is checked when the model is created. The stochastic properties of the
+# material define an uncertain space:
 
 print(model.material.to_parameter_space())
 
 # %%
-# The results are visualised with the figures declared by ``plots``:
+# The results are visualised with the figures declared by ``plots``, each one given
+# by the names of its abscissa and ordinates:
 
 model.execute()
 print(model.get_output_data()["tip_deflection"])

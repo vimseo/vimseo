@@ -2,4 +2,3 @@ name: DeclaredRectangle
 discipline: wrapping_disciplines:Rectangle
 discipline_path: .
 summary: A rectangle, wrapped from a discipline with a SimpleGrammar.
-input_grammar: Rectangle_input.json

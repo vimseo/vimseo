@@ -14,23 +14,29 @@
     "width": {
       "type": "array",
       "items": {
-        "type": "number"
+        "type": "number",
+        "minimum": 10.0,
+        "maximum": 200.0
       },
-      "description": ""
+      "description": "The width [mm]."
     },
     "height": {
       "type": "array",
       "items": {
-        "type": "number"
+        "type": "number",
+        "minimum": 10.0,
+        "maximum": 400.0
       },
-      "description": ""
+      "description": "The height [mm]."
     },
     "young_modulus": {
       "type": "array",
       "items": {
-        "type": "number"
+        "type": "number",
+        "minimum": 100000.0,
+        "maximum": 300000.0
       },
-      "description": ""
+      "description": "The Young modulus [MPa]."
     },
     "force": {
       "type": "array",
