@@ -178,6 +178,37 @@ def test_execute_with_inputs_only_then_kwargs(tmp_wd):
     assert analysis_node.options == {"foo": "y", "bar": "x"}
 
 
+def test_execute_with_inputs_only_keeps_the_settings(tmp_wd):
+    """Check that the settings set before an execution with inputs only are kept, not
+    reset to their defaults (#90)."""
+    analysis_node = MyAnalysisNode()
+    analysis_node.options["foo"] = "y"
+    analysis_node.execute(inputs=MyInputs(bar="x"))
+    assert analysis_node.options == {"foo": "y", "bar": "x"}
+
+    analysis_node.update_options(foo="z")
+    analysis_node.execute(inputs=MyInputs(bar="x"))
+    assert analysis_node.options == {"foo": "z", "bar": "x"}
+    assert analysis_node.result.metadata.settings == {"foo": "z"}
+
+
+@pytest.mark.parametrize("name", ["setting", "foo"])
+def test_execute_with_inputs_and_unexpected_arguments(tmp_wd, name):
+    """Check that an argument passed with ``inputs``, e.g. a misspelled ``settings``,
+    raises an error instead of being ignored (#65)."""
+    analysis_node = MyAnalysisNode()
+    with pytest.raises(ValueError, match=re.escape(f"Unexpected arguments ['{name}']")):
+        analysis_node.execute(inputs=MyInputs(bar="x"), **{name: MySettings(foo="_")})
+    assert analysis_node.options == {"foo": "", "bar": ""}
+
+
+def test_execute_with_inputs_of_wrong_type(tmp_wd):
+    """Check that inputs of a wrong type passed alone raise an error."""
+    analysis_node = MyAnalysisNode()
+    with pytest.raises(TypeError, match="Inputs must be of type"):
+        analysis_node.execute(inputs=MySettings(foo="_"))
+
+
 @pytest.mark.parametrize(
     "get_options",
     [
