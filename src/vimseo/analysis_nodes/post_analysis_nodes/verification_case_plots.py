@@ -121,7 +121,7 @@ class ConvergenceCase(Plotter):
                 df_[f"Ref[{output_name}]"].values[0],
                 df_[output_name].values[-1],
             ])
-            if normalize_index_output:
+            if normalize_index_output is not None:
                 y_values /= df_[output_name].values[normalize_index_output]
             fig2 = go.Scatter(
                 x=[0.0, df_[elt_size_var_name].values[-1]],
@@ -138,7 +138,7 @@ class ConvergenceCase(Plotter):
                     df_["extrapolated_values_folds"].values[j],
                     df_[output_name].values[-1],
                 ])
-                if normalize_index_output:
+                if normalize_index_output is not None:
                     y_values /= df_[output_name].values[normalize_index_output]
                 fig3 = go.Scatter(
                     x=[0.0, df_[elt_size_var_name].values[-1]],
