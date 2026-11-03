@@ -136,7 +136,7 @@ step.execute(
         input_names=[
             "height",
             "width",
-            "imposed_dplt",
+            "imposed_displacement",
         ],
         parameter_names=["young_modulus"],
     ),
@@ -222,7 +222,7 @@ step.execute(
         input_names=[
             "height",
             "width",
-            "imposed_dplt",
+            "imposed_displacement",
         ],
         parameter_names=["young_modulus"],
         optimizer_settings=NLOPT_COBYLA_Settings(max_iter=50),
@@ -258,7 +258,7 @@ step.execute(
         input_names=[
             "height",
             "width",
-            "imposed_dplt",
+            "imposed_displacement",
         ],
         parameter_names=["young_modulus"],
         optimizer_name="MultiStart",
@@ -305,7 +305,7 @@ step.execute(
         input_names=[
             "height",
             "width",
-            "imposed_dplt",
+            "imposed_displacement",
         ],
         parameter_names=["young_modulus"],
         optimizer_settings=NLOPT_COBYLA_Settings(),

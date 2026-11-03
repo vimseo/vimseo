@@ -79,8 +79,8 @@ reference_dataset_cantilever = generate_reference_from_parameter_space(
     .read(file_name="bending_test_validation_input_space.json")
     .parameter_space,
     n_samples=6,
-    input_names=["width", "height", "imposed_dplt"],
-    output_names=["reaction_forces", "maximum_dplt"],
+    input_names=["width", "height", "imposed_displacement"],
+    output_names=["reaction_forces", "maximum_deflection"],
     outputs_to_bias={"reaction_forces": Bias(mult_factor=1.05)},
     additional_name_to_data={"nominal_length": 600.0, "batch": 1},
 )
@@ -111,7 +111,7 @@ print("The stochastic material: ", material)
 
 # %%
 # And the measured quantities of interest
-measured_inputs = ["width", "height", "imposed_dplt"]
+measured_inputs = ["width", "height", "imposed_displacement"]
 measured_outputs = ["reaction_forces"]
 
 # %%

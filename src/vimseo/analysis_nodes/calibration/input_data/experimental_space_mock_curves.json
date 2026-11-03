@@ -27,7 +27,7 @@
       "center_value_expr": "0.5*(mini+maxi)",
       "use_default_values_as_center": true,
       "variable_names": [
-        "imposed_dplt"
+        "imposed_displacement"
       ],
       "center_values": null,
       "cov": 0.1,

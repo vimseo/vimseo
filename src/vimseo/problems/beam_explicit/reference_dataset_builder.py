@@ -48,7 +48,7 @@ if __name__ == "__main__":
         space_analysis_node = SpaceAnalysisNode()
         retained_variables = model.input_grammar.names
         if load_case == "Cantilever":
-            retained_variables.remove("relative_dplt_location")
+            retained_variables.remove("relative_load_location")
         space_analysis_node.update(
             "OTTriangularDistribution",
             "FromModelCenterAndCov",
@@ -61,7 +61,7 @@ if __name__ == "__main__":
             space_analysis_node.update(
                 "OTTriangularDistribution",
                 "FromCenterAndCov",
-                center_values={"relative_dplt_location": 0.9},
+                center_values={"relative_load_location": 0.9},
                 cov=0.05,
             )
         # Check that all input variables are in the space of parameters.

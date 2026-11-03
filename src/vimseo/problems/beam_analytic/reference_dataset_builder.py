@@ -34,50 +34,50 @@ from vimseo.utilities.datasets import plot_dataset_element
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
-imposed_dplt = [5.0, 5.0, 5.0, 10.0, 10.0]
+imposed_displacement = [5.0, 5.0, 5.0, 10.0, 10.0]
 young_modulus = array([200000.0, 200000.0, 200000.0, 200000.0, 200000.0])
 width = array([10.0, 10.0, 10.0, 10.0, 10.0])
 height = array([10.0, 15.0, 20.0, 15.0, 20.0])
 length = array([1000.0, 1000.0, 1000.0, 1000.0, 1000.0])
 relative_support_location = full((5, 2), [0.0, 1.0])
 support_length = array([600.0, 600.0, 600.0, 600.0, 600.0])
-relative_dplt_location = array([0.5, 0.5, 0.5, 0.5, 0.5])
+relative_load_location = array([0.5, 0.5, 0.5, 0.5, 0.5])
 
 data = vstack((
-    imposed_dplt,
+    imposed_displacement,
     young_modulus,
     width,
     height,
     length,
     relative_support_location.T,
-    relative_dplt_location,
+    relative_load_location,
 )).transpose()
 data_names = [
-    "imposed_dplt",
+    "imposed_displacement",
     "young_modulus",
     "width",
     "height",
     "length",
     "relative_support_location",
-    "relative_dplt_location",
+    "relative_load_location",
 ]
 data_group = {
-    "imposed_dplt": IODataset.INPUT_GROUP,
+    "imposed_displacement": IODataset.INPUT_GROUP,
     "young_modulus": IODataset.INPUT_GROUP,
     "width": IODataset.INPUT_GROUP,
     "height": IODataset.INPUT_GROUP,
     "length": IODataset.INPUT_GROUP,
     "relative_support_location": IODataset.INPUT_GROUP,
-    "relative_dplt_location": IODataset.INPUT_GROUP,
+    "relative_load_location": IODataset.INPUT_GROUP,
 }
 variable_names_to_n_components = {
-    "imposed_dplt": 1,
+    "imposed_displacement": 1,
     "young_modulus": 1,
     "width": 1,
     "height": 1,
     "length": 1,
     "relative_support_location": 2,
-    "relative_dplt_location": 1,
+    "relative_load_location": 1,
 }
 
 INPUT_DATASET = Dataset.from_array(
@@ -151,8 +151,8 @@ def bending_test_analytical_reference_dataset(
 
 if __name__ == "__main__":
     datasets = create_dataset_from_beam_model(INPUT_DATASET)
-    abscissa_variable = "dplt_grid"
-    variables = ["dplt"]
+    abscissa_variable = "position_profile_for_deflection"
+    variables = ["deflection_profile"]
     for load_case, dataset in datasets.items():
         plot_dataset_element(
             dataset,

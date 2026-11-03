@@ -54,7 +54,7 @@ model.execute({"height": atleast_1d(40.0), "width": atleast_1d(20.0)})
 model.execute({
     "height": atleast_1d(60.0),
     "width": atleast_1d(25.0),
-    "imposed_dplt": atleast_1d(-4.0),
+    "imposed_displacement": atleast_1d(-4.0),
 })
 
 # %%
@@ -74,13 +74,13 @@ model_results
 # comparisons; it stays in the results:
 results_for_convergence = model_results.filter(
     model_name="BendingTestAnalytical", failed=False
-).ignoring("imposed_dplt")
+).ignoring("imposed_displacement")
 len(results_for_convergence)
 
 # %%
 # What varies
 # -----------
-# ``varying_inputs`` lists the inputs taking several values; ``imposed_dplt`` is left
+# ``varying_inputs`` lists the inputs taking several values; ``imposed_displacement`` is left
 # out, since the collection ignores it:
 results_for_convergence.varying_inputs()
 
@@ -97,7 +97,9 @@ families
 # A family is a collection, which superposes the curves of its results, labelled by
 # the value of the varying input:
 family = families.get(width=20.0)
-family.visualize(plot_names=["moment_vs_moment_grid"])["moment_vs_moment_grid"]
+family.visualize(plot_names=["moment_profile_vs_position_profile_for_moment"])[
+    "moment_profile_vs_position_profile_for_moment"
+]
 
 # %%
 # The figures of all the families show their scalar outputs versus the varying input:

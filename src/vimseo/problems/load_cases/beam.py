@@ -26,8 +26,8 @@ class Beam_Cantilever(LoadCase):
 
     def get_bc_variable_names(self):
         return [
-            "imposed_dplt",
-            "relative_dplt_location",
+            "imposed_displacement",
+            "relative_load_location",
         ]
 
 
@@ -36,7 +36,7 @@ class Beam_ThreePoints(LoadCase):
     """A three-points load case."""
 
     def get_bc_variable_names(self):
-        return ["imposed_dplt", "relative_support_location"]
+        return ["imposed_displacement", "relative_support_location"]
 
 
 @dataclass
@@ -44,4 +44,8 @@ class Beam_FourPoints(LoadCase):
     """A four-points load case."""
 
     def get_bc_variable_names(self):
-        return ["imposed_dplt", "relative_dplt_location", "relative_support_location"]
+        return [
+            "imposed_displacement",
+            "relative_load_location",
+            "relative_support_location",
+        ]

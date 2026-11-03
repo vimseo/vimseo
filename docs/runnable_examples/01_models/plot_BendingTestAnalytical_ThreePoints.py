@@ -65,11 +65,11 @@ figures = model.plot_results(show=True)
 
 
 # %%
-# Plot of dplt_vs_dplt_grid
+# Plot of deflection_profile_vs_position_profile_for_deflection
 
-figures["dplt_vs_dplt_grid"]
+figures["deflection_profile_vs_position_profile_for_deflection"]
 
 # %%
-# Plot of moment_vs_moment_grid
+# Plot of moment_profile_vs_position_profile_for_moment
 
-figures["moment_vs_moment_grid"]
+figures["moment_profile_vs_position_profile_for_moment"]

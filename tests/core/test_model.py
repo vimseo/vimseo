@@ -275,8 +275,8 @@ def test_input_names_groups():
     assert not set(model.numerical_variable_names)
     assert set(model.material_variable_names) == {"young_modulus", "nu_p"}
     assert set(model.boundary_condition_variable_names) == {
-        "imposed_dplt",
-        "relative_dplt_location",
+        "imposed_displacement",
+        "relative_load_location",
     }
     assert set(model.geometrical_variable_names) == {"length", "width", "height"}
 

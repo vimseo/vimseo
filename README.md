@@ -283,8 +283,8 @@ to which the path to the workflow ``JSON`` file is passed:
 ```
 workflow_executor.exe C:\\Users\\john.doe\\Downloads\\john.doe_2025-10-03_T10-01-04_Workflow.json
 Workflow results: {'model1': BendingTestAnalytical
-   Inputs: height, imposed_dplt, length, nu_p, relative_support_location, width, young_modulus
-   Outputs: cpu_time, date, description, directory_archive_job, directory_archive_root, directory_scratch_job, directory_scratch_root, dplt, dplt_at_force_location, dplt_grid, error_code, job_name, load_case, location_max_dplt, machine, maximum_dplt, model, moment, moment_grid, n_cpus, persistent_result_files, reaction_forces, user, vims_git_version, 'space1': Parameter space:
+   Inputs: height, imposed_displacement, length, nu_p, relative_support_location, width, young_modulus
+   Outputs: cpu_time, date, description, directory_archive_job, directory_archive_root, directory_scratch_job, directory_scratch_root, deflection_profile, deflection_at_load_point, position_profile_for_deflection, error_code, job_name, load_case, location_max_deflection, machine, maximum_deflection, model, moment_profile, position_profile_for_moment, n_cpus, persistent_result_files, reaction_forces, user, vims_git_version, 'space1': Parameter space:
 +--------+-------------+-------------------+-------------+-------+--------------------------------------------------+--------------------+
 | Name   | Lower bound |       Value       | Upper bound | Type  |               Initial distribution               | Transformation(x)= |
 +--------+-------------+-------------------+-------------+-------+--------------------------------------------------+--------------------+

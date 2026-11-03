@@ -127,16 +127,23 @@ print(output_data)
 # The BendingTestAnalytical provides the following outputs:
 #
 # - reaction_forces: a scalar value giving the reaction forces calculated at the
-# - maximum_dplt: a scalar value giving the maximum displacement of the beam
-# - location_max_dplt: a scalar value giving the location of the maximum displacement along the beam
-# - displacement: an array of displacement values
-# - displacement_grid: an array of sorted coordinates along the beam at which displacement are computed
-# - moment: an array of moment values
-# - moment_grid: an array of sorted coordinates along the beam at which
+#   location of the load,
+# - maximum_deflection: a scalar value giving the deflection of largest magnitude,
+# - location_max_deflection: a scalar value giving the location of the maximum
+#   deflection along the beam,
+# - deflection_at_load_point: a scalar value giving the deflection at the location of
+#   the load,
+# - deflection_profile: the deflection of the neutral fibre along the beam,
+# - position_profile_for_deflection: the sorted positions along the beam at which the
+#   deflection is computed,
+# - moment_profile: the bending moment at the breakpoints
+#   position_profile_for_moment,
+# - position_profile_for_moment: the sorted positions along the beam of the
+#   breakpoints of the piecewise-linear bending moment.
+#
+# The value of the maximum deflection along the beam can be obtained like this:
 
-# The value of the maximum displacement along the beam can be obtained like this:
-
-model.get_output_data()["maximum_dplt"]
+model.get_output_data()["maximum_deflection"]
 
 
 # %%
@@ -144,7 +151,7 @@ model.get_output_data()["maximum_dplt"]
 
 figures = model.plot_results(save=True, show=True)
 
-figures["dplt_vs_dplt_grid"]
+figures["deflection_profile_vs_position_profile_for_deflection"]
 
 # %%
 # And now, we want to change the support location.
@@ -164,7 +171,7 @@ print(output_data)
 
 figures = model.plot_results(show=True)
 
-figures["dplt_vs_dplt_grid"]
+figures["deflection_profile_vs_position_profile_for_deflection"]
 
 # %%
 # For a model running an external solver, the options of the job
