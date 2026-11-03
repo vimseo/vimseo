@@ -15,7 +15,9 @@
 
 from __future__ import annotations
 
+import logging
 import re
+import subprocess
 from math import inf
 from pathlib import Path
 
@@ -406,3 +408,34 @@ def test_error_code_default(tmp_wd, monkeypatch):
         model.get_output_data()[MetaDataNames.error_code][0]
         == IntegratedModel._ERROR_CODE_DEFAULT
     )
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        subprocess.CalledProcessError(128, "git"),
+        FileNotFoundError("git"),
+    ],
+)
+def test_git_commit_unavailable(tmp_wd, monkeypatch, caplog, error):
+    """Check that a missing git commit is logged once, not as a warning (#109)."""
+    from vimseo.core import base_integrated_model
+
+    def check_output(*args, **kwargs):
+        raise error
+
+    monkeypatch.setattr(base_integrated_model.subprocess, "check_output", check_output)
+    base_integrated_model._get_vimseo_git_commit.cache_clear()
+    model = create_model("MockModel", "LC1")
+    model.cache = None
+    with caplog.at_level(logging.INFO, logger=base_integrated_model.__name__):
+        model.execute()
+        model.execute({"x1": atleast_1d(1.0)})
+    base_integrated_model._get_vimseo_git_commit.cache_clear()
+
+    messages = [
+        record for record in caplog.records if "git commit" in record.getMessage()
+    ]
+    assert len(messages) == 1
+    assert messages[0].levelno == logging.INFO
+    assert model.get_output_data()[MetaDataNames.vims_git_version][0] == ""

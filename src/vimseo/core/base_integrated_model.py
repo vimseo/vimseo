@@ -24,6 +24,7 @@ from copy import copy
 from copy import deepcopy
 from dataclasses import asdict
 from datetime import datetime
+from functools import cache
 from pathlib import Path
 from re import match
 from subprocess import CalledProcessError
@@ -85,6 +86,34 @@ if TYPE_CHECKING:
     from vimseo.storage_management.directory_storage import DirectoryArchive
 
 LOGGER = logging.getLogger(__name__)
+
+
+@cache
+def _get_vimseo_git_commit() -> str:
+    """Return the git commit of the source code of VIMSEO.
+
+    It is computed once per process.
+
+    Returns:
+        The git commit, or an empty string when VIMSEO is not installed from a git
+        repository or when git is not available.
+    """
+    try:
+        return (
+            subprocess
+            .check_output(
+                ["git", "-C", str(Path(__file__).parent), "rev-parse", "HEAD"],
+                stderr=subprocess.DEVNULL,
+            )
+            .decode("utf-8")
+            .strip()
+        )
+    except (CalledProcessError, OSError):
+        LOGGER.info(
+            "VIMSEO is not installed from a git repository, or git is not available: "
+            "the git commit of the model metadata is empty."
+        )
+        return ""
 
 
 class IntegratedModel(GemseoDisciplineWrapper):
@@ -901,19 +930,7 @@ class IntegratedModel(GemseoDisciplineWrapper):
                 MetaDataNames.error_code, self._ERROR_CODE_DEFAULT
             )
 
-        here = str(Path(__file__).parent)
-        try:
-            vims_git_version = (
-                subprocess
-                .check_output(["git", "-C", here, "rev-parse", "HEAD"])
-                .decode("utf-_8")
-                .strip()
-            )
-        except CalledProcessError:
-            LOGGER.warning(
-                "Model metadata: git is not available, git commit cannot be determined."
-            )
-            vims_git_version = ""
+        vims_git_version = _get_vimseo_git_commit()
         user = get_user_name()
         return MetaData(**{
             MetaDataNames.model: array([self.__class__.__name__]),
