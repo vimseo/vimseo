@@ -61,7 +61,7 @@ model.execute()
 # %%
 # And the results are visualised with the pre-defined plots:
 
-figures = model.plot_results(show=True)
+figures = model.plot_results(show=False)
 
 
 # %%
