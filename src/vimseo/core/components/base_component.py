@@ -54,6 +54,14 @@ class BaseComponent(GemseoDisciplineWrapper):
     USE_JOB_DIRECTORY: ClassVar[bool] = False
     """Whether to create a job directory."""
 
+    is_run_component: bool = False
+    """Whether the component runs the external software of its model.
+
+    It is set by the model building the chain of components, e.g. on the
+    run-processor of a :class:`.PreRunPostModel`, and gives the :attr:`.run` of the
+    model.
+    """
+
     _PERSISTENT_FILE_NAMES: ClassVar[Sequence[str]] = []
     """List of files produced in the scratch directory, to be copied to the archive
     directory."""
