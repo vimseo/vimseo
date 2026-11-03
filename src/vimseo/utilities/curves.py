@@ -21,8 +21,13 @@ from typing import TYPE_CHECKING
 
 from gemseo.datasets.dataset import Dataset
 from gemseo.post.dataset.lines import Lines
+from numpy import argmin
+from numpy import argsort
 from numpy import array
+from numpy import asarray
 from numpy import atleast_1d
+from numpy import interp
+from numpy import newaxis
 from numpy import vstack
 from pandas import DataFrame
 
@@ -36,6 +41,7 @@ if TYPE_CHECKING:
     from pathlib import Path
 
     from numpy import ndarray
+    from numpy.typing import ArrayLike
     from plotly.graph_objs import Figure
 
 
@@ -104,6 +110,37 @@ class Curve:
         value = array(value)
         self.__update_axis_check(value, "Y")
         self.__data[1] = value
+
+    def compute(self, x: ArrayLike, interpolate: bool = False) -> ndarray:
+        """Compute the ordinates of the curve at abscissas.
+
+        Args:
+            x: The abscissas.
+            interpolate: Whether to interpolate linearly between the two points of the
+                curve around each abscissa. Otherwise, take the ordinate of the point
+                of the curve closest to each abscissa.
+
+        Returns:
+            The ordinates, one per abscissa.
+
+        Raises:
+            ValueError: When interpolating at an abscissa outside the curve.
+        """
+        x = atleast_1d(asarray(x, dtype=float))
+        if not interpolate:
+            closest_indices = argmin(abs(self.x[:, newaxis] - x[newaxis, :]), axis=0)
+            return self.y[closest_indices]
+
+        x_min, x_max = self.x.min(), self.x.max()
+        outside = (x < x_min) | (x > x_max)
+        if outside.any():
+            msg = (
+                f"Cannot interpolate the curve {self.name} at {x[outside].tolist()}, "
+                f"outside its abscissas [{x_min}, {x_max}]."
+            )
+            raise ValueError(msg)
+        order = argsort(self.x, kind="stable")
+        return interp(x, self.x[order], self.y[order])
 
     def as_dict(self):
         """The curve as a dictionary."""

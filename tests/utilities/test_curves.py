@@ -213,3 +213,32 @@ def test_curve_set_plot_delegates_to_superpose_curves(tmp_wd):
     curve_set.plot(save=True, show=False)
 
     assert Path(spec.get_file_name()).is_file()
+
+
+@pytest.fixture
+def unsorted_curve() -> Curve:
+    """A curve whose abscissas are not sorted."""
+    return Curve({"x": [2.0, 0.0, 1.0], "y": [20.0, 0.0, 10.0]})
+
+
+@pytest.mark.parametrize(
+    ("x", "expected"),
+    [(1.0, [10.0]), (1.4, [10.0]), (1.6, [20.0]), ([-1.0, 3.0], [0.0, 20.0])],
+)
+def test_compute_closest_point(unsorted_curve, x, expected):
+    """Check the ordinates of the points closest to abscissas (#37)."""
+    assert_array_equal(unsorted_curve.compute(x), expected)
+
+
+@pytest.mark.parametrize(
+    ("x", "expected"), [(0.5, [5.0]), ([1.0, 1.5], [10.0, 15.0]), (2.0, [20.0])]
+)
+def test_compute_interpolation(unsorted_curve, x, expected):
+    """Check the ordinates interpolated at abscissas (#37)."""
+    assert_array_equal(unsorted_curve.compute(x, interpolate=True), expected)
+
+
+def test_compute_interpolation_outside(unsorted_curve):
+    """Check that interpolating outside the curve raises an error."""
+    with pytest.raises(ValueError, match=escape("at [3.0], outside its abscissas")):
+        unsorted_curve.compute([1.0, 3.0], interpolate=True)
