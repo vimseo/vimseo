@@ -21,6 +21,8 @@ from typing import Any
 from gemseo.core.base_factory import BaseFactory
 
 from vimseo.core.components.external_software_component import BaseComponent
+from vimseo.core.factory import create_instance
+from vimseo.core.factory import get_class
 
 LOGGER = logging.getLogger(__name__)
 
@@ -55,7 +57,8 @@ class ComponentFactory(BaseFactory):
             The instance of the class.
 
         Raises:
-            TypeError: If the class cannot be instantiated.
+            ImportError: If the class is not available.
+            TypeError: If the constructor of the class does not accept the options.
         """
 
         if base_class_name is None:
@@ -63,15 +66,27 @@ class ComponentFactory(BaseFactory):
 
         if "load_case" not in options:
             class_name = base_class_name
+            hint = "A component must be a subclass of BaseComponent."
+            available_names = None
         else:
-            class_name = base_class_name + self.SEP + options["load_case"].name
-
-        try:
-            klass = self.get_class(class_name)
-            return klass(**options)
-        except TypeError:
-            LOGGER.exception(
-                "Failed to create class %s with arguments %s",
-                base_class_name,
-                options,
+            load_case_name = options["load_case"].name
+            class_name = base_class_name + self.SEP + load_case_name
+            hint = (
+                f"The component of family {base_class_name} for the load case "
+                f"{load_case_name} must be a subclass of BaseComponent named "
+                f"{class_name}, i.e. {{Family}}{self.SEP}{{LoadCase}}."
             )
+            available_names = [
+                name
+                for name in self.class_names
+                if name.startswith(base_class_name + self.SEP)
+            ]
+
+        klass = get_class(self, class_name, "component", hint, available_names)
+        return create_instance(
+            klass,
+            "component",
+            "``def __init__(self, load_case: LoadCase | None = None, **options)`` "
+            "calling ``super().__init__(load_case=load_case, **options)``",
+            **options,
+        )
