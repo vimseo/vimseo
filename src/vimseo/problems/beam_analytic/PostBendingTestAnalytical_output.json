@@ -9,50 +9,50 @@
         "type": "number"
       }
     },
-    "maximum_dplt": {
-      "description": "",
+    "maximum_deflection": {
+      "description": "Deflection of largest magnitude, signed.",
       "type": "array",
       "items": {
         "type": "number"
       }
     },
-    "dplt_grid": {
-      "description": "",
+    "position_profile_for_deflection": {
+      "description": "Positions along the beam axis where the deflection is sampled.",
       "type": "array",
       "items": {
         "type": "number"
       }
     },
-    "location_max_dplt": {
-      "description": "",
+    "location_max_deflection": {
+      "description": "Position along the beam axis of the deflection of largest magnitude.",
       "type": "array",
       "items": {
         "type": "number"
       }
     },
-    "dplt": {
-      "description": "",
+    "deflection_profile": {
+      "description": "Deflection of the neutral fibre, at the positions position_profile_for_deflection.",
       "type": "array",
       "items": {
         "type": "number"
       }
     },
-    "moment": {
-      "description": "",
+    "moment_profile": {
+      "description": "Bending moment at the breakpoints position_profile_for_moment; the moment is linear between two breakpoints.",
       "type": "array",
       "items": {
         "type": "number"
       }
     },
-    "moment_grid": {
-      "description": "",
+    "position_profile_for_moment": {
+      "description": "Positions along the beam axis of the breakpoints of the piecewise-linear bending moment, not a dense sampling.",
       "type": "array",
       "items": {
         "type": "number"
       }
     },
-    "dplt_at_force_location": {
-      "description": "displacement where the force is applied",
+    "deflection_at_load_point": {
+      "description": "Deflection at the location of the load.",
       "type": "array",
       "items": {
         "type": "number"

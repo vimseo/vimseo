@@ -47,7 +47,7 @@ from vimseo.workflow.workflow_step import _deserialize_pydantic_settings
                 input_names=[
                     "height",
                     "width",
-                    "imposed_dplt",
+                    "imposed_displacement",
                 ],
                 parameter_names=["young_modulus"],
             ),
@@ -71,7 +71,7 @@ def test_to_serializable_settings(step):
         '{"output_name": "", "metric_name": "MSE", "mesh_name": "", "weight": null, '
         '"scaling": "NONE", "x_left_penalization_factor": 0.0, '
         '"x_right_penalization_factor": 0.0}}, "input_names": '
-        '["height", "width", "imposed_dplt"], "parameter_names": '
+        '["height", "width", "imposed_displacement"], "parameter_names": '
         '["young_modulus"], "optimizer_name": "NLOPT_COBYLA", '
         '"optimizer_settings": {"__pydantic_model__": '
         '["gemseo.algos.opt.nlopt.settings.nlopt_cobyla_settings", '

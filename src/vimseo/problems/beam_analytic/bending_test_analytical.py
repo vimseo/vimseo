@@ -35,9 +35,9 @@ class BendingTestAnalytical(PreRunPostModel):
 
     Possible load cases are:
     - Cantilever: clamped at one end, and displacement applied on the beam according to
-    the relative_dplt_location attribute.
+    the relative_load_location attribute.
     - ThreePoints: displacement applied on the beam according to the
-    relative_dplt_location attribute and support location according to the
+    relative_load_location attribute and support location according to the
     relative_support_location attribute.
 
     Input parameters are geometry of the section, Young's modulus, length of the beam,
@@ -57,8 +57,8 @@ class BendingTestAnalytical(PreRunPostModel):
     POST_PROC_FAMILY = "PostBendingTestAnalytical"
     MATERIAL_FILE = MATERIAL_LIB_DIR / "Ta6v.json"
     PLOTS: ClassVar[Sequence[tuple[str, ...]]] = [
-        ("dplt_grid", "dplt"),
-        ("moment_grid", "moment"),
+        ("position_profile_for_deflection", "deflection_profile"),
+        ("position_profile_for_moment", "moment_profile"),
     ]
 
     _MATERIAL_GRAMMAR_FILE: ClassVar[Path | str] = (

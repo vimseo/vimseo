@@ -92,10 +92,10 @@ space_analysis_node = SpaceAnalysisNode(working_directory="SpaceAnalysisNode_res
 print(space_analysis_node.get_available_space_builders())
 
 # %%
-# First, consider all input variables of the model except "relative_dplt_location".
+# First, consider all input variables of the model except "relative_load_location".
 
 retained_variables = model.get_input_data_names()
-retained_variables.remove("relative_dplt_location")
+retained_variables.remove("relative_load_location")
 space_analysis_node.execute(
     distribution_name="OTTriangularDistribution",
     space_builder_name="FromModelCenterAndCov",
@@ -106,12 +106,12 @@ space_analysis_node.execute(
 )
 
 # %%
-# Then, specifically for "relative_dplt_location".
+# Then, specifically for "relative_load_location".
 
 space_analysis_node.execute(
     distribution_name="OTTriangularDistribution",
     space_builder_name="FromCenterAndCov",
-    center_values={"relative_dplt_location": 0.9},
+    center_values={"relative_load_location": 0.9},
     cov=0.05,
 )
 print(space_analysis_node.parameter_space)
@@ -131,7 +131,7 @@ print(space_analysis_node.parameter_space)
 #   the previous ones keeping their new values,
 # - ``n_samples``: the number of samples; if 0, it is deduced from the method,
 #   e.g. ``n_replicates`` times the number of inputs plus one for Morris.
-output_names = ["reaction_forces", "dplt_at_force_location", "maximum_dplt"]
+output_names = ["reaction_forces", "deflection_at_load_point", "maximum_deflection"]
 analysis_node = SensitivityAnalysisNode(
     working_directory="sensitivity_analysis_node_results"
 )

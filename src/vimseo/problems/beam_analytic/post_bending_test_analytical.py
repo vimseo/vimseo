@@ -29,60 +29,33 @@ LOGGER = logging.getLogger(__name__)
 class PostBendingTestAnalytical(BaseComponent):
     """Post processor for the analytical bending test model."""
 
-
-class PostBendingTestAnalytical_Cantilever(PostBendingTestAnalytical):
-    """Extraction of the maximum force at the free end of the beam and displacement grid
-    and moment grid along the beam."""
-
     def _run(self, input_data):
-        disp = input_data["dplt"]
-        x_grid = input_data["dplt_grid"]
-        x_f = input_data["imposed_dplt_location"]
+        input_data = self.get_input_data()
+        deflection = input_data["deflection_profile"]
+        position = input_data["position_profile_for_deflection"]
 
-        f = interp1d(x_grid, disp)
-        dplt_at_f = f(x_f)
-        max_dplt = max(abs(disp))
-        index_max_dplt = np.argmax(abs(disp))
-        max_dplt *= disp[index_max_dplt] / max_dplt
-        location_max_dplt = x_grid[index_max_dplt]
-
+        index_max_deflection = np.argmax(abs(deflection))
         return {
-            "dplt_at_force_location": dplt_at_f,
-            "dplt": disp,
-            "dplt_grid": x_grid,
-            "maximum_dplt": np.array([max_dplt]),
-            "location_max_dplt": np.array([location_max_dplt]),
-            "moment": input_data["moment"],
-            "moment_grid": input_data["moment_grid"],
-            "reaction_forces": self.get_input_data()["reaction_forces"],
+            "deflection_at_load_point": interp1d(position, deflection)(
+                input_data["load_location"]
+            ),
+            "deflection_profile": deflection,
+            "position_profile_for_deflection": position,
+            # The signed value of largest magnitude.
+            "maximum_deflection": array([deflection[index_max_deflection]]),
+            "location_max_deflection": array([position[index_max_deflection]]),
+            "moment_profile": input_data["moment_profile"],
+            "position_profile_for_moment": input_data["position_profile_for_moment"],
+            "reaction_forces": input_data["reaction_forces"],
             "error_code": array([0]),
         }
+
+
+class PostBendingTestAnalytical_Cantilever(PostBendingTestAnalytical):
+    """Extraction of the maximum force at the free end of the beam, and of the
+    profiles of the deflection and of the moment along the beam."""
 
 
 class PostBendingTestAnalytical_ThreePoints(PostBendingTestAnalytical):
-    """Extraction of the maximum force, displacement grid and moment grid along the
-    beam."""
-
-    def _run(self, input_data):
-        disp = self.get_input_data()["dplt"]
-        x_grid = self.get_input_data()["dplt_grid"]
-        x_f = self.get_input_data()["imposed_dplt_location"]
-
-        f = interp1d(x_grid, disp)
-        dplt_at_f = f(x_f)
-        max_dplt = max(abs(disp))
-        index_max_dplt = np.argmax(abs(disp))
-        max_dplt *= disp[index_max_dplt] / max_dplt
-        location_max_dplt = x_grid[index_max_dplt]
-
-        return {
-            "dplt_at_force_location": dplt_at_f,
-            "dplt": disp,
-            "dplt_grid": x_grid,
-            "maximum_dplt": np.array([max_dplt]),
-            "location_max_dplt": np.array([location_max_dplt]),
-            "moment": self.get_input_data()["moment"],
-            "moment_grid": self.get_input_data()["moment_grid"],
-            "reaction_forces": self.get_input_data()["reaction_forces"],
-            "error_code": array([0]),
-        }
+    """Extraction of the maximum force, and of the profiles of the deflection and of
+    the moment along the beam."""

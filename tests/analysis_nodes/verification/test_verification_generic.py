@@ -93,11 +93,16 @@ def verificator():
     model.EXTRA_INPUT_GRAMMAR_CHECK = True
     output_names = model.get_output_data_names(remove_metadata=True)
     # Remove vector outputs.
-    for name in ["moment_grid", "moment", "dplt", "dplt_grid"]:
+    for name in [
+        "position_profile_for_moment",
+        "moment_profile",
+        "deflection_profile",
+        "position_profile_for_deflection",
+    ]:
         output_names.remove(name)
     # TODO add option to restrain verification to model or data outputs?
-    output_names.remove("location_max_dplt")
-    output_names.remove("maximum_dplt")
+    output_names.remove("location_max_deflection")
+    output_names.remove("maximum_deflection")
 
     verificator.execute(
         model=model, reference_data=reference_data, output_names=output_names
@@ -128,13 +133,13 @@ def test_error_metric_histogram(tmp_wd, verificator):
     plot.execute(
         verificator.result.element_wise_metrics,
         "RelativeErrorMetric",
-        "dplt_at_force_location",
+        "deflection_at_load_point",
         show=False,
         save=True,
     )
     assert (
         verificator.working_directory
-        / "metric_histogram_RelativeErrorMetric_dplt_at_force_location.html"
+        / "metric_histogram_RelativeErrorMetric_deflection_at_load_point.html"
     ).is_file()
 
 
@@ -148,13 +153,13 @@ def test_error_scatter_matrix(tmp_wd, verificator):
     plot.execute(
         df,
         "RelativeErrorMetric",
-        "dplt_at_force_location",
+        "deflection_at_load_point",
         show=False,
         save=True,
     )
     assert (
         verificator.working_directory
-        / "error_scatter_matrix_RelativeErrorMetric_dplt_at_force_location.html"
+        / "error_scatter_matrix_RelativeErrorMetric_deflection_at_load_point.html"
     ).is_file()
 
 
@@ -164,7 +169,7 @@ def test_plot(tmp_wd, verificator):
     result = BaseAnalysisNode.load_results(
         verificator.working_directory / "CodeVerificationAgainstData_result.hdf5"
     )
-    output_name = "dplt_at_force_location"
+    output_name = "deflection_at_load_point"
     metric_name = "SquaredErrorMetric"
     figures = result.plot(
         directory_path=verificator.working_directory,

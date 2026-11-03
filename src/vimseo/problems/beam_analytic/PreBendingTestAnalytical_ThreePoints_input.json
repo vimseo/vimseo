@@ -34,7 +34,7 @@
         "exclusiveMinimum": true
       }
     },
-    "imposed_dplt": {
+    "imposed_displacement": {
       "description": "Value of the imposed displacement in mm.",
       "type": "array",
       "minItems": 1,

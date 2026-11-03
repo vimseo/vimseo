@@ -32,8 +32,8 @@ from vimseo.utilities.test_utils import check_model_outputs
             "length": np.array([500.0]),
             "width": np.array([35.0]),
             "height": np.array([20.0]),
-            "imposed_dplt": np.array([-10]),
-            "relative_dplt_location": np.array([0.8]),
+            "imposed_displacement": np.array([-10]),
+            "relative_load_location": np.array([0.8]),
         }),
     ],
 )
@@ -45,31 +45,35 @@ def test_cantilever(tmp_wd, input_data):
         "BendingTestAnalytical",
         "Cantilever",
         input_data,
-        expected_outputs={"location_max_dplt": "length"},
+        expected_outputs={"location_max_deflection": "length"},
         relative_tolerance=1e-2,
     )
 
     reaction_forces = model.get_output_data()["reaction_forces"][0]
-    max_dplt = model.get_output_data()["maximum_dplt"][0]
+    max_deflection = model.get_output_data()["maximum_deflection"][0]
 
-    imposed_dplt = model.get_input_data()["imposed_dplt"][0]
+    imposed_displacement = model.get_input_data()["imposed_displacement"][0]
     young_modulus = model.get_input_data()["young_modulus"][0]
-    quadratic_moment = model._pre_processor.get_output_data()["quadratic_moment"][0]
+    second_moment_of_area = model._pre_processor.get_output_data()[
+        "second_moment_of_area"
+    ][0]
 
-    imposed_dplt_location = (
-        model._pre_processor.get_output_data()["imposed_dplt_location"]
-    )[0]
+    load_location = (model._pre_processor.get_output_data()["load_location"])[0]
     length = model.get_input_data()["length"][0]
     expected_reaction_forces = (
-        3 * imposed_dplt * young_modulus * quadratic_moment / imposed_dplt_location**3
+        3
+        * imposed_displacement
+        * young_modulus
+        * second_moment_of_area
+        / load_location**3
     )
-    expected_max_dplt = (
+    expected_max_deflection = (
         expected_reaction_forces
-        * imposed_dplt_location**2
-        * (3 * length - imposed_dplt_location)
-        / (6 * young_modulus * quadratic_moment)
+        * load_location**2
+        * (3 * length - load_location)
+        / (6 * young_modulus * second_moment_of_area)
     )
-    assert max_dplt == pytest.approx(expected_max_dplt, rel=1e-3)
+    assert max_deflection == pytest.approx(expected_max_deflection, rel=1e-3)
     assert reaction_forces == pytest.approx(expected_reaction_forces, rel=1e-3)
 
 
@@ -82,7 +86,7 @@ def test_cantilever(tmp_wd, input_data):
             "length": np.array([500.0]),
             "width": np.array([35.0]),
             "height": np.array([20.0]),
-            "imposed_dplt": np.array([-10.0]),
+            "imposed_displacement": np.array([-10.0]),
             "relative_support_location": np.array([0.2]),
         }),
     ],
@@ -107,61 +111,63 @@ def test_three_points(tmp_wd, input_data):
     )
 
     reaction_forces = model.get_output_data()["reaction_forces"][0]
-    max_dplt = model.get_output_data()["maximum_dplt"][0]
-    location_max_dplt = model.get_output_data()["location_max_dplt"][0]
+    max_deflection = model.get_output_data()["maximum_deflection"][0]
+    location_max_deflection = model.get_output_data()["location_max_deflection"][0]
 
-    imposed_dplt = model.get_input_data()["imposed_dplt"][0]
+    imposed_displacement = model.get_input_data()["imposed_displacement"][0]
     young_modulus = model.get_input_data()["young_modulus"][0]
-    quadratic_moment = model._pre_processor.get_output_data()["quadratic_moment"][0]
-    imposed_dplt_location = (
-        model._pre_processor.get_output_data()["imposed_dplt_location"]
-    )[0]
+    second_moment_of_area = model._pre_processor.get_output_data()[
+        "second_moment_of_area"
+    ][0]
+    load_location = (model._pre_processor.get_output_data()["load_location"])[0]
     support_location = model._pre_processor.get_output_data()["support_location"]
     support_length = support_location[1] - support_location[0]
-    a = imposed_dplt_location - support_location[0]
-    b = support_location[1] - imposed_dplt_location
+    a = load_location - support_location[0]
+    b = support_location[1] - load_location
 
     expected_reaction_forces = (
         3
-        * imposed_dplt
+        * imposed_displacement
         * young_modulus
-        * quadratic_moment
+        * second_moment_of_area
         * support_length
         / (a**2 * b**2)
     )
-    expected_max_dplt = (
+    expected_max_deflection = (
         expected_reaction_forces
         * min(a, b)
-        / (27 * young_modulus * quadratic_moment * support_length)
+        / (27 * young_modulus * second_moment_of_area * support_length)
     ) * np.sqrt(3 * (support_length**2 - min(a, b) ** 2) ** 3)
     if a < b:
-        expected_loc_max_dplt = (
+        expected_location_max_deflection = (
             (support_length / 2)
             * (1 + (1 - np.sqrt((4 / 3) * (1 - min(a, b) ** 2 / support_length**2))))
         ) + support_location[0]
     else:
-        expected_loc_max_dplt = (
+        expected_location_max_deflection = (
             (support_length / 2)
             * (1 - (1 - np.sqrt((4 / 3) * (1 - min(a, b) ** 2 / support_length**2))))
         ) + support_location[0]
 
-    assert max_dplt == pytest.approx(expected_max_dplt, rel=0.5)
+    assert max_deflection == pytest.approx(expected_max_deflection, rel=0.5)
     assert reaction_forces == pytest.approx(expected_reaction_forces)
     # TODO check why need such high tolerance.
-    assert location_max_dplt == pytest.approx(expected_loc_max_dplt, rel=5e-2)
+    assert location_max_deflection == pytest.approx(
+        expected_location_max_deflection, rel=5e-2
+    )
 
 
 # TODO: could be relevant to specify all (or most of) the input parameters in a rather
 # simple configuration (in particular for ThreePoints load case)
 @pytest.mark.parametrize(
-    ("load_case", "relative_dplt_location", "max_moment_index"),
+    ("load_case", "relative_load_location", "max_moment_index"),
     [
         ("Cantilever", 0.1, 0),
         ("Cantilever", 1.0, 0),
         ("ThreePoints", None, 1),
     ],
 )
-def test_moment(tmp_wd, load_case, relative_dplt_location, max_moment_index):
+def test_moment(tmp_wd, load_case, relative_load_location, max_moment_index):
     """
     Check the value of the moment.
     Compare the internal and external energies.
@@ -177,20 +183,20 @@ def test_moment(tmp_wd, load_case, relative_dplt_location, max_moment_index):
     input_data = {
         "height": np.array([20.0]),
     }
-    if relative_dplt_location is not None:
+    if relative_load_location is not None:
         input_data.update({
-            "relative_dplt_location": np.array([relative_dplt_location])
+            "relative_load_location": np.array([relative_load_location])
         })
 
     model.execute(input_data)
     out = model.get_output_data()
 
-    assert np.argmax(abs(out["moment"])) == max_moment_index
+    assert np.argmax(abs(out["moment_profile"])) == max_moment_index
 
     reaction_forces = out["reaction_forces"][0]
-    moment_grid = out["moment_grid"]
-    moment = out["moment"]
-    disp = model.get_input_data()["imposed_dplt"]
+    position_profile_for_moment = out["position_profile_for_moment"]
+    moment = out["moment_profile"]
+    disp = model.get_input_data()["imposed_displacement"]
 
     # compare energies
     from scipy.integrate import quad
@@ -199,19 +205,19 @@ def test_moment(tmp_wd, load_case, relative_dplt_location, max_moment_index):
 
     w_internal = quad(
         fun_squared_moment,
-        a=moment_grid[0],
-        b=moment_grid[-1],
-        args=(moment_grid, moment),
+        a=position_profile_for_moment[0],
+        b=position_profile_for_moment[-1],
+        args=(position_profile_for_moment, moment),
     ) / (
         model.get_input_data()["young_modulus"][0]
-        * model._pre_processor.get_output_data()["quadratic_moment"][0]
+        * model._pre_processor.get_output_data()["second_moment_of_area"][0]
     )
 
     assert w_external[0] == pytest.approx(w_internal[0] * 0.5, rel=1e-2)
 
 
-def fun_squared_moment(x, moment_grid, moment):
-    m_func = interp1d(moment_grid, moment)
+def fun_squared_moment(x, position_profile_for_moment, moment):
+    m_func = interp1d(position_profile_for_moment, moment)
     return m_func(x) ** 2
 
 
@@ -240,15 +246,47 @@ def test_displacement_profile(tmp_wd, load_case, height):
     model.execute({"height": np.array([height])})
 
     young_modulus = model.get_input_data()["young_modulus"][0]
-    quadratic_moment = (
+    second_moment_of_area = (
         model.get_input_data()["width"][0]
         * model.get_input_data()["height"][0] ** 3
         / 12
     )
 
     out = model.get_output_data()
-    x = out["dplt_grid"]
-    y_prime = np.diff(out["dplt"]) / np.diff(x)
+    x = out["position_profile_for_deflection"]
+    y_prime = np.diff(out["deflection_profile"]) / np.diff(x)
     y_second = np.diff(y_prime) / np.diff(x[:-1])
-    y_second_expected = -model.run.m_func(x[1:-1]) / (young_modulus * quadratic_moment)
+    y_second_expected = -model.run.m_func(x[1:-1]) / (
+        young_modulus * second_moment_of_area
+    )
     assert y_second == pytest.approx(y_second_expected, rel=1e-5)
+
+
+@pytest.mark.fast
+@pytest.mark.parametrize("load_case", ["Cantilever", "ThreePoints"])
+def test_zero_imposed_displacement(tmp_wd, load_case):
+    """Check that a zero deflection gives a zero maximum deflection, not NaN (#82)."""
+    model = create_model("BendingTestAnalytical", load_case)
+    model.cache = None
+    output_data = model.execute({"imposed_displacement": np.array([0.0])})
+
+    assert output_data["maximum_deflection"] == pytest.approx([0.0])
+    assert output_data["deflection_at_load_point"] == pytest.approx([0.0])
+    assert not np.isnan(output_data["location_max_deflection"]).any()
+
+
+@pytest.mark.fast
+@pytest.mark.parametrize("load_case", ["Cantilever", "ThreePoints"])
+def test_maximum_deflection_is_signed(tmp_wd, load_case):
+    """Check that the maximum deflection is the signed value of largest magnitude."""
+    model = create_model("BendingTestAnalytical", load_case)
+    model.cache = None
+    output_data = model.execute()
+
+    deflection = output_data["deflection_profile"]
+    index = np.argmax(abs(deflection))
+    assert output_data["maximum_deflection"][0] == deflection[index]
+    assert (
+        output_data["location_max_deflection"][0]
+        == output_data["position_profile_for_deflection"][index]
+    )

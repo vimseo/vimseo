@@ -64,7 +64,7 @@ model = create_model(
 reference_data = {
     "height": [10.0, 15.0],
     "width": [10.0, 10.0],
-    "maximum_dplt": [-4.0, -6.0],
+    "maximum_deflection": [-4.0, -6.0],
     "reaction_forces": [-12.0, -40.0],
 }
 
@@ -88,7 +88,7 @@ verificator.options["metric_names"] = [
 verificator.execute(
     model=model,
     reference_data=reference_data,
-    output_names=["maximum_dplt", "reaction_forces"],
+    output_names=["maximum_deflection", "reaction_forces"],
     description={
         "title": "Verification of a cantilever analytic beam for a variation of beam height.",
         "element_wise": ["Small height value", "High height value"],

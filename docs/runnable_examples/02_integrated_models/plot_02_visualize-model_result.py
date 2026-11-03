@@ -75,10 +75,10 @@ result = ModelResult.from_dict({
     "outputs": model.get_output_data(),
 })
 figs = model.plot_results(show=True, save=False)
-figs["dplt_vs_dplt_grid"]
+figs["deflection_profile_vs_position_profile_for_deflection"]
 
 # %%
-figs["moment_vs_moment_grid"]
+figs["moment_profile_vs_position_profile_for_moment"]
 
 # %%
 # Scalar outputs can be visualized in a scatter matrix:
@@ -107,7 +107,10 @@ print(result)
 
 # %%
 # Two model results can be compared. We first generate a second result:
-model.execute({"young_modulus": atleast_1d(1.95e5), "imposed_dplt": atleast_1d(-10.0)})
+model.execute({
+    "young_modulus": atleast_1d(1.95e5),
+    "imposed_displacement": atleast_1d(-10.0),
+})
 result_2 = ModelResult.from_dict({
     "inputs": model.get_input_data(),
     "outputs": model.get_output_data(),
@@ -141,8 +144,8 @@ fig
 # The curves can also be compared:
 superpose_curves(
     [
-        result.curves["dplt_vs_dplt_grid"],
-        result_2.curves["dplt_vs_dplt_grid"],
+        result.curves["deflection_profile_vs_position_profile_for_deflection"],
+        result_2.curves["deflection_profile_vs_position_profile_for_deflection"],
     ],
     labels=["result", "result 2"],
 )

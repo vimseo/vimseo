@@ -2,36 +2,36 @@
   "name": "PostBendingTestAnalytical_input",
   "required": [],
   "properties": {
-    "dplt": {
-      "description": "",
+    "deflection_profile": {
+      "description": "Deflection of the neutral fibre, at the positions position_profile_for_deflection.",
       "type": "array",
       "items": {
         "type": "number"
       }
     },
-    "dplt_grid": {
-      "description": "",
+    "position_profile_for_deflection": {
+      "description": "Positions along the beam axis where the deflection is sampled.",
       "type": "array",
       "items": {
         "type": "number"
       }
     },
-    "moment": {
-      "description": "",
+    "moment_profile": {
+      "description": "Bending moment at the breakpoints position_profile_for_moment; the moment is linear between two breakpoints.",
       "type": "array",
       "items": {
         "type": "number"
       }
     },
-    "moment_grid": {
-      "description": "",
+    "position_profile_for_moment": {
+      "description": "Positions along the beam axis of the breakpoints of the piecewise-linear bending moment, not a dense sampling.",
       "type": "array",
       "items": {
         "type": "number"
       }
     },
-    "imposed_dplt_location": {
-      "description": "Location of the imposed displacement along the beam",
+    "load_location": {
+      "description": "Location of the load along the beam axis.",
       "type": "array",
       "items": {
         "type": "number"
