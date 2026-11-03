@@ -438,7 +438,7 @@ class BaseAnalysisNode(metaclass=GoogleDocstringInheritanceMeta):
         Each execution fills a new result, so that a result returned by a previous
         execution, e.g. passed as input to another analysis node, is not modified.
         """
-        self.result = type(self.result)()
+        self.result = self._new_result()
         with analysis_node_run(self.name) as run:
             self._archive(
                 self._analysis_node_archive_manager.start_analysis_node_run,
@@ -461,6 +461,14 @@ class BaseAnalysisNode(metaclass=GoogleDocstringInheritanceMeta):
             self._analysis_node_archive_manager.publish_analysis_node_result,
             self.result,
         )
+
+    def _new_result(self) -> BaseResult:
+        """Return the empty result filled by an execution.
+
+        An analysis node building its result over several executions overrides it to
+        start from a copy of the previous result.
+        """
+        return type(self.result)()
 
     def _republish_result(self) -> None:
         """Publish again the result of the last execution in the archive.

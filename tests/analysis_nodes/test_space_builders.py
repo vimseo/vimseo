@@ -839,3 +839,23 @@ def test_grammar_names(tmp_wd):
     ]
     builder = FromMinAndMax()
     assert builder.grammar_names == list(builder._grammar.names)
+
+
+def test_an_execution_does_not_modify_the_previous_space(tmp_wd):
+    """Check that an execution adds to a copy of the previous space (#117)."""
+    space_analysis_node = SpaceAnalysisNode()
+    model = create_model("MockModel", "LC1")
+    options = {
+        "distribution_name": "OTTriangularDistribution",
+        "space_builder_name": "FromModelCenterAndCov",
+        "model": model,
+        "use_default_values_as_center": True,
+        "cov": 0.05,
+        "truncate_to_model_bounds": False,
+    }
+    first = space_analysis_node.execute(variable_names=["x1"], **options)
+    second = space_analysis_node.execute(variable_names=["x1_no_bounds"], **options)
+
+    assert first.parameter_space.variable_names == ["x1"]
+    assert second.parameter_space.variable_names == ["x1", "x1_no_bounds"]
+    assert second.parameter_space is not first.parameter_space
