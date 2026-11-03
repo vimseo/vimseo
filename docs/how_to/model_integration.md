@@ -69,3 +69,10 @@ and the values, possibly defining probability distributions for the properties:
 ```
 
 The input grammar and default input data are automatically filled with the material properties.
+
+A component given a material grammar must keep its default
+`default_grammar_type = Discipline.GrammarType.JSON`: the material grammar carries the
+bounds and descriptions of the properties, which a `SimpleGrammar` (a map from names to
+types) cannot represent. Only a `JSONGrammar` can be loaded from a schema file, and only
+a JSON schema can be read back to build the input space of the model. A component with
+another type of grammar raises a `TypeError` when it is given a material grammar.

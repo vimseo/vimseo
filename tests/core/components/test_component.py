@@ -135,3 +135,29 @@ def test_required_input(tmp_wd):
     """Test case where the required input are checked."""
     mpc3 = mc.MockComponent()
     assert mpc3.input_grammar.required_names == {"x1", "x2", "x3"}
+
+
+class _SimpleGrammarComponent(BaseComponent):
+    """A component using a SimpleGrammar, which cannot hold a material grammar."""
+
+    auto_detect_grammar_files = False
+    default_grammar_type = BaseComponent.GrammarType.SIMPLE
+
+    def _run(self, input_data):
+        return {}
+
+
+def test_material_grammar_requires_a_json_grammar(tmp_wd):
+    """Check that a material grammar given to a component with a non-JSON grammar
+    raises an explicit error (#100)."""
+    from vimseo.material_lib import MATERIAL_LIB_DIR
+
+    with pytest.raises(TypeError, match=r"can only be loaded into a JSONGrammar"):
+        _SimpleGrammarComponent(
+            material_grammar_file=MATERIAL_LIB_DIR / "Mock_grammar.json"
+        )
+
+
+def test_simple_grammar_without_material(tmp_wd):
+    """Check that a component with a non-JSON grammar and no material is accepted."""
+    _SimpleGrammarComponent()
