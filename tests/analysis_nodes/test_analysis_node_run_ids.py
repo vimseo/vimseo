@@ -103,6 +103,34 @@ def test_two_executions_of_an_analysis_node_have_different_run_ids(
     assert set(second.simulation_run_ids).isdisjoint(first_simulations)
 
 
+def test_an_execution_does_not_modify_the_result_of_a_previous_one(
+    tmp_wd, parameter_space
+):
+    """Check that a result kept from a previous execution is not overwritten (#117)."""
+    model = MockModel("LC1")
+    model.cache = None
+    doe_analysis_node = DOEAnalysisNode()
+    options = {
+        "model": model,
+        "parameter_space": parameter_space,
+        "output_names": ["y1"],
+        "n_samples": N_SAMPLES,
+    }
+    first = doe_analysis_node.execute(algo="OT_OPT_LHS", **options)
+    first_samples = first.dataset.get_view(variable_names="x1").to_numpy().copy()
+    first_run_id = first.metadata.analysis_node_run_id
+    second = doe_analysis_node.execute(algo="OT_MONTE_CARLO", **options)
+
+    assert second is not first
+    assert doe_analysis_node.result is second
+    assert first.metadata.settings["algo"] == "OT_OPT_LHS"
+    assert second.metadata.settings["algo"] == "OT_MONTE_CARLO"
+    assert first.metadata.analysis_node_run_id == first_run_id
+    assert (
+        first.dataset.get_view(variable_names="x1").to_numpy() == first_samples
+    ).all()
+
+
 def test_simulations_used_by_two_analysis_nodes_are_shared(tmp_wd):
     """Check that an analysis node using simulations found in the model cache lists them, while
     the simulations still refer to the analysis node run which created them."""

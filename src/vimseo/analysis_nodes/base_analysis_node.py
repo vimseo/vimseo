@@ -434,7 +434,11 @@ class BaseAnalysisNode(metaclass=GoogleDocstringInheritanceMeta):
 
         The analysis node run is started in the archive before the analysis node is executed, so that
         the simulations it launches can be attached to it.
+
+        Each execution fills a new result, so that a result returned by a previous
+        execution, e.g. passed as input to another analysis node, is not modified.
         """
+        self.result = type(self.result)()
         with analysis_node_run(self.name) as run:
             self._archive(
                 self._analysis_node_archive_manager.start_analysis_node_run,
