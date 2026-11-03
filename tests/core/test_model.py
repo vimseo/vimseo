@@ -120,9 +120,23 @@ def test_metadata_added_to_outputs(tmp_wd):
     assert set(out) == {"y1", *list(DEFAULT_METADATA.keys())}
 
 
-def test_set_n_cpus_is_deprecated(tmp_wd):
+def test_set_n_cpus(tmp_wd):
+    """Check that the number of CPUs of the run component can be set (#71)."""
+    model = create_model("MockExternalSoftware", "LC1")
+    job_executor = model.run.job_executor
+    job_executor.options["job_name"] = "my_job"
+    model.set_n_cpus(4)
+    assert model.run.n_cpus == 4
+    assert model.n_cpus == 4
+    assert model.run.job_executor is job_executor
+    # The other options are kept.
+    assert job_executor.options["job_name"] == "my_job"
+
+
+def test_set_n_cpus_without_job_executor(tmp_wd):
+    """Check that a model whose run component has no job executor raises an error."""
     model = create_model("MockModel", "LC1")
-    with pytest.warns(DeprecationWarning, match="set_n_cpus is deprecated"):
+    with pytest.raises(ValueError, match="has no job executor"):
         model.set_n_cpus(2)
 
 

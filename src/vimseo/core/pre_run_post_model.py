@@ -16,7 +16,6 @@
 from __future__ import annotations
 
 import logging
-import warnings
 from copy import deepcopy
 from typing import TYPE_CHECKING
 from typing import ClassVar
@@ -147,15 +146,6 @@ class PreRunPostModel(IntegratedModel):
     def n_cpus(self):
         """The number of CPUs to run this model."""
         return self._run_processor.n_cpus
-
-    def set_n_cpus(self, n_cpus: int):
-        """.. deprecated:: Use ``model.run.job_executor.set_options()`` instead."""
-        warnings.warn(
-            "PreRunPostModel.set_n_cpus is deprecated, "
-            "use model.run.job_executor.set_options() instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
 
     def get_dataflow(self):
         """The inputs and outputs of the components of the model.
