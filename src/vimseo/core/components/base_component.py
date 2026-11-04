@@ -20,6 +20,7 @@ from typing import TYPE_CHECKING
 from typing import ClassVar
 
 from gemseo.core.discipline.discipline import Discipline
+from gemseo.core.grammars.json_grammar import JSONGrammar
 from numpy import atleast_1d
 
 from vimseo.core.gemseo_discipline_wrapper import GemseoDisciplineWrapper
@@ -85,6 +86,23 @@ class BaseComponent(GemseoDisciplineWrapper):
         material: Material | None = None,
         check_subprocess: bool = False,
     ) -> None:
+        """
+        Args:
+            load_case: The load case.
+            material_grammar_file: The path to the JSON grammar of a material, whose
+                properties become inputs of the component. It can only be loaded
+                into a ``JSONGrammar``: a component given a material grammar must
+                keep ``default_grammar_type = Discipline.GrammarType.JSON``, since the
+                bounds and descriptions of the properties have no representation in
+                another type of grammar. If empty, no material grammar is loaded.
+            material: The material whose property values are the default values of
+                the inputs of the same names.
+            check_subprocess: Whether to raise an error when a subprocess fails.
+
+        Raises:
+            TypeError: When a material grammar is given to a component whose input
+                grammar is not a ``JSONGrammar``.
+        """
         super().__init__()
         # A component may read the upstream error code and return its own; without
         # them in its grammars, GEMSEO would drop them and the model would report the
@@ -117,6 +135,18 @@ class BaseComponent(GemseoDisciplineWrapper):
             # )
             # temp_dir.cleanup()
             # Strict mode:
+            if not isinstance(self.input_grammar, JSONGrammar):
+                msg = (
+                    f"Component {type(self).__name__} uses a "
+                    f"{type(self.input_grammar).__name__}, but a material grammar "
+                    f"({material_grammar_file}) can only be loaded into a "
+                    f"JSONGrammar: the bounds and descriptions of the properties have "
+                    f"no representation in a {type(self.input_grammar).__name__}. "
+                    f"Either set default_grammar_type = Discipline.GrammarType.JSON "
+                    f"on {type(self).__name__}, or construct the component without "
+                    f"material_grammar_file."
+                )
+                raise TypeError(msg)
             self.input_grammar.update_from_file(material_grammar_file)
 
         if material is not None:

@@ -450,6 +450,16 @@ class IntegratedModel(GemseoDisciplineWrapper):
                 self._chain.disciplines[0].input_grammar
             )
         else:
+            first_component = self._chain.disciplines[0]
+            LOGGER.warning(
+                "The input grammar of component %s is a %s, not a JSONGrammar: no "
+                "input bounds can be read from it, so all the bounds of model %s are "
+                "(-inf, inf). Any design or parameter space built from this model "
+                "will be unbounded.",
+                first_component.name,
+                type(first_component.input_grammar).__name__,
+                self.name,
+            )
             self.input_space = {}
             self.lower_bounds = {}
             self.upper_bounds = {}
