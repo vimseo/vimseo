@@ -276,16 +276,14 @@ class JobExecutor(metaclass=GoogleDocstringInheritanceMeta):
                 # wait for event on stdout and/or stderr
                 r, _, _ = select.select([proc.stdout, proc.stderr], [], [], 0.5)
                 for stream in r:
+                    # ``readline`` returns a single line.
+                    line = stream.readline().rstrip("\n")
+                    if not line:
+                        continue
                     if stream is proc.stdout:
-                        line = stream.readline()
-                        if line:
-                            for val in line.splitlines():
-                                LOGGER.info(val)
-                    elif stream is proc.stderr:
-                        line = stream.readline()
-                        if line:
-                            for val in line.splitlines():
-                                LOGGER.error(val)
+                        LOGGER.info(line)
+                    else:
+                        LOGGER.error(line)
 
                 if live_tail and time.monotonic() >= next_convergence_fetch:
                     self._fetch_convergence_safely()
@@ -299,8 +297,8 @@ class JobExecutor(metaclass=GoogleDocstringInheritanceMeta):
                     time.sleep(1)
                     break
 
-            # Raise an error here if check_subprocess=True:
-            # Last bit of stuff, flushing the buffers eventually
+            # Flush the remaining output. A stream closed while reading it is not
+            # read again by ``communicate``, which returns ``None`` for it.
             remaining_stdout, remaining_stderr = proc.communicate()
             for val in (
                 remaining_stdout.splitlines() if remaining_stdout is not None else []
