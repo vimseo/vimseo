@@ -19,6 +19,7 @@ import logging
 
 from gemseo.core.base_factory import BaseFactory
 
+from vimseo.core.factory import get_class
 from vimseo.core.load_case import LoadCase
 
 LOGGER = logging.getLogger(__name__)
@@ -44,6 +45,18 @@ class LoadCaseFactory(BaseFactory):
             **options: The options of the load case.
         """
         class_name = f"{domain}_{load_case_name}" if domain != "" else load_case_name
+        get_class(
+            self,
+            class_name,
+            "load case",
+            "A load case must be a subclass of LoadCase defined in a module of "
+            "vimseo.problems.load_cases or of a plugin"
+            + (
+                f", named {{domain}}_{{name}}, here {class_name}."
+                if domain != ""
+                else "."
+            ),
+        )
         dummy_lc = super().create(class_name)
         json_path = dummy_lc.auto_get_file(".json", raise_error=False)
         if json_path:
