@@ -15,6 +15,7 @@
 
 from __future__ import annotations
 
+from copy import deepcopy
 from typing import TYPE_CHECKING
 from typing import Annotated
 from typing import Any
@@ -312,6 +313,14 @@ class SpaceAnalysisNode(BaseCompositeAnalysisNode):
             self._space_builder.build(
                 self.result.parameter_space, distribution_name, model=model, **options
             )
+
+    def _new_result(self) -> SpaceAnalysisNodeResult:
+        # The parameter space is built over several executions, each one adding
+        # variables: an execution starts from a copy of the previous space, so that
+        # the result of the previous execution is not modified.
+        result = SpaceAnalysisNodeResult()
+        result.parameter_space = deepcopy(self.result.parameter_space)
+        return result
 
     @BaseAnalysisNode._validate
     def execute(

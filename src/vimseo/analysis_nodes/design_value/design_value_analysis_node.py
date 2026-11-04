@@ -15,6 +15,7 @@
 
 from __future__ import annotations
 
+from dataclasses import fields
 from typing import TYPE_CHECKING
 
 from gemseo.utils.directory_creator import DirectoryNamingMethod
@@ -122,4 +123,9 @@ class DesignValueAnalysisNode(BaseCompositeAnalysisNode):
         statistics_options["variable_names"] = output_names
         # TODO why is dataset not contained in statistics_options?
         statistics_analysis_node.execute(dataset=dataset, **statistics_options)
-        self.result = statistics_analysis_node.result
+        # The statistics are copied, not the metadata, which belong to the run of the
+        # statistics analysis node.
+        statistics_result = statistics_analysis_node.result
+        for field in fields(statistics_result):
+            if field.name != "metadata":
+                setattr(self.result, field.name, getattr(statistics_result, field.name))
