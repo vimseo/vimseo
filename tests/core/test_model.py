@@ -406,3 +406,22 @@ def test_error_code_default(tmp_wd, monkeypatch):
         model.get_output_data()[MetaDataNames.error_code][0]
         == IntegratedModel._ERROR_CODE_DEFAULT
     )
+
+
+def test_run_component(tmp_wd):
+    """Check that the run component is found by its flag, not by its position (#84)."""
+    model = create_model("MockModel", "LC1")
+    run_processor = model._run_processor
+    assert model.run is run_processor
+    assert run_processor.is_run_component
+    assert not model._pre_processor.is_run_component
+
+    model._pre_processor.is_run_component = True
+    with pytest.raises(ValueError, match="has several run components"):
+        model.run  # ruff: ignore[useless-expression]
+
+
+def test_run_component_defaults_to_the_first_component(tmp_wd):
+    """Check that a model without run component flag runs its first component."""
+    model = create_model("MockCurves", "Dummy")
+    assert model.run is model._chain.disciplines[0]

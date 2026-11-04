@@ -183,10 +183,6 @@ class IntegratedModel(GemseoDisciplineWrapper):
     _ERROR_CODE_DEFAULT = -1
     """Default value of error_code."""
 
-    _RUN_COMPONENT_INDEX: ClassVar[int] = 0
-    """The index, in the component chain, of the component running the external
-    software (returned by the :attr:`run` property). Defaults to the first component."""
-
     MATERIAL_FILE: ClassVar[Path | str] = ""
     """The path to the json file defining the material values."""
 
@@ -844,8 +840,25 @@ class IntegratedModel(GemseoDisciplineWrapper):
 
     @property
     def run(self) -> BaseComponent:
-        """The component running the external software."""
-        return self._chain.disciplines[self._RUN_COMPONENT_INDEX]
+        """The component running the external software.
+
+        It is the component whose ``is_run_component`` is ``True``, e.g. the
+        run-processor of a :class:`.PreRunPostModel`, else the first component.
+
+        Raises:
+            ValueError: When several components are run components.
+        """
+        components = self._chain.disciplines
+        run_components = [
+            component
+            for component in components
+            if getattr(component, "is_run_component", False)
+        ]
+        if len(run_components) > 1:
+            names = ", ".join(component.name for component in run_components)
+            msg = f"The model {self.name} has several run components: {names}."
+            raise ValueError(msg)
+        return run_components[0] if run_components else components[0]
 
     @property
     def job_executor(self):
