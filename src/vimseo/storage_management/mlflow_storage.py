@@ -109,10 +109,13 @@ def get_tracking_uri(root_directory: Path | str = "") -> str:
 
     if config.database.mode == "Local":
         local_uri = config.database.local_uri
+        # ``as_uri`` gives a valid file uri on every platform, whereas prefixing an
+        # absolute POSIX path with ``file:///`` gives four slashes, which MLflow
+        # resolves to the root of the file system.
         if str(root_directory) in ("", local_uri):
             # The default root of the archive is the uri of the configuration.
-            return local_uri or f"file:///{Path(root_directory).absolute()!s}"
-        return f"file:///{Path(root_directory).absolute()!s}"
+            return local_uri or Path(root_directory).absolute().as_uri()
+        return Path(root_directory).absolute().as_uri()
 
     msg = f"Wrong value for config.database.mode: {config.database.mode}"
     raise ValueError(msg)
