@@ -359,6 +359,20 @@ class BaseAnalysisNode(metaclass=GoogleDocstringInheritanceMeta):
         return list(self._st_settings.model_fields.keys())
 
     def _pre_process_options(self, **options):
+        if (
+            self._INPUTS is not None
+            and "inputs" in options
+            and "settings" not in options
+        ):
+            # Checked before updating the options, which an error leaves unchanged.
+            unexpected_names = sorted(set(options) - {"inputs"})
+            if unexpected_names:
+                msg = (
+                    f"Unexpected arguments {unexpected_names} passed with ``inputs``: "
+                    "either pass settings and inputs as a single ``**kwargs``, "
+                    "or use both ``inputs`` and ``settings`` args."
+                )
+                raise ValueError(msg)
         self.update_options(**options)
 
         if not self._HAS_OPTION_CHECK:
@@ -394,9 +408,19 @@ class BaseAnalysisNode(metaclass=GoogleDocstringInheritanceMeta):
                 # update_options stored the model of the inputs itself,
                 # which is not an option.
                 del self._options["inputs"]
-                self._options.update(self._dump_options(options["inputs"]))
+                if not isinstance(options["inputs"], self._INPUTS):
+                    msg = f"Inputs must be of type {self._INPUTS}."
+                    raise TypeError(msg)
                 if self._SETTINGS is not None:
-                    self._options.update(self._SETTINGS().model_dump())
+                    # The settings set before, e.g. with update_options, are kept;
+                    # only the missing ones take their default values.
+                    settings = {
+                        name: self._options[name]
+                        for name in self._settings_names
+                        if name in self._options
+                    }
+                    self._options.update(self._SETTINGS(**settings).model_dump())
+                self._options.update(self._dump_options(options["inputs"]))
             else:
                 self._options = self._dump_options(self._opt_grammar(**self._options))
 
