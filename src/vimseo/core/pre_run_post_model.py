@@ -16,7 +16,6 @@
 from __future__ import annotations
 
 import logging
-import warnings
 from copy import deepcopy
 from typing import TYPE_CHECKING
 from typing import ClassVar
@@ -78,9 +77,6 @@ class PreRunPostModel(IntegratedModel):
     SUBROUTINES_NAMES: ClassVar[Sequence[str]] = []
     """The names of the subroutines."""
 
-    _RUN_COMPONENT_INDEX: ClassVar[int] = 1
-    """The run-processor is the second component of the pre/run/post chain."""
-
     N_CPUS = 1
     """The default number of cpus used to run the model."""
 
@@ -108,6 +104,7 @@ class PreRunPostModel(IntegratedModel):
             material=material,
             check_subprocess=options["check_subprocess"],
         )
+        run_processor.is_run_component = True
         self._subroutine_names = deepcopy(self.SUBROUTINES_NAMES)
         for sub_name in self._subroutine_names:
             run_processor.subroutine_list.append(
@@ -146,23 +143,9 @@ class PreRunPostModel(IntegratedModel):
             self.run.job_executor._user_job_options.update({"n_cpus": self.N_CPUS})
 
     @property
-    def run(self) -> BaseComponent:
-        """The component running the external software."""
-        return self._run_processor
-
-    @property
     def n_cpus(self):
         """The number of CPUs to run this model."""
         return self._run_processor.n_cpus
-
-    def set_n_cpus(self, n_cpus: int):
-        """.. deprecated:: Use ``model.run.job_executor.set_options()`` instead."""
-        warnings.warn(
-            "PreRunPostModel.set_n_cpus is deprecated, "
-            "use model.run.job_executor.set_options() instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
 
     def get_dataflow(self):
         """The inputs and outputs of the components of the model.

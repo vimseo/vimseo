@@ -183,10 +183,6 @@ class IntegratedModel(GemseoDisciplineWrapper):
     _ERROR_CODE_DEFAULT = -1
     """Default value of error_code."""
 
-    _RUN_COMPONENT_INDEX: ClassVar[int] = 0
-    """The index, in the component chain, of the component running the external
-    software (returned by the :attr:`run` property). Defaults to the first component."""
-
     MATERIAL_FILE: ClassVar[Path | str] = ""
     """The path to the json file defining the material values."""
 
@@ -648,9 +644,16 @@ class IntegratedModel(GemseoDisciplineWrapper):
         )
 
     @property
-    def n_cpus(self):
-        """The number of CPUs to run this model."""
-        return 1
+    def n_cpus(self) -> int:
+        """The number of CPUs to run this model.
+
+        It is the ``n_cpus`` option of the job executor of the :attr:`run` component,
+        or 1 when this component has no job executor.
+        """
+        job_executor = self.job_executor
+        if job_executor is None:
+            return 1
+        return job_executor.options.get("n_cpus", 1)
 
     @staticmethod
     def get_metadata_names():
@@ -844,8 +847,53 @@ class IntegratedModel(GemseoDisciplineWrapper):
 
     @property
     def run(self) -> BaseComponent:
-        """The component running the external software."""
-        return self._chain.disciplines[self._RUN_COMPONENT_INDEX]
+        """The component running the external software.
+
+        It is the component whose ``is_run_component`` is ``True``, e.g. the
+        run-processor of a :class:`.PreRunPostModel`, else the first component.
+
+        Raises:
+            ValueError: When several components are run components.
+        """
+        components = self._chain.disciplines
+        run_components = [
+            component
+            for component in components
+            if getattr(component, "is_run_component", False)
+        ]
+        if len(run_components) > 1:
+            names = ", ".join(component.name for component in run_components)
+            msg = f"The model {self.name} has several run components: {names}."
+            raise ValueError(msg)
+        return run_components[0] if run_components else components[0]
+
+    def set_n_cpus(self, n_cpus: int) -> None:
+        """Set the number of CPUs used to run the external software of the model.
+
+        It sets the ``n_cpus`` option of the job executor of the :attr:`run`
+        component, keeping its other options.
+
+        Args:
+            n_cpus: The number of CPUs.
+
+        Raises:
+            ValueError: When the run component has no job executor.
+        """
+        job_executor = self.job_executor
+        if job_executor is None:
+            msg = (
+                f"The number of CPUs of the model {self.name} cannot be set: its run "
+                f"component {self.run.name} has no job executor."
+            )
+            raise ValueError(msg)
+        settings_class = job_executor._USER_JOB_OPTIONS_MODEL
+        options = {
+            name: value
+            for name, value in job_executor.options.items()
+            if name in settings_class.model_fields
+        }
+        options["n_cpus"] = n_cpus
+        job_executor.set_options(settings_class(**options))
 
     @property
     def job_executor(self):
