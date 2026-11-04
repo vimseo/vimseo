@@ -126,8 +126,8 @@ class ModelResult(BaseResult):
 
     The scalars and the vectors are mappings which can be called to select variables,
     e.g. ``scalars(group="inputs")``. The curves and the figures are lists which can
-    also be indexed by name, e.g. ``curves["dplt_vs_dplt_grid"]`` and
-    ``plots["dplt_vs_dplt_grid"]``. :meth:`to_dict` gives back the raw dictionary the
+    also be indexed by name, e.g. ``curves["deflection_profile_vs_position_profile_for_deflection"]`` and
+    ``plots["deflection_profile_vs_position_profile_for_deflection"]``. :meth:`to_dict` gives back the raw dictionary the
     result was built from.
     """
 

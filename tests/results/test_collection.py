@@ -49,13 +49,13 @@ def _execute(archive, monkeypatch=None):
             model.execute({
                 "height": atleast_1d(height),
                 "width": atleast_1d(width),
-                "imposed_dplt": atleast_1d(-5.0),
+                "imposed_displacement": atleast_1d(-5.0),
             })
     # A duplicate, whose numerical setting differs.
     model.execute({
         "height": atleast_1d(40.0),
         "width": atleast_1d(20.0),
-        "relative_dplt_location": atleast_1d(1.0),
+        "relative_load_location": atleast_1d(1.0),
     })
     return model
 
@@ -120,7 +120,10 @@ def test_families(archive):
     assert families.get(width=99.0) is None
     figures = families.visualize()
     assert "scalar_outputs_vs_height[width=20.0]" in figures
-    assert "curves_dplt_vs_dplt_grid[width=30.0]" in figures
+    assert (
+        "curves_deflection_profile_vs_position_profile_for_deflection[width=30.0]"
+        in figures
+    )
     assert set(families.to_dataframe()["family"]) == {"width=20.0", "width=30.0"}
 
 
@@ -128,8 +131,13 @@ def test_plot_a_collection(archive):
     """The curves of the results are superposed, labelled by the varying inputs."""
     model_results = open_model_results(**archive).filter("`inputs.width` == 30")
     figures = model_results.visualize()
-    assert set(figures) == {"dplt_vs_dplt_grid", "moment_vs_moment_grid"}
-    assert len(figures["dplt_vs_dplt_grid"].data) == 3
+    assert set(figures) == {
+        "deflection_profile_vs_position_profile_for_deflection",
+        "moment_profile_vs_position_profile_for_moment",
+    }
+    assert (
+        len(figures["deflection_profile_vs_position_profile_for_deflection"].data) == 3
+    )
 
 
 def test_plot_a_figure_missing_from_some_results(tmp_wd, caplog):
@@ -139,10 +147,16 @@ def test_plot_a_figure_missing_from_some_results(tmp_wd, caplog):
     create_model("MockMultiCurves", "Dummy", **archive).execute()
     model_results = open_model_results(**archive)
     figures = model_results.visualize(
-        plot_names=["dplt_vs_dplt_grid", "crack_propagation"]
+        plot_names=[
+            "deflection_profile_vs_position_profile_for_deflection",
+            "crack_propagation",
+        ]
     )
     assert figures == {}
-    assert "['dplt_vs_dplt_grid', 'crack_propagation'] are not drawn" in caplog.text
+    assert (
+        "['deflection_profile_vs_position_profile_for_deflection', 'crack_propagation'] are not drawn"
+        in caplog.text
+    )
 
 
 def test_search_and_load(archive):

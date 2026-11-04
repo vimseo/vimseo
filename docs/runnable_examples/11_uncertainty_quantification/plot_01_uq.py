@@ -61,7 +61,7 @@ model = create_model(
 
 # %%
 # It is possible to change a default input of the model.
-model.default_input_data.update({"imposed_dplt": array([-15.0])})
+model.default_input_data.update({"imposed_displacement": array([-15.0])})
 
 # %%
 # 2. Define the uncertain space
@@ -91,10 +91,10 @@ print(space_analysis_node.get_available_space_builders())
 #     e.g. $\mathcal{T}(0.1, 0.2, 0.3)$.
 #
 # Here, the space of parameters is built in two steps.
-# First, considering all input variables of the model except "relative_dplt_location".
+# First, considering all input variables of the model except "relative_load_location".
 
 retained_variables = model.get_input_data_names()
-retained_variables.remove("relative_dplt_location")
+retained_variables.remove("relative_load_location")
 space_analysis_node.execute(
     distribution_name="OTTriangularDistribution",
     space_builder_name="FromModelCenterAndCov",
@@ -105,12 +105,12 @@ space_analysis_node.execute(
 )
 
 # %%
-# Then, specifically for "relative_dplt_location".
+# Then, specifically for "relative_load_location".
 
 space_analysis_node.execute(
     distribution_name="OTTriangularDistribution",
     space_builder_name="FromCenterAndCov",
-    center_values={"relative_dplt_location": 0.9},
+    center_values={"relative_load_location": 0.9},
     cov=0.05,
 )
 parameter_space = space_analysis_node.parameter_space

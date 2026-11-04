@@ -15,15 +15,15 @@
         "type": "number"
       }
     },
-    "moment": {
-      "description": "",
+    "moment_profile": {
+      "description": "Bending moment at the breakpoints position_profile_for_moment; the moment is linear between two breakpoints.",
       "type": "array",
       "items": {
         "type": "number"
       }
     },
-    "moment_grid": {
-      "description": "",
+    "position_profile_for_moment": {
+      "description": "Positions along the beam axis of the breakpoints of the piecewise-linear bending moment, not a dense sampling.",
       "type": "array",
       "items": {
         "type": "number"
@@ -36,8 +36,8 @@
         "type": "number"
       }
     },
-    "quadratic_moment": {
-      "description": "Quadratic moment of the beam section",
+    "second_moment_of_area": {
+      "description": "Second moment of area of the beam section.",
       "type": "array",
       "items": {
         "type": "number"

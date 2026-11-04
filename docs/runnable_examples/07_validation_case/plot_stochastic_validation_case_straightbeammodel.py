@@ -92,8 +92,8 @@ for mult_factor, batch in zip([1.01, 1.02, 1.03], [1, 2, 3], strict=False):
         .read(file_name="bending_test_validation_input_space.json")
         .parameter_space,
         n_samples=6,
-        input_names=["width", "height", "imposed_dplt"],
-        output_names=["reaction_forces", "maximum_dplt"],
+        input_names=["width", "height", "imposed_displacement"],
+        output_names=["reaction_forces", "maximum_deflection"],
         outputs_to_bias={"reaction_forces": Bias(mult_factor=mult_factor)},
         additional_name_to_data={"nominal_length": 600.0, "batch": batch},
     )
@@ -141,8 +141,8 @@ for batch, reference_data in zip(
                 variable_names=[
                     "width",
                     "height",
-                    "imposed_dplt",
-                    "maximum_dplt",
+                    "imposed_displacement",
+                    "maximum_deflection",
                     "reaction_forces",
                     "nominal_length",
                     "batch",
@@ -150,9 +150,9 @@ for batch, reference_data in zip(
                 variable_names_to_group_names={
                     "width": IODataset.INPUT_GROUP,
                     "height": IODataset.INPUT_GROUP,
-                    "imposed_dplt": IODataset.INPUT_GROUP,
+                    "imposed_displacement": IODataset.INPUT_GROUP,
                     "reaction_forces": IODataset.OUTPUT_GROUP,
-                    "maximum_dplt": IODataset.OUTPUT_GROUP,
+                    "maximum_deflection": IODataset.OUTPUT_GROUP,
                 },
             )
         )

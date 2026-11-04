@@ -12,7 +12,7 @@
       "parameters": [],
       "size": 1
     },
-    "imposed_dplt": {
+    "imposed_displacement": {
       "name": "Triangular",
       "mode": -5.0,
       "minimum": -5.25,
@@ -90,7 +90,7 @@
         "length",
         "width",
         "height",
-        "imposed_dplt",
+        "imposed_displacement",
         "young_modulus",
         "nu_p"
       ],

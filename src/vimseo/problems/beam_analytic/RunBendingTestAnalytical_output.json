@@ -2,15 +2,15 @@
   "name": "RunBendingTestAnalytical_output",
   "required": [],
   "properties": {
-    "dplt": {
-      "description": "",
+    "deflection_profile": {
+      "description": "Deflection of the neutral fibre, at the positions position_profile_for_deflection.",
       "type": "array",
       "items": {
         "type": "number"
       }
     },
-    "dplt_grid": {
-      "description": "",
+    "position_profile_for_deflection": {
+      "description": "Positions along the beam axis where the deflection is sampled.",
       "type": "array",
       "items": {
         "type": "number"

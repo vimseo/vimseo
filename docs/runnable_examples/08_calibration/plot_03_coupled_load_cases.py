@@ -180,7 +180,7 @@ step.execute(
         input_names=[
             "height",
             "width",
-            "imposed_dplt",
+            "imposed_displacement",
         ],
         parameter_names=["young_modulus"],
         optimizer_settings=NLOPT_COBYLA_Settings(max_iter=50),

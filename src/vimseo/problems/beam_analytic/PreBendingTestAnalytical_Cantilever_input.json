@@ -34,7 +34,7 @@
         "exclusiveMinimum": true
       }
     },
-    "imposed_dplt": {
+    "imposed_displacement": {
       "description": "Value of the imposed displacement in mm",
       "type": "array",
       "minItems": 1,
@@ -43,8 +43,8 @@
         "type": "number"
       }
     },
-    "relative_dplt_location": {
-      "description": "Relative location of the imposed displacement along the beam",
+    "relative_load_location": {
+      "description": "Relative location of the load along the beam.",
       "type": "array",
       "minItems": 1,
       "maxItems": 1,

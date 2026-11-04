@@ -346,7 +346,7 @@ class NamedList(UserList):
     """A list of curves or curve sets, which can also be indexed by their names.
 
     It is a list: it is iterated over its items, an integer gives an item, and a
-    string gives the item of this :attr:`name`, e.g. ``curves["dplt_vs_dplt_grid"]``.
+    string gives the item of this :attr:`name`, e.g. ``curves["deflection_profile_vs_position_profile_for_deflection"]``.
     """
 
     def __getitem__(self, key):

@@ -1,5 +1,5 @@
 GROUP;inputs;inputs;inputs;inputs;inputs;inputs;outputs
-VARIABLE;width;length;imposed_dplt;young_modulus;height;relative_dplt_location;reaction_forces
+VARIABLE;width;length;imposed_displacement;young_modulus;height;relative_load_location;reaction_forces
 COMPONENT;0;0;0;0;0;0;0
 0;29.49599373109432;581.3867646335378;-4.974780739551054;210575.60049845107;40.44793327177121;0.8994482588397894;-3574.7861109219766
 1;30.014825288131014;610.051824121521;-5.1178652451930855;208854.15243325726;39.82643487035581;0.9014429549964356;-3046.541840341451

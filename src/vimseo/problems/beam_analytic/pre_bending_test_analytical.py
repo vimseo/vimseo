@@ -36,8 +36,8 @@ class PreBendingTestAnalytical_Cantilever(BaseComponent):
             "length": array([600.0]),
             "width": array([30.0]),
             "height": array([40.0]),
-            "imposed_dplt": array([-5.0]),
-            "relative_dplt_location": array([1.0]),
+            "imposed_displacement": array([-5.0]),
+            "relative_load_location": array([1.0]),
         })
 
     def _run(self, input_data):
@@ -45,20 +45,22 @@ class PreBendingTestAnalytical_Cantilever(BaseComponent):
         height = input_data["height"][0]
         width = input_data["width"][0]
         length = input_data["length"][0]
-        imposed_dplt = input_data["imposed_dplt"][0]
-        relative_dplt_location = input_data["relative_dplt_location"][0]
+        imposed_displacement = input_data["imposed_displacement"][0]
+        relative_load_location = input_data["relative_load_location"][0]
         young_modulus = input_data["young_modulus"][0]
 
-        # compute displacement location:
-        x_f = relative_dplt_location * length
+        # compute the location of the load:
+        x_f = relative_load_location * length
 
-        # compute quadratic moment:
-        quadratic_moment = width * height**3 / 12.0
+        # compute the second moment of area:
+        second_moment_of_area = width * height**3 / 12.0
 
         # compute reaction force:
-        force = 3 * young_modulus * quadratic_moment * imposed_dplt / (x_f**3)
+        force = (
+            3 * young_modulus * second_moment_of_area * imposed_displacement / (x_f**3)
+        )
 
-        # compute moment (and grid)
+        # compute the breakpoints of the piecewise-linear moment
         if x_f == length:
             m_grid = array([0.0, length])
             moment = array([-force * length, 0.0])
@@ -67,13 +69,13 @@ class PreBendingTestAnalytical_Cantilever(BaseComponent):
             moment = array([-force * x_f, 0.0, 0.0])
 
         return {
-            "quadratic_moment": array([quadratic_moment]),
-            "imposed_dplt_location": array([x_f]),
+            "second_moment_of_area": array([second_moment_of_area]),
+            "load_location": array([x_f]),
             "reaction_forces": array([force]),
             "boundary": array([0.0]),
             "solver": array(["IVP"]),
-            "moment": moment,
-            "moment_grid": m_grid,
+            "moment_profile": moment,
+            "position_profile_for_moment": m_grid,
         }
 
 
@@ -88,7 +90,7 @@ class PreBendingTestAnalytical_ThreePoints(BaseComponent):
             "length": array([600.0]),
             "width": array([30.0]),
             "height": array([40.0]),
-            "imposed_dplt": array([-5.0]),
+            "imposed_displacement": array([-5.0]),
             "relative_support_location": array([0.5]),
         })
 
@@ -96,7 +98,7 @@ class PreBendingTestAnalytical_ThreePoints(BaseComponent):
         height = input_data["height"][0]
         width = input_data["width"][0]
         length = input_data["length"][0]
-        imposed_dplt = input_data["imposed_dplt"][0]
+        imposed_displacement = input_data["imposed_displacement"][0]
         relative_support_location = input_data["relative_support_location"][0]
         young_modulus = input_data["young_modulus"][0]
 
@@ -106,14 +108,18 @@ class PreBendingTestAnalytical_ThreePoints(BaseComponent):
 
         x_f = 0.5 * length
 
-        quadratic_moment = width * height**3 / 12.0
+        second_moment_of_area = width * height**3 / 12.0
 
         support_length = support_location[1] - support_location[0]
         a = x_f - support_location[0]
         b = support_length - a
 
         force = (
-            6 * support_length * young_modulus * quadratic_moment * imposed_dplt
+            6
+            * support_length
+            * young_modulus
+            * second_moment_of_area
+            * imposed_displacement
         ) / (b * a * (support_length**2 - b**2 - a**2))
 
         m_grid = array([support_location[0], x_f, support_location[1]])
@@ -124,12 +130,12 @@ class PreBendingTestAnalytical_ThreePoints(BaseComponent):
         ])
 
         return {
-            "quadratic_moment": array([quadratic_moment]),
-            "imposed_dplt_location": array([x_f]),
+            "second_moment_of_area": array([second_moment_of_area]),
+            "load_location": array([x_f]),
             "reaction_forces": array([force]),
             "boundary": array([0.0, 0.0, 0.0, 0.0]),
             "solver": array(["BVP"]),
-            "moment": moment,
-            "moment_grid": m_grid,
+            "moment_profile": moment,
+            "position_profile_for_moment": m_grid,
             "support_location": array(support_location),
         }

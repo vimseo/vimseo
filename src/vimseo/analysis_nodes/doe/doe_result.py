@@ -280,7 +280,7 @@ class DOEResult(BaseResult):
         """Create the figures of the parametric study, per family of samples.
 
         A figure of a family is suffixed by the values of the other varying inputs,
-        e.g. ``curves_dplt_vs_dplt_grid[width=20.0]``, unless a single input varies.
+        e.g. ``curves_deflection_profile_vs_position_profile_for_deflection[width=20.0]``, unless a single input varies.
 
         Args:
             data: The values of the variables, shaped as ``(n_samples, size)``.

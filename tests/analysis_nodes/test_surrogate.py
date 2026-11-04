@@ -99,7 +99,7 @@ def bending_test_analytical_surrogate(bending_test_analytical_dataset):
     surrogate_analysis_node.execute(
         model=model,
         dataset=bending_test_analytical_dataset,
-        output_names=["reaction_forces", "dplt_at_force_location"],
+        output_names=["reaction_forces", "deflection_at_load_point"],
         quality_for_selection=("MSEMeasure", LOO),
         evaluation_methods=[LOO, LEARN],
     )

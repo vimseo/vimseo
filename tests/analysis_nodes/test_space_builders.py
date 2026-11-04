@@ -392,11 +392,11 @@ def test_wrong_min_and_max_values(tmp_wd):
     """Check that a space of parameters can be created from minimum and maximum
     values."""
     space_analysis_node = SpaceAnalysisNode()
-    minimum_values = {"young_modulus": -1.0, "relative_dplt_location": -1.0}
-    maximum_values = {"relative_dplt_location": -1.0}
+    minimum_values = {"young_modulus": -1.0, "relative_load_location": -1.0}
+    maximum_values = {"relative_load_location": -1.0}
     msg = (
-        "Variable names for minimum dict_keys(['young_modulus', 'relative_dplt_location']) "
-        "and maximum dict_keys(['relative_dplt_location']) must be the same."
+        "Variable names for minimum dict_keys(['young_modulus', 'relative_load_location']) "
+        "and maximum dict_keys(['relative_load_location']) must be the same."
     )
     with pytest.raises(ValueError, match=re.escape(msg)):
         space_analysis_node.execute(
@@ -809,23 +809,23 @@ def test_variable_name_order(tmp_wd):
                 "length": 200.0,
                 "width": 5.0,
                 "height": 5.0,
-                "imposed_dplt": 0.0,
-                "relative_dplt_location": 0.1,
+                "imposed_displacement": 0.0,
+                "relative_load_location": 0.1,
             },
             maximum_values={
                 "length": 1000.0,
                 "width": 50.0,
                 "height": 50.0,
-                "imposed_dplt": 20.0,
-                "relative_dplt_location": 1.0,
+                "imposed_displacement": 20.0,
+                "relative_load_location": 1.0,
             },
         )
         assert space_analysis_node.parameter_space.variable_names == [
             "length",
             "width",
             "height",
-            "imposed_dplt",
-            "relative_dplt_location",
+            "imposed_displacement",
+            "relative_load_location",
         ]
 
 

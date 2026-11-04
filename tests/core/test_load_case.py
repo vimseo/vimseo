@@ -53,7 +53,7 @@ def test_load_case_description():
     default_text = str(lc)
     assert default_text.startswith("Load case Beam_Cantilever:")
     assert (
-        "Boundary condition variables: imposed_dplt, relative_dplt_location"
+        "Boundary condition variables: imposed_displacement, relative_load_location"
         in default_text
     )
     assert "Plots:" not in default_text
