@@ -99,6 +99,9 @@ class ExternalSoftwareComponent(BaseComponent):
         error_run = self._job_executor.execute(
             check_subprocess=self._check_subprocess,
         )
+        if self._job_executor.stopped_by and not error_run:
+            # the solver exited cleanly after being told to stop: the run is truncated
+            error_run = 1
         if error_run:
             LOGGER.warning(
                 f"An error has occurred in {self.__class__.__name__}, "

@@ -203,6 +203,12 @@ and this project adheres to
 
 ## Added
 
+- Run limits of the jobs, as user job options of every job executor:
+  `solver_time_limit` (the maximum solver time, counted from the first convergence
+  file written, so that a wait in a licence queue does not count) and `deadline` (a
+  wall-clock time). A job reaching a limit is terminated (`abaqus terminate` for
+  Abaqus, SIGTERM to the process group by default), its results so far are kept and
+  the run is reported as faulty; `JobExecutor.stopped_by` tells which limit stopped it.
 - Tools accept the data users already have: a mapping of variable names to values,
   a nested `{"inputs": ..., "outputs": ...}` mapping, a mono-index `DataFrame`, the
   legacy `name{group}[component]` `DataFrame` or a `Dataset`
