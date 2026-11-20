@@ -61,7 +61,7 @@ def get_class(
     # GEMSEO ignores the modules that fail to import, and so the classes they define.
     if factory.failed_imports:
         failed_imports = "; ".join(
-            f"{module_name}: {str(error)[:200]}"
+            f"{module_name}: {_first_line(error)}"
             for module_name, error in factory.failed_imports.items()
         )
         message.append(
@@ -69,6 +69,24 @@ def get_class(
             f"available: {failed_imports}."
         )
     raise ImportError(" ".join(message))
+
+
+def _first_line(error: object) -> str:
+    """Return the first line of an error message, marking the omitted lines.
+
+    The first line of an import error names what could not be imported, whereas a
+    truncation at a fixed length could cut it.
+
+    Args:
+        error: The error or its message.
+
+    Returns:
+        The first line of the message.
+    """
+    lines = str(error).strip().splitlines()
+    if not lines:
+        return ""
+    return lines[0] + (" [...]" if len(lines) > 1 else "")
 
 
 def create_instance(

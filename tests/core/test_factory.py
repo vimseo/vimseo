@@ -24,8 +24,49 @@ import pytest
 from vimseo.api import create_model
 from vimseo.core.components.component_factory import ComponentFactory
 from vimseo.core.factory import create_instance
+from vimseo.core.factory import get_class
 from vimseo.core.load_case_factory import LoadCaseFactory
 from vimseo.core.model_factory import ModelFactory
+
+
+class _FactoryWithFailedImports:
+    """A factory whose modules failed to import."""
+
+    class_names = ("A", "B")
+    failed_imports = {  # ruff: ignore[mutable-class-default]
+        "pkg.short": "No module named 'foo'",
+        "pkg.long": "cannot import name 'bar' from 'pkg.baz' (" + "x" * 300 + ")",
+        "pkg.multiline": "first line\nsecond line",
+    }
+
+    def get_class(self, name: str) -> type:
+        msg = name
+        raise ImportError(msg)
+
+
+def test_failed_imports_in_message():
+    """Check that the failed imports are listed with the first line of their error,
+    without truncating it."""
+    with pytest.raises(ImportError) as info:
+        get_class(_FactoryWithFailedImports(), "C", "model")
+    message = str(info.value)
+    assert message.endswith(
+        "These modules could not be imported, so the classes they define are not "
+        "available: pkg.short: No module named 'foo'; "
+        "pkg.long: cannot import name 'bar' from 'pkg.baz' (" + "x" * 300 + "); "
+        "pkg.multiline: first line [...]."
+    )
+
+
+@pytest.mark.parametrize(
+    "factory_class", [ModelFactory, LoadCaseFactory, ComponentFactory]
+)
+def test_searched_packages_exist(factory_class):
+    """Check that the packages searched by a factory exist, otherwise their import
+    failure is listed in every error message of the factory."""
+    package_names = factory_class._PACKAGE_NAMES
+    failed_imports = factory_class().failed_imports
+    assert not set(package_names) & set(failed_imports)
 
 
 def test_unknown_model():

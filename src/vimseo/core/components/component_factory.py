@@ -33,8 +33,6 @@ class ComponentFactory(BaseFactory):
     _CLASS = BaseComponent
     _PACKAGE_NAMES = (
         "vimseo.problems",
-        "vimseo.core.components.pre",
-        "vimseo.core.components.run",
         "vimseo.core.components.post",
         "vimseo.core.components.subroutines",
     )
