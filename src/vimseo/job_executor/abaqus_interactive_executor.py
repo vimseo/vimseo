@@ -53,7 +53,10 @@ class InteractiveAbaqus(BaseInteractiveExecutor):
         super().__init__(command_template)
 
     def _terminate_external_software(self):
-        cmd = [self._job_options.executable, f"job={self._job_name}", "terminate"]
+        executable = (self._job_options or {}).get(
+            "executable", self.DEFAULT_EXECUTABLE
+        )
+        cmd = [executable, f"job={self._job_name}", "terminate"]
         LOGGER.warning(f"Terminating solver with command {cmd}")
         subprocess.run(
             cmd,
