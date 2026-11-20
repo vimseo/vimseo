@@ -13,7 +13,7 @@
 
 The results for the OpfmCube model are presented based on the analysis node result dashboard,
 which is the page **Analysis Node Results** of the command ``dashboard_results``
-provided by the plugin [vimseo-dashboards](https://forge-is.pf.irt-saintexupery.com/vims/vimseo-dashboards):
+(``dashboard`` extra):
 
 ## OpfmCube PST
 

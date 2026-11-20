@@ -221,7 +221,7 @@ figures["CDF_comparison_reaction_forces"]
 
 # %%
 # The saved result can be visualised in the page **Analysis Node Results**
-# of the dashboard ``dashboard_results``, provided by the plugin vimseo-dashboards.
+# of the dashboard ``dashboard_results``, which requires the ``dashboard`` extra.
 
 # %%
 # The simulated input space can be exported to disk, to be visualized with

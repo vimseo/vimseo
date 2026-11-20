@@ -178,5 +178,5 @@ tables["outputs"]
 #
 # | Need | Command |
 # | --- | --- |
-# | Browse the model results of an archive, refined by study, model, load case, status or query, or any analysis node result, e.g. a validation case, or edit a parameter space (package `vimseo-dashboards`) | `dashboard_results` |
+# | Browse the model results of an archive, refined by study, model, load case, status or query, or any analysis node result, e.g. a validation case, or edit a parameter space | `dashboard_results` |
 # | Browse the model results and the analysis node runs of an MLflow archive | `dashboard_mlflow` |

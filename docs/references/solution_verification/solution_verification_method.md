@@ -25,7 +25,7 @@ to estimate the confidence in Richardson extapolation.
 
 These two methods are implemented in VIMSEO, in the analysis node named ``DiscretizationSolutionVerification``.
 and can be displayed by the page **Analysis Node Results** of the dashboard ``dashboard_results``
-(provided by the plugin [vimseo-dashboards](https://forge-is.pf.irt-saintexupery.com/vims/vimseo-dashboards)),
+(which requires the ``dashboard`` extra),
 or written in a directory with the command ``visualize_analysis_node_result``.
 Solution verification is performed through a convergence study of the solution
 on four progressively refined meshes (only three meshes would be strictly necessary),
