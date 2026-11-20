@@ -22,6 +22,7 @@ from typing import Any
 from pydantic import BaseModel
 from pydantic import Field
 from pydantic import field_validator
+from pydantic import model_validator
 
 from vimseo.utilities.distribution import DEFAULT_MIN_MAX
 from vimseo.utilities.distribution import DistributionParameters
@@ -56,6 +57,17 @@ class MaterialProperty(BaseModel):
             )
             raise ValueError(msg)
         return distribution
+
+    @model_validator(mode="after")
+    def _check_value_in_bounds(self) -> MaterialProperty:
+        """Reject a value out of the bounds of the property."""
+        if not self.lower_bound <= self.value <= self.upper_bound:
+            msg = (
+                f"The value {self.value} of the material property {self.name} is out "
+                f"of its bounds [{self.lower_bound}, {self.upper_bound}]."
+            )
+            raise ValueError(msg)
+        return self
 
     def model_post_init(self, __context: Any) -> None:
         """Set the distribution bounds equal to the property bounds."""

@@ -66,6 +66,7 @@ from vimseo.material.material_registry import resolve_material
 from vimseo.storage_management import get_archive_class
 from vimseo.storage_management import run_kind
 from vimseo.storage_management.scratch_storage import DirectoryScratch
+from vimseo.utilities.json_grammar_utils import check_material_bounds
 from vimseo.utilities.json_grammar_utils import load_input_bounds
 from vimseo.utilities.plotting_utils import superpose_curves
 from vimseo.utilities.user import get_user_name
@@ -457,6 +458,11 @@ class IntegratedModel(GemseoDisciplineWrapper):
                 self.lower_bounds[name] = [-inf]
                 self.upper_bounds[name] = [inf]
                 self.input_space[name] = [-inf, inf]
+
+        if self.__material is not None:
+            for component in self._chain.disciplines:
+                if isinstance(component.input_grammar, JSONGrammar):
+                    check_material_bounds(self.__material, component.input_grammar)
 
         # Set status to DONE, to avoid being locked in FAILED mode.
         self.execution_status.value = ExecutionStatus.Status.DONE

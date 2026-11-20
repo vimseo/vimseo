@@ -195,6 +195,7 @@ All settings classes inherit from `BaseSettings` (Pydantic `BaseModel` with `ext
 | `dashboard_workflow` | `vimseo.dashboards.workflow.entry_point:main` |
 | `workflow_executor` | `vimseo.workflow.workflow_executor:main` |
 | `dashboard_mlflow` | `vimseo.storage_management.mlflow_ui_entry_point:main` |
+| `vimseo_wrap` | `vimseo.core.declarative_model:main` |
 | `visualize_analysis_node_result` | `vimseo.analysis_nodes.visualize_analysis_node_result:main` |
 
 ### Test structure

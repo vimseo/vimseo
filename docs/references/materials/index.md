@@ -13,6 +13,9 @@ All rights reserved.
 -->
 # Material description
 
+The format of a material JSON file is described in
+[Material file format](material_file_format.md).
+
 
 [Ta6v](ta6v.md){ .md-button }
 [Plane orthotropic ply](plane_orthotropic_ply.md){ .md-button }

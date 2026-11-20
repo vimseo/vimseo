@@ -1,0 +1,6 @@
+name: DeclaredBoundedBeam
+discipline: wrapping_disciplines:BoundedCantileverBeam
+discipline_path: .
+summary: A cantilever beam whose discipline bounds its inputs itself.
+plots:
+  - [x, deflection]
