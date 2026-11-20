@@ -140,7 +140,7 @@ class PreRunPostModel(IntegratedModel):
         self._set_differentiated_names(self.run)
 
         if isinstance(self.run, ExternalSoftwareComponent):
-            self.run.job_executor._user_job_options.update({"n_cpus": self.N_CPUS})
+            self.run.job_executor.update_options(n_cpus=self.N_CPUS)
 
     @property
     def n_cpus(self):

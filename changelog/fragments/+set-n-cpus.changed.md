@@ -7,4 +7,4 @@
  Commons, PO Box 1866, Mountain View, CA 94042, USA.
 -->
 
-`IntegratedModel.set_n_cpus(n_cpus)` sets the number of CPUs of the job executor of the `run` component, keeping its other options, instead of `model.run.job_executor.set_options(...)` with the settings class of the executor. It is no longer deprecated, and no longer a no-op on a `PreRunPostModel`. It raises a `ValueError` when the run component has no job executor. `IntegratedModel.n_cpus` is the number of CPUs of this job executor, else 1.
+`IntegratedModel.set_n_cpus(n_cpus)` sets the number of CPUs of the job executor of the `run` component with `JobExecutor.update_options`, keeping its other options, instead of `model.run.job_executor.set_options(...)` with the settings class of the executor. It is no longer deprecated, and no longer a no-op on a `PreRunPostModel`. It raises a `ValueError` when the run component has no job executor. `IntegratedModel.n_cpus` is the number of CPUs of this job executor, else 1.

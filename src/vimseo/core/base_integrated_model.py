@@ -886,14 +886,7 @@ class IntegratedModel(GemseoDisciplineWrapper):
                 f"component {self.run.name} has no job executor."
             )
             raise ValueError(msg)
-        settings_class = job_executor._USER_JOB_OPTIONS_MODEL
-        options = {
-            name: value
-            for name, value in job_executor.options.items()
-            if name in settings_class.model_fields
-        }
-        options["n_cpus"] = n_cpus
-        job_executor.set_options(settings_class(**options))
+        job_executor.update_options(n_cpus=n_cpus)
 
     @property
     def job_executor(self):
