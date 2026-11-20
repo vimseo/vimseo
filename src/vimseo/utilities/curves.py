@@ -18,15 +18,17 @@ from __future__ import annotations
 from collections import UserList
 from dataclasses import replace
 from typing import TYPE_CHECKING
+from typing import overload
 
 from gemseo.datasets.dataset import Dataset
 from gemseo.post.dataset.lines import Lines
 from numpy import argmin
-from numpy import argsort
 from numpy import array
 from numpy import asarray
 from numpy import atleast_1d
+from numpy import diff
 from numpy import interp
+from numpy import ndim
 from numpy import newaxis
 from numpy import vstack
 from pandas import DataFrame
@@ -111,27 +113,73 @@ class Curve:
         self.__update_axis_check(value, "Y")
         self.__data[1] = value
 
-    def compute(self, x: ArrayLike, interpolate: bool = False) -> ndarray:
+    @overload
+    def compute(self, x: float, interpolate: bool = False) -> float: ...
+
+    @overload
+    def compute(self, x: ArrayLike, interpolate: bool = False) -> ndarray: ...
+
+    def compute(
+        self, x: float | ArrayLike, interpolate: bool = False
+    ) -> float | ndarray:
         """Compute the ordinates of the curve at abscissas.
 
         Args:
-            x: The abscissas.
+            x: The abscissa, or the abscissas.
             interpolate: Whether to interpolate linearly between the two points of the
                 curve around each abscissa. Otherwise, take the ordinate of the point
                 of the curve closest to each abscissa.
 
         Returns:
+            The ordinate as a float if ``x`` is a scalar,
+            otherwise the ordinates as an array, one per abscissa.
+
+        Raises:
+            ValueError: When interpolating a curve whose abscissas are not strictly
+                monotonic, or at an abscissa outside the curve.
+        """
+        is_scalar = ndim(x) == 0
+        x = atleast_1d(asarray(x, dtype=float))
+        y = self.__interpolate(x) if interpolate else self.__closest(x)
+        return float(y[0]) if is_scalar else y
+
+    def __closest(self, x: ndarray) -> ndarray:
+        """Return the ordinates of the points of the curve closest to abscissas.
+
+        Args:
+            x: The abscissas.
+
+        Returns:
+            The ordinates, one per abscissa.
+        """
+        return self.y[argmin(abs(self.x[:, newaxis] - x[newaxis, :]), axis=0)]
+
+    def __interpolate(self, x: ndarray) -> ndarray:
+        """Interpolate the curve linearly at abscissas.
+
+        Args:
+            x: The abscissas.
+
+        Returns:
             The ordinates, one per abscissa.
 
         Raises:
-            ValueError: When interpolating at an abscissa outside the curve.
+            ValueError: When the abscissas of the curve are not strictly monotonic,
+                or when an abscissa is outside the curve.
         """
-        x = atleast_1d(asarray(x, dtype=float))
-        if not interpolate:
-            closest_indices = argmin(abs(self.x[:, newaxis] - x[newaxis, :]), axis=0)
-            return self.y[closest_indices]
+        steps = diff(self.x)
+        if (steps > 0).all():
+            x_curve, y_curve = self.x, self.y
+        elif (steps < 0).all():
+            x_curve, y_curve = self.x[::-1], self.y[::-1]
+        else:
+            msg = (
+                f"Cannot interpolate the curve {self.name}: "
+                "its abscissas are not strictly monotonic."
+            )
+            raise ValueError(msg)
 
-        x_min, x_max = self.x.min(), self.x.max()
+        x_min, x_max = x_curve[0], x_curve[-1]
         outside = (x < x_min) | (x > x_max)
         if outside.any():
             msg = (
@@ -139,8 +187,7 @@ class Curve:
                 f"outside its abscissas [{x_min}, {x_max}]."
             )
             raise ValueError(msg)
-        order = argsort(self.x, kind="stable")
-        return interp(x, self.x[order], self.y[order])
+        return interp(x, x_curve, y_curve)
 
     def as_dict(self):
         """The curve as a dictionary."""

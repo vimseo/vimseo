@@ -7,4 +7,4 @@
  Commons, PO Box 1866, Mountain View, CA 94042, USA.
 -->
 
-`Curve.compute(x, interpolate=False)` computes the ordinates of a curve at abscissas: the ordinates of the closest points by default, or interpolated linearly with `interpolate=True`, which raises a `ValueError` outside the abscissas of the curve.
+`Curve.compute(x, interpolate=False)` computes the ordinate of a curve at an abscissa, as a float, or its ordinates at abscissas, as an array: the ordinates of the closest points by default, or interpolated linearly with `interpolate=True`, which raises a `ValueError` when the abscissas of the curve are not strictly monotonic or outside them.
