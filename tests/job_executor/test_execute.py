@@ -16,6 +16,7 @@
 from __future__ import annotations
 
 import pytest
+from pydantic import ValidationError
 
 from vimseo.job_executor.base_executor import JobExecutor
 
@@ -67,3 +68,31 @@ def test_execute_runs_a_real_subprocess(tmp_path):
     executor.execute(check_subprocess=True)
 
     assert (tmp_path / "out.txt").read_text().strip() == "hi"
+
+
+def test_update_options_keeps_the_other_options():
+    """``update_options`` changes the given options only."""
+    executor = JobExecutor("")
+    executor.update_options(job_name="my_job")
+    executor.update_options(n_cpus=4)
+    assert executor.options["n_cpus"] == 4
+    assert executor.options["job_name"] == "my_job"
+
+
+@pytest.mark.parametrize("options", [{"foo": 1}, {"n_cpus": "many"}])
+def test_update_options_validates(options):
+    """``update_options`` rejects an unknown option or a wrong type."""
+    executor = JobExecutor("")
+    with pytest.raises(ValidationError):
+        executor.update_options(**options)
+    assert executor.options["n_cpus"] == 1
+
+
+def test_set_job_options_keeps_the_user_job_options(tmp_path):
+    """Setting the job options does not change the user job options."""
+    executor = _TemplateExecutor("")
+    executor.DEFAULT_EXECUTABLE = "solver.exe"
+    executor.update_options(executable="my_solver.exe")
+    executor._set_job_options(tmp_path)
+    assert executor._job_options["executable"] == "solver.exe"
+    assert executor.options["executable"] == "my_solver.exe"
