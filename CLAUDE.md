@@ -87,6 +87,15 @@ tox -e doc
 tox -e dist
 ```
 
+**Release:** pushing a tag `X.Y.Z` runs [release.yml](.github/workflows/release.yml),
+which builds the wheel, the sdist and `constraints.txt` (a universal `uv pip compile`
+of every extra), runs the fast tests against the installed wheel with these
+constraints (Linux and Windows, Python 3.10 and 3.12), then creates the GitHub release.
+The upload to PyPI stays manual (`tox -e dist-upload`). Users without internet access
+build their own bundle with
+[tools/offline_bundle/build_offline_bundle.py](tools/offline_bundle/build_offline_bundle.py)
+(README, section Offline installation).
+
 ## Architecture
 
 VIMSEO is a VV&UQ (Verification, Validation & Uncertainty Quantification) framework. It wraps simulation models and provides analysis nodes to assess simulation credibility. The library is built on top of [GEMSEO](https://gemseo.readthedocs.io/), a Python MDO library — VIMSEO models are GEMSEO `Discipline` subclasses.

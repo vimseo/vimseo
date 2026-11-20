@@ -97,6 +97,49 @@ pip install git+https://forge-is.pf.irt-saintexupery.com/vims/vimseo-dashboards.
 - **Model Results**: the model results of an archive, refined by study, model,
   load case, status or query.
 
+### Tested dependency versions
+
+`pip install vimseo` takes the latest versions of the dependencies allowed by
+**VIMSEO**, which may be more recent than the ones it was tested with. Each
+[GitHub release](https://github.com/vimseo/vimseo/releases) publishes a
+`constraints.txt` with the dependency versions its tests pass with, for every OS and
+every supported Python. Use it to get a reproducible environment:
+
+```
+pip install "vimseo[mesh]==X.Y.Z" -c https://github.com/vimseo/vimseo/releases/download/X.Y.Z/constraints.txt
+```
+
+The constraints apply to any choice of extras, and also work through a package mirror
+(Artifactory, Nexus, ...).
+
+### Offline installation
+
+To install **VIMSEO** on a machine without internet access, build an installation
+bundle on a machine with internet access and **the same OS, processor architecture and
+Python version (major.minor)**, from a clone of this repository at the release tag:
+
+```
+python tools/offline_bundle/build_offline_bundle.py --extras mesh \
+    --constraints https://github.com/vimseo/vimseo/releases/download/X.Y.Z/constraints.txt \
+    git+https://forge-is.pf.irt-saintexupery.com/vims/vimseo-dashboards.git@<tag>
+```
+
+Run it with the Python of the target version; it only needs pip. It builds the wheels of
+**VIMSEO**, of the plugins given as arguments and of all their dependencies, checks
+that they install offline in a new virtual environment, and zips them in
+`dist/vimseo-X.Y.Z-offline-<platform>-py<version>.zip`. Copy the zip to the target
+machine, extract it and, in the extracted folder:
+
+```
+python -m venv env
+env\Scripts\activate          (Windows; on Linux: source env/bin/activate)
+python install.py
+```
+
+`install.py` refuses a Python version or a platform other than the ones of the bundle,
+then installs it with pip without accessing any package index. Count a few hundred MB
+for the mandatory dependencies, and about 1 GB with every extra.
+
 ---
 **NOTE**
 

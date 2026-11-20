@@ -1,0 +1,120 @@
+name: Release
+
+# Push a tag X.Y.Z to publish a GitHub release holding the wheel, the sdist and the
+# dependency constraints of the release (constraints.txt). The constraints are a
+# universal resolution (every OS, every supported Python) of all the extras, and the
+# release is published only once the fast tests pass with them, on Linux and Windows,
+# with the oldest and the newest supported Python.
+# The upload to PyPI stays manual: tox -e dist && tox -e dist-upload.
+on:
+  push:
+    tags: ["[0-9]+.[0-9]+.[0-9]+*"]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0  # setuptools-scm reads the version from the tag
+      - uses: astral-sh/setup-uv@v6
+      - name: Wheel and sdist
+        run: uv build --out-dir dist
+      - name: Check that the version is the tag
+        run: test -f "dist/vimseo-${GITHUB_REF_NAME}-py3-none-any.whl"
+      - name: Dependency constraints
+        # --python-version is the lower bound of requires-python: without it, uv takes
+        # the running interpreter as the lower bound and drops the older versions.
+        run: |
+          uv pip compile pyproject.toml --universal --all-extras --python-version 3.10 \
+            --no-header --quiet --output-file constraints.body.txt
+          {
+            echo "# Dependency versions of vimseo ${GITHUB_REF_NAME}, for every OS and every supported Python."
+            echo "# The fast tests of vimseo pass with them. Install with:"
+            echo "#   pip install \"vimseo[all]==${GITHUB_REF_NAME}\" -c ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/releases/download/${GITHUB_REF_NAME}/constraints.txt"
+            cat constraints.body.txt
+          } > dist/constraints.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  test:
+    needs: build
+    name: test (${{ matrix.os }}, ${{ matrix.python-version }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ["3.10", "3.12"]
+    defaults:
+      run:
+        shell: bash
+    env:
+      # Same as tox.ini.
+      MPLBACKEND: AGG
+    steps:
+      - uses: actions/checkout@v5  # the tests, not the package
+      - uses: astral-sh/setup-uv@v6
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - name: Environment out of the checkout
+        run: |
+          uv venv --python ${{ matrix.python-version }} "$RUNNER_TEMP/venv"
+          echo "VIRTUAL_ENV=$RUNNER_TEMP/venv" >> "$GITHUB_ENV"
+          if [ "$RUNNER_OS" = Windows ]; then bin=Scripts; else bin=bin; fi
+          echo "$RUNNER_TEMP/venv/$bin" >> "$GITHUB_PATH"
+      - name: Install the released wheel with its constraints
+        run: |
+          uv pip install "vimseo[all] @ ./dist/vimseo-${GITHUB_REF_NAME}-py3-none-any.whl" \
+            -c dist/constraints.txt
+          uv pip install --group dev
+      - name: Check that the tests use the installed wheel
+        run: python -c "import vimseo, sys; sys.exit('site-packages' not in vimseo.__file__)"
+      - name: Fast tests
+        run: python -m pytest -k "not slow"
+
+  release:
+    needs: [build, test]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - name: Release notes
+        run: |
+          base="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}"
+          cat > notes.md <<EOF
+          ## Installation
+
+          Install this release with the dependency versions it was tested with:
+
+          \`\`\`
+          pip install "vimseo[all]==${GITHUB_REF_NAME}" -c ${base}/releases/download/${GITHUB_REF_NAME}/constraints.txt
+          \`\`\`
+
+          Drop \`[all]\` or pick the extras you need: the constraints apply to any of them.
+          For a machine without internet access, see
+          [Offline installation](${base}/blob/${GITHUB_REF_NAME}/README.md#offline-installation).
+
+          See the [changelog](${base}/blob/${GITHUB_REF_NAME}/CHANGELOG.md).
+
+          EOF
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          # A tag with a letter (0.2.0rc1, 0.2.0b1) is a pre-release.
+          case "$GITHUB_REF_NAME" in *[a-z]*) pre=--prerelease ;; *) pre= ;; esac
+          gh release create "$GITHUB_REF_NAME" dist/* --verify-tag $pre \
+            --title "vimseo $GITHUB_REF_NAME" --notes-file notes.md --generate-notes
