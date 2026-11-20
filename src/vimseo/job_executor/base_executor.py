@@ -18,12 +18,14 @@
 from __future__ import annotations
 
 import logging
+import os
 import select
 import shlex
 import signal
 import subprocess
 import sys
 import time
+from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING
 from typing import Any
@@ -74,6 +76,16 @@ class JobExecutor(metaclass=GoogleDocstringInheritanceMeta):
     _user_job_options: Mapping[str, Any]
     """The user job options."""
 
+    _process: subprocess.Popen | None
+    """The subprocess of the job being executed, None outside an execution."""
+
+    stopped_by: str
+    """The run limit that terminated the last job: ``"solver_time_limit"``,
+    ``"deadline"``, or ``""`` when the job ended on its own."""
+
+    _RUN_LIMIT_POLL_INTERVAL: ClassVar[float] = 0.5
+    """The number of seconds between two checks of the run limits."""
+
     _COMMAND_TEMPLATE: ClassVar[str] = ""
     """The template used to generate the executed command line."""
 
@@ -105,6 +117,8 @@ class JobExecutor(metaclass=GoogleDocstringInheritanceMeta):
         self._job_options = None
         self._user_job_options = self._USER_JOB_OPTIONS_MODEL().model_dump()
         self._convergence_cursors = {}
+        self._process = None
+        self.stopped_by = ""
 
     def execute(
         self,
@@ -170,7 +184,82 @@ class JobExecutor(metaclass=GoogleDocstringInheritanceMeta):
         return Path(self._job_directory)
 
     def _terminate_external_software(self):
-        """Terminate the external software if it is still running."""
+        """Terminate the external software if it is still running.
+
+        By default, the subprocess and its process group are sent SIGTERM. A subclass
+        uses the solver's own way when it has one (e.g. ``abaqus terminate``), which
+        writes the results of the increments converged so far.
+        """
+        process = self._process
+        if process is None or process.poll() is not None:
+            return
+        try:
+            if sys.platform.startswith("win"):
+                process.terminate()
+            else:
+                os.killpg(process.pid, signal.SIGTERM)
+        except ProcessLookupError:
+            pass
+
+    def _has_solver_started(self) -> bool:
+        """Whether the solver has started, i.e. has written its first convergence file.
+
+        Without convergence sources, the solver is considered started with the
+        subprocess.
+        """
+        sources = self._user_job_options.get(
+            "convergence_sources", self._CONVERGENCE_SOURCES
+        )
+        if not sources:
+            return True
+        directory = self._convergence_source_directory
+        return any((directory / f"{self._job_name}.{ext}").exists() for ext in sources)
+
+    def _check_run_limits(self, solver_start: float | None) -> tuple[float | None, str]:
+        """Check the run limits of the user job options.
+
+        Args:
+            solver_start: The monotonic time at which the solver was seen started,
+                None if not yet.
+
+        Returns:
+            The solver start, detected by this check if it was not known,
+            and the limit reached, ``""`` if none.
+        """
+        deadline = self._user_job_options.get("deadline")
+        if deadline is not None and datetime.now(deadline.tzinfo) >= deadline:
+            return solver_start, "deadline"
+        limit = self._user_job_options.get("solver_time_limit", 0.0) or 0.0
+        if limit > 0.0:
+            if solver_start is None and self._has_solver_started():
+                solver_start = time.monotonic()
+            if solver_start is not None and time.monotonic() - solver_start >= limit:
+                return solver_start, "solver_time_limit"
+        return solver_start, ""
+
+    def _enforce_run_limits(self, solver_start: float | None) -> float | None:
+        """Terminate the job if a run limit is reached, once.
+
+        Args:
+            solver_start: The monotonic time at which the solver was seen started,
+                None if not yet.
+
+        Returns:
+            The solver start, see :meth:`_check_run_limits`.
+        """
+        if self.stopped_by:
+            return solver_start
+        solver_start, reached = self._check_run_limits(solver_start)
+        if reached:
+            self.stopped_by = reached
+            LOGGER.warning(
+                "Run limit '%s' reached: terminating the job %s, its results so far "
+                "are kept.",
+                reached,
+                self._job_name,
+            )
+            self._terminate_external_software()
+        return solver_start
 
     @classmethod
     def _render_template(
@@ -255,18 +344,33 @@ class JobExecutor(metaclass=GoogleDocstringInheritanceMeta):
 
         Returns: The error code.
         """
+        self.stopped_by = ""
+        solver_start = None
+        new_session = not sys.platform.startswith("win")
         if self._is_blocking_subprocess or sys.platform.startswith("win"):
-            return subprocess.run(cmd, cwd=self._job_directory).returncode
-        proc = subprocess.Popen(
+            # the output goes straight to the console; the limits are still enforced
+            self._process = proc = subprocess.Popen(
+                cmd, cwd=self._job_directory, start_new_session=new_session
+            )
+            try:
+                while True:
+                    try:
+                        return proc.wait(timeout=self._RUN_LIMIT_POLL_INTERVAL)
+                    except subprocess.TimeoutExpired:
+                        solver_start = self._enforce_run_limits(solver_start)
+            finally:
+                self._process = None
+        self._process = proc = subprocess.Popen(
             cmd,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             cwd=self._job_directory,
             text=True,
-            start_new_session=True,
+            start_new_session=new_session,
         )
 
         self._convergence_cursors = {}
+        next_run_limit_check = 0.0
         live_tail = activate_convergence_fetching and self._user_job_options.get(
             "convergence_live_tail", False
         )
@@ -309,6 +413,12 @@ class JobExecutor(metaclass=GoogleDocstringInheritanceMeta):
                         time.monotonic() + self._CONVERGENCE_POLL_INTERVAL
                     )
 
+                if time.monotonic() >= next_run_limit_check:
+                    solver_start = self._enforce_run_limits(solver_start)
+                    next_run_limit_check = (
+                        time.monotonic() + self._RUN_LIMIT_POLL_INTERVAL
+                    )
+
                 if proc.poll() is not None:
                     if activate_convergence_fetching:
                         self._fetch_convergence_safely()
@@ -334,6 +444,7 @@ class JobExecutor(metaclass=GoogleDocstringInheritanceMeta):
             if proc.poll() is None:
                 LOGGER.warning("Solver still running, killing it...")
                 self._terminate_external_software()
+            self._process = None
 
         # Raise an error here if check_subprocess is True:
         if check_subprocess and proc.returncode != 0:

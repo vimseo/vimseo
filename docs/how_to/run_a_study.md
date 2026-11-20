@@ -195,6 +195,39 @@ model.execute()
 print(model.get_output_data())
 ```
 
+## Limit the solver time, stop at a deadline
+
+Non-linear jobs can run for hours and hold licences shared with other users. Two
+options of the job executor terminate a job that lasts too long, keeping the results of
+the increments converged so far, and the run is reported as faulty (`error_code` 1), so
+that a post-processor opting in with `POSTPROCESS_DESPITE_FAULTY_RUN` reads the truncated
+results:
+
+- `solver_time_limit`: the maximum time (s) given to the solver. The time is counted
+  from the first convergence file the solver writes (`<job_name>.sta` for Abaqus), so
+  that a wait in the licence queue does not count.
+- `deadline`: a wall-clock time (`datetime`) at which the job is terminated whatever
+  its progress, e.g. the end of a licence lending.
+
+```python
+from datetime import datetime
+
+from vimseo.job_executor.user_job_options import InteractiveAbaqusUserJobSettings
+
+model.run.job_executor.set_options(
+    InteractiveAbaqusUserJobSettings(
+        n_cpus=2,
+        solver_time_limit=3600.0,
+        deadline=datetime(2026, 11, 16, 9, 0),
+    )
+)
+```
+
+The limits apply to the interactive job executors, which drive the solver process; a
+job submitted through a job scheduler is limited by the scheduler
+(`max_wall_clock_time` of `SlurmAbaqusUserJobSettings`). After the execution,
+`model.run.job_executor.stopped_by` tells which limit, if any, stopped the job.
+
 Another key point is to avoid that your VIMSEO Python
 process being killed when your connexion to the cluster closes. There
 are two possibilities:

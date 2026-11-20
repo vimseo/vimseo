@@ -17,6 +17,8 @@
 
 from __future__ import annotations
 
+from datetime import datetime  # ruff: ignore[typing-only-standard-library-import]
+
 from pydantic import Field
 
 from vimseo.analysis_nodes.base_settings import BaseSettings
@@ -33,4 +35,20 @@ class BaseUserJobSettings(BaseSettings):
     )
     job_name: str = Field(
         default="", description="The job name used for the job directory."
+    )
+    solver_time_limit: float = Field(
+        default=0.0,
+        ge=0.0,
+        description="The maximum time (s) given to the solver, 0 meaning no limit. "
+        "The time is counted from the start of the solver, detected by the first "
+        "convergence file it writes (see ``convergence_sources``), so that a wait in a "
+        "licence queue does not count; without convergence sources, it is counted from "
+        "the start of the subprocess. A job reaching the limit is terminated, its results "
+        "so far are kept and the run is reported as faulty.",
+    )
+    deadline: datetime | None = Field(
+        default=None,
+        description="The wall-clock time at which the job is terminated, whatever its "
+        "progress, e.g. the end of a licence lending; None meaning no deadline. The "
+        "results so far are kept and the run is reported as faulty.",
     )
