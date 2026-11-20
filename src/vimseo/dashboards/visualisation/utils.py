@@ -20,10 +20,14 @@ from typing import TYPE_CHECKING
 
 import streamlit as st
 
+from vimseo.analysis_nodes.analysis_node_results_factory import load_result_buffer
 from vimseo.api import create_model
+from vimseo.io.io_factory import IOFactory
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
+
+    from vimseo.analysis_nodes.base_result import BaseResult
 
 
 def inputs_in_columns(
@@ -131,3 +135,26 @@ def multiselect_with_all(
 def camel_case_to_snake_case(text: str):
     pattern = re.compile(r"(?<!^)(?=[A-Z])")
     return pattern.sub("_", text).lower()
+
+
+def load_result(content: bytes, file_format: str) -> BaseResult:
+    """Load an analysis node result from the content of a file.
+
+    Args:
+        content: The content of the file.
+        file_format: The format of the file, ``"hdf5"``, or ``"json"`` for a
+            ``SpaceAnalysisNodeResult`` (deprecated).
+
+    Returns:
+        The analysis node result.
+
+    Raises:
+        ValueError: If the file format is not supported.
+    """
+    if file_format == "hdf5":
+        return load_result_buffer(content)
+    if file_format == "json":
+        return IOFactory().create("SpaceAnalysisNodeFileIO").read_buffer(content)
+
+    msg = f"Unexpected file format {file_format}"
+    raise ValueError(msg)

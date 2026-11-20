@@ -191,6 +191,10 @@ convention = "google"
 # ignore docstring that have not yet be converted to the google style
 "src/*.py" = ["D"]
 "src/vimseo/lib_vimseo/*.*" = ["ALL"]
+# Streamlit names the main page and the other pages of a multipage app after their
+# files, which live in a "pages" directory without __init__.py.
+"src/vimseo/dashboards/main_dashboard/Results_Explorer.py" = ["invalid-module-name"]
+"src/vimseo/dashboards/main_dashboard/pages/*.py" = ["implicit-namespace-package"]
 
 [format]
 docstring-code-format = true

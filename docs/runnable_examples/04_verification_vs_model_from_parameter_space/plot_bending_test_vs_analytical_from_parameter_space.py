@@ -137,7 +137,7 @@ verificator.save_results()
 # %%
 # The saved results can be loaded in a dashboard to be explored.
 # The dashboard is opened by typing ``dashboard_results`` in a terminal
-# (page **Analysis Node Results**); it is provided by the plugin vimseo-dashboards.
+# (page **Analysis Node Results**); it requires the ``dashboard`` extra.
 # The figures and the tables can also be written in a directory by typing
 # ``visualize_analysis_node_result --uri path/to/the/result.hdf5``.
 

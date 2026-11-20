@@ -62,7 +62,7 @@ The rest is shipped by optional dependencies, the *extras*:
 
 | Extra | Install with | Brings | Needed for |
 | --- | --- | --- | --- |
-| `dashboard` | `pip install "vimseo[dashboard]"` | `streamlit` | The `dashboard_workflow` interface |
+| `dashboard` | `pip install "vimseo[dashboard]"` | `streamlit` | The dashboards `dashboard_results` and `dashboard_workflow` |
 | `mlflow` | `pip install "vimseo[mlflow]"` | `mlflow` | The `MlflowArchive` storage backend. Without it, `DirectoryArchive` -- the default -- remains available |
 | `mesh` | `pip install "vimseo[mesh]"` | `pyvista` | VTK field post-processing (`extract_line`, `vtu_to_png`) and **executing the `TanOpenHole` model**. Pulls `vtk` (~330 MB) and needs system OpenGL libraries |
 | `jax` | `pip install "vimseo[jax]"` | `jax` | Necessary to obtain the jacobian of the `TanOpenHole` model |
@@ -71,13 +71,26 @@ Install them all at once with `pip install "vimseo[all]"`.
 
 Asking for a feature whose extra is missing raises an error naming the extra to install.
 
+### Dashboards
+
+The `dashboard` extra provides the command `dashboard_results`, whose pages are:
+
+- **Analysis Node Results**: the values and the figures of an analysis node result,
+  loaded from a file, an archive of analysis node runs or a URI;
+- **Parameter Space**: the edition of a parameter space;
+- **Model Results**: the model results of an archive, refined by study, model,
+  load case, status or query.
+
+Install the `mlflow` extra too to explore an MLflow archive:
+`pip install "vimseo[dashboard,mlflow]"`.
+
 ### Plugins
 
 `pip install vimseo` installs the latest release of **VIMSEO**. Its plugins, such as
-[vimseo-dashboards](https://forge-is.pf.irt-saintexupery.com/vims/vimseo-dashboards),
+[vimseo-abaqus](https://forge-is.pf.irt-saintexupery.com/vims/vimseo-abaqus),
 are not necessarily released for it.
 
-The plugins, **vimseo-dashboards** included, are hosted on a private forge. To get
+The plugins are hosted on a private forge. To get
 access, ask sebastien.bocquet@irt-saintexupery.com or
 ludovic.barriere@irt-saintexupery.com.
 
@@ -85,17 +98,9 @@ To benefit from the latest developments, install **VIMSEO** from its branch `mai
 and the plugins from their branch `develop`:
 
 ```
-pip install "vimseo[dashboard,mlflow] @ git+https://github.com/vimseo/vimseo.git@main"
-pip install git+https://forge-is.pf.irt-saintexupery.com/vims/vimseo-dashboards.git@develop
+pip install "vimseo @ git+https://github.com/vimseo/vimseo.git@main"
+pip install git+https://forge-is.pf.irt-saintexupery.com/vims/vimseo-abaqus.git@develop
 ```
-
-**vimseo-dashboards** provides the command `dashboard_results`, whose pages are:
-
-- **Analysis Node Results**: the values and the figures of an analysis node result,
-  loaded from a file, an archive of analysis node runs or a URI;
-- **Parameter Space**: the edition of a parameter space;
-- **Model Results**: the model results of an archive, refined by study, model,
-  load case, status or query.
 
 ---
 **NOTE**

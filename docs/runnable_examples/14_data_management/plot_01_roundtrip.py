@@ -112,7 +112,7 @@ analysis_node_result.to_dataframes()
 # | Plot | `model_result.plot()` | `analysis_node_result.plot()` |
 # | Tabulate | `model_result.to_dataframes()`, `model_results.to_dataset()` | `analysis_node_result.to_dataframes()` |
 # | Explore a set | `open_model_results(**archive).filter(...).families(along=...)` | `open_analysis_node_results(**archive).filter(...)` |
-# | Dashboards | `dashboard_results` (`vimseo-dashboards`), `dashboard_mlflow` | `dashboard_results` (`vimseo-dashboards`), `dashboard_mlflow` |
+# | Dashboards | `dashboard_results`, `dashboard_mlflow` | `dashboard_results`, `dashboard_mlflow` |
 #
 # ``archive`` holds ``archive_manager``, ``directory_archive_root`` and
 # ``study_name``.

@@ -13,16 +13,20 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-"""Check that every dashboard command launches a script which opens without error.
+"""Check that every dashboard and every page opens without error.
 
-The dashboards are discovered from the ``dashboard_*`` commands of the distribution,
-so that a new dashboard is checked without writing a test.
+The dashboards are discovered from the ``dashboard_*`` commands of the distribution
+and the pages from the directory of the main dashboard, so that a new dashboard or
+page is checked without writing a test.
 """
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 
+import vimseo.dashboards.main_dashboard as main_dashboard
 from vimseo.utilities.test_utils import get_dashboard_entry_points
 from vimseo.utilities.test_utils import get_dashboard_script
 from vimseo.utilities.test_utils import run_dashboard
@@ -32,9 +36,15 @@ pytest.importorskip("streamlit")
 
 ENTRY_POINTS = get_dashboard_entry_points("vimseo")
 
+PAGES = sorted((Path(main_dashboard.__file__).parent / "pages").glob("*.py"))
+
 
 def test_dashboards_are_discovered():
-    assert {entry_point.name for entry_point in ENTRY_POINTS} >= {"dashboard_workflow"}
+    assert {entry_point.name for entry_point in ENTRY_POINTS} >= {
+        "dashboard_results",
+        "dashboard_workflow",
+    }
+    assert PAGES
 
 
 @pytest.mark.fast
@@ -56,3 +66,11 @@ def test_dashboard_opens(tmp_wd, entry_point):
     app = run_dashboard(script)
     assert not app.exception, script
     assert not app.error, script
+
+
+@pytest.mark.parametrize("page", PAGES, ids=lambda page: page.stem)
+def test_page_opens(tmp_wd, page):
+    """A page of the main dashboard executes without error."""
+    app = run_dashboard(page)
+    assert not app.exception, page
+    assert not app.error, page
