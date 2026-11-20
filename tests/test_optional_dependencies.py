@@ -37,6 +37,8 @@ import pytest
 import tomllib
 
 from vimseo.analysis_nodes.analysis_nodes_factory import AnalysisNodesFactory
+from vimseo.core.components.component_factory import ComponentFactory
+from vimseo.core.load_case_factory import LoadCaseFactory
 from vimseo.core.model_factory import ModelFactory
 from vimseo.storage_management import get_archive_class
 from vimseo.storage_management.directory_storage import DirectoryArchive
@@ -60,12 +62,6 @@ DEV_ONLY_MODULES = frozenset({
     # Ships the pytest fixtures offered to the users of VIMSEO. pytest belongs to the
     # "dev" dependency group, not to the mandatory dependencies.
     "vimseo.utilities.pytest_conftest",
-})
-
-KNOWN_BROKEN_MODULES = frozenset({
-    # Unrelated to the optional dependencies: the module imports
-    # analytic_bending_test_analytical_cantilever, which no longer exists.
-    "vimseo.problems.beam_explicit.reference_dataset_builder",
 })
 
 CORE_ANALYSIS_NODES = (
@@ -108,7 +104,7 @@ def _is_installed(extra: str) -> bool:
 
 def _allowed_failures() -> set[str]:
     """The module prefixes allowed to fail, given the extras actually installed."""
-    allowed = set(DEV_ONLY_MODULES) | set(KNOWN_BROKEN_MODULES)
+    allowed = set(DEV_ONLY_MODULES)
     for extra, modules in EXTRA_TO_OPTIONAL_MODULES.items():
         if not _is_installed(extra):
             allowed.update(modules)
@@ -116,7 +112,10 @@ def _allowed_failures() -> set[str]:
 
 
 @pytest.mark.fast
-@pytest.mark.parametrize("factory_class", [AnalysisNodesFactory, ModelFactory])
+@pytest.mark.parametrize(
+    "factory_class",
+    [AnalysisNodesFactory, ModelFactory, LoadCaseFactory, ComponentFactory],
+)
 def test_no_core_module_fails_to_import(factory_class):
     """Check that only modules of a missing extra fail during class discovery."""
     allowed = _allowed_failures()

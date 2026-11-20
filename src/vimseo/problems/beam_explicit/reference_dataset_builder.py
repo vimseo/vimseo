@@ -21,17 +21,17 @@ from vimseo.analysis_nodes.doe.doe import DOEAnalysisNode
 from vimseo.analysis_nodes.space.space_analysis_node import SpaceAnalysisNode
 from vimseo.api import create_model
 from vimseo.problems.beam_explicit.analytical_laws import (
-    analytic_bending_test_analytical_cantilever,
+    bending_test_analytical_cantilever,
 )
 from vimseo.problems.beam_explicit.analytical_laws import (
-    analytic_bending_test_analytical_three_points,
+    bending_test_analytical_three_points,
 )
 from vimseo.utilities.datasets import SEP
 
 if __name__ == "__main__":
     analytic_bending_test_analytical = {
-        "Cantilever": analytic_bending_test_analytical_cantilever,
-        "ThreePoints": analytic_bending_test_analytical_three_points,
+        "Cantilever": bending_test_analytical_cantilever,
+        "ThreePoints": bending_test_analytical_three_points,
     }
     for load_case in ["Cantilever", "ThreePoints"]:
         model = analytic_bending_test_analytical[load_case]
