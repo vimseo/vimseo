@@ -188,6 +188,8 @@ convention = "google"
   "unnecessary-assign",
   "implicit-namespace-package",
 ]
+# Standalone scripts, run by path: not packages, and they print.
+"tools/*.py" = ["implicit-namespace-package", "T"]
 # ignore docstring that have not yet be converted to the google style
 "src/*.py" = ["D"]
 "src/vimseo/lib_vimseo/*.*" = ["ALL"]
