@@ -5,20 +5,20 @@
     "length": 600.0,
     "width": 30.0,
     "height": 40.0,
-    "imposed_dplt": -5.0,
-    "relative_dplt_location": 1.0
+    "imposed_displacement": -5.0,
+    "relative_load_location": 1.0
   },
   "outputs": {
     "reaction_forces": -2333.3333333333335,
-    "moment": [
+    "moment_profile": [
       1400000.0,
       0.0
     ],
-    "moment_grid": [
+    "position_profile_for_moment": [
       0.0,
       600.0
     ],
-    "dplt": [
+    "deflection_profile": [
       0.0,
       -0.0007626515125749902,
       -0.003040299948778674,
@@ -120,7 +120,7 @@
       -4.924245000767797,
       -4.999999999999994
     ],
-    "dplt_grid": [
+    "position_profile_for_deflection": [
       0.0,
       6.0606060606060606,
       12.121212121212121,
@@ -222,9 +222,9 @@
       593.9393939393939,
       600.0
     ],
-    "dplt_at_force_location": -4.999999999999994,
-    "maximum_dplt": -4.999999999999994,
-    "location_max_dplt": 600.0
+    "deflection_at_load_point": -4.999999999999994,
+    "maximum_deflection": -4.999999999999994,
+    "location_max_deflection": 600.0
   },
   "metadata": {
     "error_code": 0,

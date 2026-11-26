@@ -56,7 +56,7 @@ input_transform = AnalyticDiscipline({"length": "lengthOverWidth*width"})
 # Define the transformations between new output variables
 # and the existing model outputs. Note that model outputs or inputs can be used:
 output_transform = AnalyticDiscipline({
-    "dplt_adim_at_force": "dplt_at_force_location/length"
+    "relative_deflection_at_load_point": "deflection_at_load_point/length"
 })
 
 # Optionnaly, define default values for the model variables
@@ -113,9 +113,9 @@ assert (
     == 2 * transformed_input_model.get_input_data()["width"]
 )
 assert (
-    output_data["dplt_adim_at_force"]
+    output_data["relative_deflection_at_load_point"]
     == transformed_input_model._chain.disciplines[-2].get_output_data()[
-        "dplt_at_force_location"
+        "deflection_at_load_point"
     ]
     / transformed_input_model._chain.disciplines[1].get_input_data()["length"]
 )

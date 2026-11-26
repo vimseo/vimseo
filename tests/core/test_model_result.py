@@ -174,14 +174,25 @@ def test_structured_model_result(tmp_wd):
     with pytest.raises(ValueError, match="Unknown group"):
         result.scalars(group="parameters")
 
-    assert result.curves["dplt_vs_dplt_grid"].variable_names == ("dplt_grid", "dplt")
-    assert result.plots.names == ["dplt_vs_dplt_grid", "moment_vs_moment_grid"]
-    assert result.plots["moment_vs_moment_grid"]["moment"].variable_names == (
-        "moment_grid",
-        "moment",
+    assert result.curves[
+        "deflection_profile_vs_position_profile_for_deflection"
+    ].variable_names == ("position_profile_for_deflection", "deflection_profile")
+    assert result.plots.names == [
+        "deflection_profile_vs_position_profile_for_deflection",
+        "moment_profile_vs_position_profile_for_moment",
+    ]
+    assert result.plots["moment_profile_vs_position_profile_for_moment"][
+        "moment_profile"
+    ].variable_names == (
+        "position_profile_for_moment",
+        "moment_profile",
     )
     assert set(result.plot()) == set(result.plots.names)
-    assert set(result.plot(plot_names=["dplt_vs_dplt_grid"])) == {"dplt_vs_dplt_grid"}
+    assert set(
+        result.plot(
+            plot_names=["deflection_profile_vs_position_profile_for_deflection"]
+        )
+    ) == {"deflection_profile_vs_position_profile_for_deflection"}
 
     assert result.run_id == model.get_output_data()[MetaDataNames.run_id][0]
     assert result.model_name == "BendingTestAnalytical"

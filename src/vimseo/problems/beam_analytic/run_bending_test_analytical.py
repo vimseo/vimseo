@@ -39,20 +39,23 @@ class RunBendingTestAnalytical(BaseComponent):
         super().__init__(**options)
         self.m_func = None
         self.E = None
-        self.moment_inertia = None
+        self.second_moment_of_area = None
         self.BC = None
 
     def _run(self, input_data):
         solver = input_data["solver"][0]
         self.BC = input_data["boundary"]
-        moment = input_data["moment"]
-        m_grid = input_data["moment_grid"]
+        moment = input_data["moment_profile"]
+        m_grid = input_data["position_profile_for_moment"]
 
         displacement, displacement_grid = self.solver_equations(
             input_data, m_grid, moment, solver
         )
 
-        return {"dplt": displacement, "dplt_grid": displacement_grid}
+        return {
+            "deflection_profile": displacement,
+            "position_profile_for_deflection": displacement_grid,
+        }
 
     def solver_equations(self, input_data, m_grid, moment, solver):
         """
@@ -66,7 +69,7 @@ class RunBendingTestAnalytical(BaseComponent):
 
         """
         self.E = input_data["young_modulus"]
-        self.moment_inertia = input_data["quadratic_moment"]
+        self.second_moment_of_area = input_data["second_moment_of_area"]
         self.build_moment_linear(m_grid, moment)
 
         x = linspace(m_grid[0], m_grid[-1], self._X_NB_PTS).flatten()
@@ -99,7 +102,7 @@ class RunBendingTestAnalytical(BaseComponent):
 
         """
         moment = self.m_func(x)
-        return [y[1], -moment / (self.E[0] * self.moment_inertia[0])]
+        return [y[1], -moment / (self.E[0] * self.second_moment_of_area[0])]
 
     def fun_array(self, x, y):
         """
@@ -113,7 +116,7 @@ class RunBendingTestAnalytical(BaseComponent):
             1st and second derivatives of displacement in a (2, m) array
         """
         moment = self.m_func(x)
-        return vstack((y[1], -moment / (self.E * self.moment_inertia)))
+        return vstack((y[1], -moment / (self.E * self.second_moment_of_area)))
 
     def bc(self, ya, yb):
         return array([ya[0] - self.BC[0], yb[0] - self.BC[2]])

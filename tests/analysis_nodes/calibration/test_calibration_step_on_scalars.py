@@ -76,7 +76,7 @@ def calibration_step_on_scalars(max_iter):
             input_names=[
                 "height",
                 "width",
-                "imposed_dplt",
+                "imposed_displacement",
             ],
             parameter_names=["young_modulus"],
             optimizer_name="NLOPT_COBYLA",
@@ -163,7 +163,7 @@ def test_calibration_step_with_starting_point(tmp_wd):
             input_names=[
                 "height",
                 "width",
-                "imposed_dplt",
+                "imposed_displacement",
             ],
             parameter_names=["young_modulus"],
         ),
@@ -239,7 +239,7 @@ def test_calibration_step_on_scalars_multiple_models(tmp_wd):
             input_names=[
                 "height",
                 "width",
-                "imposed_dplt",
+                "imposed_displacement",
             ],
             parameter_names=["young_modulus"],
             optimizer_name="NLOPT_COBYLA",

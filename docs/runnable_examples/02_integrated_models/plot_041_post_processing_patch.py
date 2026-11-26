@@ -59,12 +59,14 @@ class MyPost(BaseComponent):
         self.input_grammar.update_from_names(
             list(model.output_grammar.names) + list(model.input_grammar.names)
         )
-        self.output_grammar.update_from_data({"relative_max_dplt": atleast_1d(0.0)})
+        self.output_grammar.update_from_data({
+            "relative_deflection_at_load_point": atleast_1d(0.0)
+        })
 
     def _run(self, input_data):
         output_data = {}
-        output_data["relative_max_dplt"] = (
-            input_data["dplt_at_force_location"] / input_data["length"]
+        output_data["relative_deflection_at_load_point"] = (
+            input_data["deflection_at_load_point"] / input_data["length"]
         )
         return output_data
 
@@ -97,6 +99,6 @@ model_with_post = create_model(
 # The composed model is executed. Note that the cache is reused,
 # so no computation is done here. Only the new post-processing is computed.
 output_data = model_with_post.execute()
-print("Relative max displacement:", output_data["relative_max_dplt"])
+print("Relative max displacement:", output_data["relative_deflection_at_load_point"])
 
 # %%

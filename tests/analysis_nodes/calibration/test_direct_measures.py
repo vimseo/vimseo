@@ -61,8 +61,8 @@ def test_calibration_on_stress_strain_curve(tmp_wd):
         settings=DirectMeasuresSettings(
             direct_measure_settings={
                 "E1": DirectMeasureOnCurveSettings(
-                    x_name="dplt_grid",
-                    y_name="dplt",
+                    x_name="position_profile_for_deflection",
+                    y_name="deflection_profile",
                     measure_name="DummyModulus",
                 )
             }

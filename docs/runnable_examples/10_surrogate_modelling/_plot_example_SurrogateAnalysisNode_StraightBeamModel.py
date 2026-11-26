@@ -88,15 +88,15 @@ space_analysis_node.execute(
         # "length": 200.0,
         # "width": 5.0,
         "height": 5.0,
-        "imposed_dplt": 0.0,
-        # "relative_dplt_location": 0.5,
+        "imposed_displacement": 0.0,
+        # "relative_load_location": 0.5,
     },
     maximum_values={
         # "length": 1000.0,
         # "width": 50.0,
         "height": 50.0,
-        "imposed_dplt": 20.0,
-        # "relative_dplt_location": 1.0,
+        "imposed_displacement": 20.0,
+        # "relative_load_location": 1.0,
     },
 )
 print(space_analysis_node.parameter_space)
@@ -152,7 +152,7 @@ pprint.pprint(surrogate_analysis_node.options)
 #
 #    surrogates = surrogate_analysis_node.execute(model=model, doe_results=dataset,
 #                                        algo="PolynomialRegressor", algo_options={"degree": 2, "fit_intercept": True}
-#                                        output_names=["dplt_at_force_location"])
+#                                        output_names=["deflection_at_load_point"])
 
 # %%
 #
@@ -188,14 +188,14 @@ print(surrogate_analysis_node.selected_algo)
 #
 
 # %%
-# The surrogate model can then be used in place of the model (outputs restricted to "dplt_at_force_location"):
+# The surrogate model can then be used in place of the model (outputs restricted to "deflection_at_load_point"):
 
 input_data = {
     # "young_modulus": array([150000.0]),
     # "length": array([5450.0]),
     # "width": array([245.0]),
     "height": array([35.0]),
-    "imposed_dplt": array([10.0]),
+    "imposed_displacement": array([10.0]),
 }
 output = surrogate.execute(input_data)
 output["reaction_forces"]

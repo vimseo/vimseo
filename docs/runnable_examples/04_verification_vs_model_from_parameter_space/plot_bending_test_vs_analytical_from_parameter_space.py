@@ -54,14 +54,14 @@ space_analysis_node.execute(
     minimum_values={
         "length": 200.0,
         "height": 5.0,
-        "imposed_dplt": 0.0,
-        "relative_dplt_location": 0.1,
+        "imposed_displacement": 0.0,
+        "relative_load_location": 0.1,
     },
     maximum_values={
         "length": 1000.0,
         "height": 50.0,
-        "imposed_dplt": 20.0,
-        "relative_dplt_location": 1.0,
+        "imposed_displacement": 20.0,
+        "relative_load_location": 1.0,
     },
 )
 print(space_analysis_node.parameter_space)
@@ -123,7 +123,7 @@ verificator.execute(
     reference_model=model_2,
     parameter_space=space_analysis_node.result.parameter_space,
     n_samples=5,
-    output_names=["reaction_forces", "maximum_dplt", "location_max_dplt"],
+    output_names=["reaction_forces", "maximum_deflection", "location_max_deflection"],
 )
 
 # %%

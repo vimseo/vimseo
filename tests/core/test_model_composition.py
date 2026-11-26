@@ -43,13 +43,17 @@ def _make_post(base_model, extra_outputs=()):
                 list(base_model.output_grammar.names)
                 + list(base_model.input_grammar.names)
             )
-            self.output_grammar.update_from_data({"relative_max_dplt": atleast_1d(0.0)})
+            self.output_grammar.update_from_data({
+                "relative_deflection_at_load_point": atleast_1d(0.0)
+            })
             for name in extra_outputs:
                 self.output_grammar.update_from_data({name: atleast_1d(0.0)})
 
         def _run(self, input_data):
             output_data = {
-                "relative_max_dplt": input_data["dplt_at_force_location"]
+                "relative_deflection_at_load_point": input_data[
+                    "deflection_at_load_point"
+                ]
                 / input_data["length"]
             }
             for name in extra_outputs:
@@ -84,7 +88,7 @@ def test_model_composition_output_contains_base_outputs(tmp_wd, tmp_path):
     )
     output = composition.execute()
 
-    assert "relative_max_dplt" in output
+    assert "relative_deflection_at_load_point" in output
     for name in base_model.get_output_data_names(remove_metadata=True):
         assert name in output, f"base output {name!r} missing from composition output"
 
@@ -109,7 +113,7 @@ def test_model_composition_cache_hit_roundtrips_all_outputs(tmp_wd, tmp_path):
     # Identical inputs -> cache hit -> restored io.data re-validated.
     output = composition.execute()
 
-    assert "relative_max_dplt" in output
+    assert "relative_deflection_at_load_point" in output
     for name in base_model.get_output_data_names(remove_metadata=True):
         assert name in output
 
@@ -125,7 +129,7 @@ def test_model_composition_stale_cache_raises(tmp_wd, tmp_path):
     """
     cache_file = tmp_path / "with_post.hdf"
 
-    # "Old code": the post declares only ``relative_max_dplt``; writes the cache.
+    # "Old code": the post declares only ``relative_deflection_at_load_point``; writes the cache.
     base_model = create_model("BendingTestAnalytical", "Cantilever")
     base_model.execute()
     old_composition = _make_composition(
