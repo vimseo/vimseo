@@ -168,9 +168,23 @@ def test_discipline_path(tmp_wd):
     try:
         model = create_model_class(declaration, MODULE_NAME)("Dummy")
         assert model.execute({"x": array([3.0])})["y"][0] == 6.0  # ruff: ignore[float-equality-comparison]
+        # Appended, so that the installed packages keep the priority.
+        assert sys.path[-1] == str(declaration.discipline_path)
     finally:
         sys.path[:] = sys_path
         sys.modules.pop(module_name, None)
+
+
+def test_discipline_created_at_first_instantiation(tmp_wd):
+    """The discipline is not created with the class, but with the first model."""
+    declaration = ModelDeclaration.from_yaml(
+        _write_declaration(tmp_wd, discipline="missing_module_for_tests:Missing")
+    )
+
+    cls = create_model_class(declaration, MODULE_NAME)
+
+    with pytest.raises(ModuleNotFoundError, match="missing_module_for_tests"):
+        cls("Dummy")
 
 
 def test_write_input_grammar(tmp_wd):
@@ -270,6 +284,38 @@ def test_check_models_path(tmp_wd):
     assert "The model DeclaredStiffness is available to create_model" in result.stdout
 
 
+def _run_with_models_path(script: str, directory: Path) -> subprocess.CompletedProcess:
+    """Run a Python script with ``VIMSEO_MODELS_PATH`` set to a directory."""
+    return subprocess.run(
+        [sys.executable, "-c", script],
+        capture_output=True,
+        text=True,
+        env={**os.environ, "VIMSEO_MODELS_PATH": str(directory)},
+        cwd=directory,
+        check=False,
+    )
+
+
+def test_models_path_name_clash(tmp_wd):
+    """A declared model named like another model is reported by the model factory."""
+    _write_declaration(tmp_wd, name="MockModel")
+    script = (
+        "from vimseo.core.model_factory import ModelFactory\n"
+        "if __name__ == '__main__':\n"
+        "    ModelFactory().class_names\n"
+    )
+
+    result = _run_with_models_path(script, tmp_wd)
+
+    assert result.returncode == 0, result.stderr
+    assert re.search(
+        r"The declared model MockModel has the name of a model of "
+        r"vimseo\.problems\.mock\.\S+; create_model creates the one of \S+: "
+        r"rename the declared model\.",
+        result.stderr,
+    ), result.stderr
+
+
 def test_models_path(tmp_wd):
     """The models of ``VIMSEO_MODELS_PATH`` are created by name."""
     _write_declaration(tmp_wd)
@@ -281,14 +327,7 @@ def test_models_path(tmp_wd):
         "    print(type(model).__module__)\n"
         "    print(model.execute({'area': array([2.0])})['stiffness'][0])\n"
     )
-    result = subprocess.run(
-        [sys.executable, "-c", script],
-        capture_output=True,
-        text=True,
-        env={**os.environ, "VIMSEO_MODELS_PATH": str(tmp_wd)},
-        cwd=tmp_wd,
-        check=False,
-    )
+    result = _run_with_models_path(script, tmp_wd)
 
     assert result.returncode == 0, result.stderr
     assert result.stdout.split()[-2:] == ["vimseo.problems.declarative", "300000.0"]

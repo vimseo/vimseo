@@ -30,12 +30,18 @@ A YAML file declares the class attributes of a :class:`.BaseDisciplineModel`:
     plots:
       - [strain_history, stress_history]
 
-The relative paths are relative to the directory of the YAML file.
+The relative paths of ``discipline_path``, ``material`` and ``input_grammar`` are
+relative to the directory of the YAML file. The values of ``discipline_options`` are
+passed to the discipline as written: a relative path among them is relative to the
+current working directory.
 
 The models declared in the directories of the ``models_path`` setting
 (``VIMSEO_MODELS_PATH``) are registered by :mod:`vimseo.problems.declarative`, so that
-they are created by name, as any model. The command ``vimseo_wrap`` writes the JSON input
-grammar of a declared model from its discipline, and checks a declaration.
+they are created by name, as any model. This setting is read once, when the model
+factory first imports this module: changing it afterwards has no effect in the same
+process. The discipline of a declared model is created when the model is first
+instantiated, not when the model is registered. The command ``vimseo_wrap`` writes the
+JSON input grammar of a declared model from its discipline, and checks a declaration.
 """
 
 from __future__ import annotations
@@ -87,13 +93,15 @@ class ModelDeclaration(BaseModel):
 
     discipline_path: Path | None = Field(
         default=None,
-        description="A directory added to ``sys.path`` to import the module of the "
-        "discipline, when this module is not installed.",
+        description="A directory appended to ``sys.path`` to import the module of the "
+        "discipline, when this module is not installed; the installed packages keep "
+        "the priority over the modules of this directory.",
     )
 
     discipline_options: dict[str, Any] = Field(
         default_factory=dict,
-        description="The arguments of the constructor of the discipline.",
+        description="The arguments of the constructor of the discipline, passed as "
+        "written: a relative path is relative to the current working directory.",
     )
 
     load_case: str = Field(default="Dummy", description="The name of the load case.")
@@ -167,10 +175,32 @@ def create_discipline(declaration: ModelDeclaration) -> Discipline:
     if declaration.discipline_path is not None:
         path = str(declaration.discipline_path)
         if path not in sys.path:
-            sys.path.insert(0, path)
+            sys.path.append(path)
     module_name, class_name = declaration.discipline.split(":")
     cls = getattr(importlib.import_module(module_name), class_name)
     return cls(**declaration.discipline_options)
+
+
+class _LazyDiscipline:
+    """The discipline of a declared model, created at its first access.
+
+    The model factory imports the declared models when it searches for the model
+    classes; creating their disciplines on demand avoids running the constructors of
+    all of them, and shows an error of a discipline only for the model using it.
+    """
+
+    def __init__(self, declaration: ModelDeclaration) -> None:
+        """
+        Args:
+            declaration: The declaration of the model.
+        """
+        self.__declaration = declaration
+        self.__discipline = None
+
+    def __get__(self, instance: Any, owner: type) -> Discipline:
+        if self.__discipline is None:
+            self.__discipline = create_discipline(self.__declaration)
+        return self.__discipline
 
 
 def create_model_class(
@@ -185,7 +215,7 @@ def create_model_class(
             to be kept as an attribute of this module, where it is found by its name.
 
     Returns:
-        The class of the model.
+        The class of the model, whose discipline is created at the first instantiation.
     """
     return type(
         declaration.name,
@@ -194,7 +224,7 @@ def create_model_class(
             "__module__": module_name,
             "__doc__": declaration.summary,
             "SUMMARY": declaration.summary,
-            "_DISCIPLINE": create_discipline(declaration),
+            "_DISCIPLINE": _LazyDiscipline(declaration),
             "_EXPECTED_LOAD_CASE": declaration.load_case,
             "MATERIAL_FILE": declaration.material or "",
             "_INPUT_GRAMMAR_FILE": declaration.input_grammar or "",
