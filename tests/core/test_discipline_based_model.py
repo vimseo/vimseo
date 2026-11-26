@@ -15,9 +15,14 @@
 
 from __future__ import annotations
 
+from typing import ClassVar
+
+from gemseo.core.discipline import Discipline
 from numpy import atleast_1d
+from numpy import inf
 
 from vimseo.api import create_model
+from vimseo.core.base_discipline_model import BaseDisciplineModel
 
 
 def test_discipline_based_model(tmp_wd):
@@ -46,3 +51,31 @@ def test_discipline_isolation(tmp_wd):
     model_bis.default_input_data.update({"x": atleast_1d(2.0)})
 
     assert model.default_input_data["x"][0] == 1.0  # ruff: ignore[float-equality-comparison]
+
+
+class _SimpleGrammarDiscipline(Discipline):
+    """A discipline using a SimpleGrammar, from which no bound can be read."""
+
+    default_grammar_type = Discipline.GrammarType.SIMPLE
+
+    def __init__(self):
+        super().__init__()
+        self.input_grammar.update_from_names(["x"])
+        self.output_grammar.update_from_names(["y"])
+        self.default_input_data = {"x": atleast_1d(1.0)}
+
+    def _run(self, input_data):
+        return {"y": input_data["x"]}
+
+
+class _SimpleGrammarModel(BaseDisciplineModel):
+    _DISCIPLINE: ClassVar[Discipline] = _SimpleGrammarDiscipline()
+    _EXPECTED_LOAD_CASE = "Dummy"
+
+
+def test_unbounded_model(tmp_wd):
+    """Check that the input bounds of a model whose first component has no
+    JSONGrammar are infinite (#100)."""
+    model = _SimpleGrammarModel()
+    assert model.lower_bounds["x"] == [-inf]
+    assert model.upper_bounds["x"] == [inf]

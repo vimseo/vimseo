@@ -232,7 +232,9 @@ class TanRun_Tension(BaseComponent):
     Inputs and outputs (geometry, ``load``, ``grid_resolution``, ``layup``,
     ``dx``/``dy``) are described by the ``TanRun_Tension_{input,output}.json``
     grammar files next to this module; the ply material properties and their
-    bounds are merged in from ``MATERIAL_GRAMMAR_FILE``.
+    bounds are merged in from ``MATERIAL_GRAMMAR_FILE``, which is why this component
+    keeps ``default_grammar_type = "JSONGrammar"``: a material grammar cannot be loaded
+    into a ``SimpleGrammar``.
     """
 
     USE_JOB_DIRECTORY = True
