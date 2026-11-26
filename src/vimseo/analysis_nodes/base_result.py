@@ -283,21 +283,36 @@ def assert_results_equal(r1, r2):
         assert set(r1.keys()) == set(r2.keys())
         for k in r1:
             assert_results_equal(r1[k], r2[k])
-    elif isinstance(r1, list):
-        assert len(r1) == len(r2)
-        for v1, v2 in zip(r1, r2, strict=False):
+    elif isinstance(r1, (list, tuple)):
+        # A tuple may be read back as a list.
+        assert isinstance(r2, (list, tuple)), f"{r1!r} != {r2!r}"
+        assert len(r1) == len(r2), f"{r1!r} != {r2!r}"
+        for v1, v2 in zip(r1, r2, strict=True):
             assert_results_equal(v1, v2)
     elif isinstance(r1, float):
         if not isnan(r1):
             assert isclose(r1, r2, rel_tol=1e-6, abs_tol=1e-12), f"{r1} != {r2}"
         else:
             assert isnan(r2)
+    elif type(r1).__eq__ is object.__eq__:
+        # The objects are compared by identity, which a serialization does not keep:
+        # only their types are checked.
+        LOGGER.info(
+            "Objects of type %s are compared by identity, only the type is checked",
+            type(r1),
+        )
+        assert type(r1) is type(r2), f"{type(r1)} != {type(r2)}"
     else:
         try:
-            assert r1 == r2
-        except (AssertionError, TypeError, ValueError) as e:
-            # If comparison returns an error or a non-boolean, check the type and print
-            # that the comparison has failed.
+            are_equal = bool(r1 == r2)
+        except (TypeError, ValueError) as e:
+            # The objects cannot be compared: only their types are checked.
             assert type(r1) is type(r2), (  # ruff: ignore[pytest-assert-in-except]
                 f"Objects of type {type(r1)} are not equal and not comparable: {e}"
             )
+            LOGGER.info(
+                "Objects of type %s are not comparable, only the type is checked",
+                type(r1),
+            )
+        else:
+            assert are_equal, f"{r1!r} != {r2!r}"

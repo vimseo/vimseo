@@ -19,8 +19,11 @@ from pathlib import Path
 from re import escape
 
 import pytest
+from numpy import array
 from numpy import atleast_1d
+from numpy import float64
 from numpy import linspace
+from numpy import ndarray
 from numpy import zeros
 from numpy.testing import assert_array_equal
 
@@ -213,3 +216,75 @@ def test_curve_set_plot_delegates_to_superpose_curves(tmp_wd):
     curve_set.plot(save=True, show=False)
 
     assert Path(spec.get_file_name()).is_file()
+
+
+@pytest.fixture
+def unsorted_curve() -> Curve:
+    """A curve whose abscissas are not sorted."""
+    return Curve({"x": [2.0, 0.0, 1.0], "y": [20.0, 0.0, 10.0]})
+
+
+@pytest.mark.parametrize(
+    ("x", "expected"),
+    [(1.0, [10.0]), (1.4, [10.0]), (1.6, [20.0]), ([-1.0, 3.0], [0.0, 20.0])],
+)
+def test_compute_closest_point(unsorted_curve, x, expected):
+    """Check the ordinates of the points closest to abscissas (#37)."""
+    assert_array_equal(unsorted_curve.compute(x), expected)
+
+
+@pytest.mark.parametrize("x_curve", [[0.0, 1.0, 2.0], [2.0, 1.0, 0.0]])
+@pytest.mark.parametrize(
+    ("x", "expected"), [(0.5, [5.0]), ([1.0, 1.5], [10.0, 15.0]), (2.0, [20.0])]
+)
+def test_compute_interpolation(x_curve, x, expected):
+    """Check the ordinates interpolated at abscissas, increasing or decreasing (#37)."""
+    curve = Curve({"x": x_curve, "y": [10.0 * x_i for x_i in x_curve]})
+    assert_array_equal(curve.compute(x, interpolate=True), expected)
+
+
+@pytest.mark.parametrize("interpolate", [False, True])
+@pytest.mark.parametrize("x", [1.0, 1, float64(1.0), array(1.0)])
+def test_compute_scalar(interpolate, x):
+    """Check that a scalar abscissa gives a float ordinate."""
+    curve = Curve({"x": [0.0, 1.0, 2.0], "y": [0.0, 10.0, 20.0]})
+    y = curve.compute(x, interpolate=interpolate)
+    assert type(y) is float
+    assert y == pytest.approx(10.0)
+
+
+@pytest.mark.parametrize("interpolate", [False, True])
+@pytest.mark.parametrize("x", [[1.0], (1.0,), array([1.0])])
+def test_compute_array(interpolate, x):
+    """Check that a sequence of abscissas gives an array of ordinates."""
+    curve = Curve({"x": [0.0, 1.0, 2.0], "y": [0.0, 10.0, 20.0]})
+    y = curve.compute(x, interpolate=interpolate)
+    assert isinstance(y, ndarray)
+    assert_array_equal(y, [10.0])
+
+
+@pytest.mark.parametrize(
+    "x_curve", [[2.0, 0.0, 1.0], [0.0, 2.0, 1.0], [0.0, 1.0, 1.0, 2.0]]
+)
+def test_compute_interpolation_not_monotonic(x_curve):
+    """Check that interpolating a curve whose abscissas are not strictly monotonic
+    raises an error."""
+    curve = Curve({"x": x_curve, "y": [0.0] * len(x_curve)})
+    with pytest.raises(
+        ValueError,
+        match=escape(
+            "Cannot interpolate the curve y_vs_x: "
+            "its abscissas are not strictly monotonic."
+        ),
+    ):
+        curve.compute(0.5, interpolate=True)
+
+
+@pytest.mark.parametrize("x_curve", [[0.0, 1.0, 2.0], [2.0, 1.0, 0.0]])
+def test_compute_interpolation_outside(x_curve):
+    """Check that interpolating outside the curve raises an error."""
+    curve = Curve({"x": x_curve, "y": [0.0, 10.0, 20.0]})
+    with pytest.raises(
+        ValueError, match=escape("at [3.0], outside its abscissas [0.0, 2.0].")
+    ):
+        curve.compute([1.0, 3.0], interpolate=True)

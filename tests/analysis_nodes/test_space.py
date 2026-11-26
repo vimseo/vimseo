@@ -30,6 +30,7 @@ from vimseo.analysis_nodes.space.space_analysis_node import update_space_from_st
 from vimseo.analysis_nodes.statistics.statistics_analysis_node import (
     StatisticsAnalysisNode,
 )
+from vimseo.api import create_model
 from vimseo.utilities.test_utils import check_result_visualization
 
 ANALYSIS_NODE_PATH = Path(analysis_nodes.__path__[0])
@@ -94,6 +95,87 @@ def test_get_fitted_distribution_parameters_scipy_fallback():
         distribution = _FakeNativeDistribution()
 
     assert _get_fitted_distribution_parameters(_FakeDistribution()) == (1.0, 2.0)
+
+
+def _get_parameters(space_analysis_node, name):
+    """Return the parameters of the distribution of a variable."""
+    distribution = space_analysis_node.parameter_space.distributions[name]
+    return pytest.approx(list(distribution.distribution.getParameter()))
+
+
+def test_update(tmp_wd):
+    """Check that the space of parameters can be updated without ``execute``, as in
+    the examples of :class:`.SpaceAnalysisNode`."""
+    space_analysis_node = SpaceAnalysisNode()
+    space_analysis_node.update(
+        "OTNormalDistribution",
+        "FromCenterAndCov",
+        center_values={"force_relative_location": 0.5},
+        cov=0.05,
+    )
+    assert space_analysis_node.parameter_space.variable_names == [
+        "force_relative_location"
+    ]
+    assert _get_parameters(space_analysis_node, "force_relative_location") == [
+        0.5,
+        0.025,
+    ]
+
+    space_analysis_node.update(
+        "OTTriangularDistribution",
+        "FromMinAndMax",
+        minimum_values={"young_modulus": 1e5},
+        maximum_values={"young_modulus": 1.5e5},
+        center_value_expr="0.25 * mini + 0.75 * maxi",
+    )
+    assert space_analysis_node.parameter_space.variable_names == [
+        "force_relative_location",
+        "young_modulus",
+    ]
+    assert _get_parameters(space_analysis_node, "young_modulus") == [
+        1e5,
+        1.375e5,
+        1.5e5,
+    ]
+
+    model = create_model("BendingTestAnalytical", "Cantilever")
+    space_analysis_node.update(
+        "OTTriangularDistribution",
+        "FromModelMinAndMax",
+        model=model,
+        variable_names=["young_modulus"],
+        use_default_values_as_center=True,
+    )
+    assert _get_parameters(space_analysis_node, "young_modulus") == [
+        1.9e5,
+        2.1e5,
+        2.3e5,
+    ]
+
+
+def test_update_from_statistics(tmp_wd):
+    """Check that the space of parameters can be replaced by the one of a
+    :class:`.StatisticsResult` without ``execute``."""
+    space_for_sample_generation = ParameterSpace()
+    space_for_sample_generation.add_random_variable(
+        "x1",
+        "OTDistribution",
+        interfaced_distribution="Normal",
+        parameters=(1.0, 0.05),
+    )
+    samples = space_for_sample_generation.compute_samples(n_samples=10)
+    statistics_analysis_node = StatisticsAnalysisNode()
+    statistics_analysis_node._options["tested_distributions"] = ["Normal"]
+    statistics_analysis_node.execute(
+        dataset=Dataset.from_array(samples, variable_names=["x1"])
+    )
+
+    space_analysis_node = SpaceAnalysisNode()
+    space_analysis_node.update(
+        "OTNormalDistribution", "FromCenterAndCov", center_values={"x": 0.5}, cov=0.05
+    )
+    space_analysis_node.update(statistics=statistics_analysis_node.result)
+    assert space_analysis_node.parameter_space.variable_names == ["x1"]
 
 
 def test_save_and_load_json(tmp_wd):

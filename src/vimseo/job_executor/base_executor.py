@@ -127,10 +127,26 @@ class JobExecutor(metaclass=GoogleDocstringInheritanceMeta):
             raise TypeError(msg)
         self._user_job_options = options.model_dump()
 
+    def update_options(self, **options: Any) -> None:
+        """Update some user job options, keeping the others.
+
+        Args:
+            **options: The user job options to change.
+
+        Raises:
+            pydantic.ValidationError: When an option is not a field of the user job
+                options model of the executor, or has a wrong type.
+        """
+        self._user_job_options = self._USER_JOB_OPTIONS_MODEL(**{
+            **self._user_job_options,
+            **options,
+        }).model_dump()
+
     def _set_job_options(self, job_directory: Path):
         """Set the job options."""
         self._job_directory = job_directory
-        options = self._user_job_options
+        # A copy, so that the user job options are not changed.
+        options = dict(self._user_job_options)
         options.update({"executable": self.DEFAULT_EXECUTABLE})
         self._job_options = options
         self._job_name = options.get("job_name", "")

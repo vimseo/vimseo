@@ -278,6 +278,17 @@ def test_save_results(
         ).is_file()
 
 
+def test_dated_working_directories(tmp_wd):
+    """Check that the working directories can be named after the date and time of the
+    execution (#108)."""
+    analysis_node = MyAnalysisNode(
+        directory_naming_method=DirectoryNamingMethod.DATED_UUID
+    )
+    analysis_node.execute()
+    name = analysis_node.working_directory.name
+    assert re.fullmatch(r"\d{4}-\d{2}-\d{2}_\d{2}h\d{2}min\d{2}s_[0-9a-f]+", name)
+
+
 @pytest.mark.parametrize(
     ("file_format", "prefix", "expected"),
     [

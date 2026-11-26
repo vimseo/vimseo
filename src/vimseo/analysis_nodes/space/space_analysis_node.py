@@ -204,13 +204,13 @@ class SpaceAnalysisNode(BaseCompositeAnalysisNode):
         >>> # By default the center of the distribution is the half sum of the min
         >>> # and max values.
         >>> # But this behaviour can be changed by passing a symbolic expression,
-        >>> # having the parameters "minimum" and "maximum":
+        >>> # of the parameters "mini" and "maxi":
         >>> space_analysis_node.update(
         ...     "OTTriangularDistribution",
         ...     "FromMinAndMax",
         ...     minimum_values={"young_modulus": 1e5},
         ...     maximum_values={"young_modulus": 1.5e5},
-        ...     center_value_expr="{0.25 * {minimum} + 0.75 * {maximum}",
+        ...     center_value_expr="0.25 * mini + 0.75 * maxi",
         ... )
         >>> # It is convenient to define the initial parameter space from a model.
         >>> # Here the "FromModelMinAndMax" builder is used.
@@ -218,10 +218,10 @@ class SpaceAnalysisNode(BaseCompositeAnalysisNode):
         >>> from vimseo.api import create_model
         >>> model = create_model("BendingTestAnalytical", "Cantilever")
         >>> space_analysis_node.update(
-        ...     distribution_name,
+        ...     "OTTriangularDistribution",
         ...     "FromModelMinAndMax",
         ...     model=model,
-        ...     variable_names=["E", "force_relative_location"],
+        ...     variable_names=["young_modulus"],
         ...     use_default_values_as_center=True,
         ... )
         >>> # The ``variable_names`` argument allows to retain only a subset of
@@ -233,20 +233,20 @@ class SpaceAnalysisNode(BaseCompositeAnalysisNode):
         >>> # used to customize the center value based on the min and max values of the
         >>> # model inputs:
         >>> space_analysis_node.update(
-        ...     distribution_name,
+        ...     "OTTriangularDistribution",
         ...     "FromModelMinAndMax",
         ...     model=model,
-        ...     variable_names=["E", "force_relative_location"],
+        ...     variable_names=["young_modulus"],
         ...     use_default_values_as_center=False,
-        ...     center_value_expr="{0.25 * {minimum} + 0.75 * {maximum}",
+        ...     center_value_expr="0.25 * mini + 0.75 * maxi",
         ... )
         >>> # A parameter space can also be updated from a model using center values
         >>> # and a coefficient of variation:
         >>> space_analysis_node.update(
-        ...     distribution_name,
+        ...     "OTTriangularDistribution",
         ...     "FromModelCenterAndCov",
         ...     model=model,
-        ...     variable_names=["E", "force_relative_location"],
+        ...     variable_names=["young_modulus"],
         ...     use_default_values_as_center=False,
         ...     cov=0.05,
         ... )
@@ -287,6 +287,7 @@ class SpaceAnalysisNode(BaseCompositeAnalysisNode):
         distribution_name: str = "",
         space_builder_name: str = "",
         model=None,
+        statistics: StatisticsResult | None = None,
         **options,
     ) -> None:
         """Updates the space of parameters.
@@ -295,13 +296,14 @@ class SpaceAnalysisNode(BaseCompositeAnalysisNode):
             distribution_name: The name of the distribution.
             space_builder_name: The name of the :class:`~.SpaceBuilder`.
             model: The model from which the space of parameters is built.
+            statistics: The result of a statistics analysis node, from which the
+                space of parameters is built instead, replacing the current one.
+                If ``None``, the space of parameters is updated by the space builder.
             options: The options of the parameter space builder.
         """
-        if options["statistics"] is not None:
+        if statistics is not None:
             self.result.parameter_space = ParameterSpace()
-            update_space_from_statistics(
-                self.result.parameter_space, options["statistics"]
-            )
+            update_space_from_statistics(self.result.parameter_space, statistics)
         else:
             self._space_builder = self.__builder_factory.create(space_builder_name)
             self._space_builder.update_options(**options)

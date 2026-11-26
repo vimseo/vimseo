@@ -145,8 +145,7 @@ stakeholders, **VIMSEO** is the perfect companion to set up simulation-driven de
 [GEMSEO](https://gemseo.readthedocs.io/en/stable/index.html). Since **VIMSEO** models derive
 from GEMSEO Disciplines, they can be readily use in MDO scenarios.
 **VIMSEO** model wrapper is particularly relevant for models based on Finite-Element Analysis (FEA)
-and in general any model using mesh discretisation. A wrapper specific to models based on
-*Abaqus* FEA software is available.
+and in general any model using mesh discretisation.
 
 - A wrapper for analysis methods: standard analysis methods are already integrated
 to run VV&UQ workflows (see figure below), namely _code and solution verification_, _uncertainty quantification_,
