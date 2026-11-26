@@ -63,7 +63,8 @@ class MetaData:
     """Name of the user which run the current job."""
 
     vims_git_version: ndarray[str]
-    """VIMSEO version: ID of the git commit checked-out at execution."""
+    """VIMSEO version: the installed version when it is a tagged release, otherwise
+    the ID of the git commit checked-out at execution."""
 
     directory_archive_root: ndarray[str]
     """Path to the archive root directory."""

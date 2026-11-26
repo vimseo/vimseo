@@ -24,6 +24,7 @@ from copy import copy
 from copy import deepcopy
 from dataclasses import asdict
 from datetime import datetime
+from functools import cache
 from pathlib import Path
 from re import match
 from subprocess import CalledProcessError
@@ -49,6 +50,7 @@ from numpy import inf
 from pandas import DataFrame
 from strenum import StrEnum
 
+import vimseo
 from vimseo.analysis_nodes.post_analysis_nodes.plot_parameters import Plot
 from vimseo.analysis_nodes.post_analysis_nodes.plot_parameters import merge_plots
 from vimseo.core.gemseo_discipline_wrapper import GemseoDisciplineWrapper
@@ -85,6 +87,59 @@ if TYPE_CHECKING:
     from vimseo.storage_management.directory_storage import DirectoryArchive
 
 LOGGER = logging.getLogger(__name__)
+
+
+def _is_release_version(version: str) -> bool:
+    """Return whether a version of VIMSEO is a tagged release.
+
+    The version is computed by setuptools_scm: a tagged release, e.g. ``0.1.7``, has
+    neither a development part (``.devN``, the code is ahead of the last tag) nor a
+    local part (``+...``, e.g. the working tree has uncommitted changes).
+
+    Args:
+        version: The version.
+
+    Returns:
+        Whether the version is a tagged release.
+    """
+    return ".dev" not in version and "+" not in version
+
+
+@cache
+def _get_vimseo_version() -> str:
+    """Return the version of the source code of VIMSEO.
+
+    It is the installed version when it is a tagged release.
+    Otherwise, it is the git commit checked out in the source directory of VIMSEO,
+    which is exact even for an editable install, whose version is computed at
+    installation; when git cannot give it, it is the installed version.
+
+    It is computed once per process.
+
+    Returns:
+        The version of the source code of VIMSEO.
+    """
+    version = vimseo.__version__
+    if _is_release_version(version):
+        return version
+
+    try:
+        return (
+            subprocess
+            .check_output(
+                ["git", "-C", str(Path(__file__).parent), "rev-parse", "HEAD"],
+                stderr=subprocess.DEVNULL,
+            )
+            .decode("utf-8")
+            .strip()
+        )
+    except (CalledProcessError, OSError):
+        LOGGER.info(
+            "VIMSEO is not a tagged release and its git commit cannot be determined: "
+            "the model metadata stores its installed version %s.",
+            version,
+        )
+        return version
 
 
 class IntegratedModel(GemseoDisciplineWrapper):
@@ -942,19 +997,7 @@ class IntegratedModel(GemseoDisciplineWrapper):
                 MetaDataNames.error_code, self._ERROR_CODE_DEFAULT
             )
 
-        here = str(Path(__file__).parent)
-        try:
-            vims_git_version = (
-                subprocess
-                .check_output(["git", "-C", here, "rev-parse", "HEAD"])
-                .decode("utf-_8")
-                .strip()
-            )
-        except CalledProcessError:
-            LOGGER.warning(
-                "Model metadata: git is not available, git commit cannot be determined."
-            )
-            vims_git_version = ""
+        vims_git_version = _get_vimseo_version()
         user = get_user_name()
         return MetaData(**{
             MetaDataNames.model: array([self.__class__.__name__]),

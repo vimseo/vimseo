@@ -16,6 +16,7 @@
 from __future__ import annotations
 
 import re
+import subprocess
 from math import inf
 from pathlib import Path
 
@@ -420,6 +421,45 @@ def test_error_code_default(tmp_wd, monkeypatch):
         model.get_output_data()[MetaDataNames.error_code][0]
         == IntegratedModel._ERROR_CODE_DEFAULT
     )
+
+
+@pytest.mark.parametrize(
+    ("version", "git_output", "expected"),
+    [
+        # A tagged release: git is not called.
+        ("0.1.7", None, "0.1.7"),
+        # Not a tagged release: the git commit.
+        ("0.1.8.dev25+g04543d44e", b"04543d44e0\n", "04543d44e0"),
+        ("0.1.7+d20261023", b"04543d44e0\n", "04543d44e0"),
+        # Not a tagged release and git unavailable: the installed version.
+        ("0.1.8.dev25+g04543d44e", OSError("git"), "0.1.8.dev25+g04543d44e"),
+        (
+            "0.1.8.dev25+g04543d44e",
+            subprocess.CalledProcessError(128, "git"),
+            "0.1.8.dev25+g04543d44e",
+        ),
+    ],
+)
+def test_vimseo_version(monkeypatch, version, git_output, expected):
+    """Check the version of VIMSEO stored in the model metadata."""
+    import vimseo
+    from vimseo.core import base_integrated_model
+
+    def check_output(*args, **kwargs):
+        if git_output is None:
+            msg = "git must not be called for a tagged release."
+            raise AssertionError(msg)
+        if isinstance(git_output, Exception):
+            raise git_output
+        return git_output
+
+    monkeypatch.setattr(vimseo, "__version__", version)
+    monkeypatch.setattr(base_integrated_model.subprocess, "check_output", check_output)
+    base_integrated_model._get_vimseo_version.cache_clear()
+    try:
+        assert base_integrated_model._get_vimseo_version() == expected
+    finally:
+        base_integrated_model._get_vimseo_version.cache_clear()
 
 
 def test_run_component(tmp_wd):
