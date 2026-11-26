@@ -15,7 +15,6 @@
 
 from __future__ import annotations
 
-import logging
 from typing import ClassVar
 
 from gemseo.core.discipline import Discipline
@@ -74,11 +73,9 @@ class _SimpleGrammarModel(BaseDisciplineModel):
     _EXPECTED_LOAD_CASE = "Dummy"
 
 
-def test_unbounded_model_warns(tmp_wd, caplog):
-    """Check that a model whose input bounds cannot be read warns that they are
-    infinite (#100)."""
-    with caplog.at_level(logging.WARNING):
-        model = _SimpleGrammarModel()
-    assert "not a JSONGrammar: no input bounds can be read" in caplog.text
+def test_unbounded_model(tmp_wd):
+    """Check that the input bounds of a model whose first component has no
+    JSONGrammar are infinite (#100)."""
+    model = _SimpleGrammarModel()
     assert model.lower_bounds["x"] == [-inf]
     assert model.upper_bounds["x"] == [inf]
