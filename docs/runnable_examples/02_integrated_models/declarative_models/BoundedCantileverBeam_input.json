@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema",
+  "type": "object",
+  "properties": {
+    "length": {
+      "type": "array",
+      "items": {
+        "type": "number",
+        "minimum": 100.0,
+        "maximum": 5000.0
+      }
+    },
+    "width": {
+      "type": "array",
+      "items": {
+        "type": "number",
+        "minimum": 10.0,
+        "maximum": 200.0
+      }
+    },
+    "height": {
+      "type": "array",
+      "items": {
+        "type": "number",
+        "minimum": 10.0,
+        "maximum": 400.0
+      }
+    },
+    "young_modulus": {
+      "type": "array",
+      "items": {
+        "type": "number",
+        "minimum": 1000.0,
+        "maximum": 400000.0
+      }
+    },
+    "force": {
+      "type": "array",
+      "items": {
+        "type": "number",
+        "minimum": 0.0,
+        "maximum": 50000.0
+      }
+    }
+  }
+}
