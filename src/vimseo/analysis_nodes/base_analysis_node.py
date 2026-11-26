@@ -69,7 +69,10 @@ class AnalysisNodeConstructorSettings(ArchiveLocationSettings):
     )
     directory_naming_method: DirectoryNamingMethod = Field(
         default=DirectoryNamingMethod.NUMBERED,
-        description="The method to create the execution directories.",
+        description="The method to create the execution directories: ``NUMBERED`` "
+        "(1, 2, ...), ``UUID`` (a unique identifier) or ``DATED_UUID`` (the date and "
+        "time of the execution followed by a unique identifier, "
+        "e.g. ``2026-11-03_15h41min34s_60debe5af408``).",
     )
     working_directory: str | Path = Field(
         default=config.working_directory,
