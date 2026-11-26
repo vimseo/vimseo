@@ -13,4 +13,5 @@ all the inputs of the discipline and can only restrict them. The component wrapp
 the discipline gets the JSON grammar of the file, from which the model input bounds
 are read; the input grammar of the model remains a `SimplerGrammar`, and the
 discipline keeps its own grammar. An input out of the bounds makes the simulation
-fail.
+fail. The new helpers of `vimseo.utilities.json_grammar_utils` are `read_json_grammar`,
+`to_json_grammar`, `check_grammar_restriction` and `check_material_bounds`.

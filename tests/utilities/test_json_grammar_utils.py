@@ -29,6 +29,7 @@ from vimseo.material.material_relation import MaterialRelation
 from vimseo.utilities.json_grammar_utils import EnhancedJSONEncoder
 from vimseo.utilities.json_grammar_utils import check_grammar_restriction
 from vimseo.utilities.json_grammar_utils import check_material_bounds
+from vimseo.utilities.json_grammar_utils import read_json_grammar
 from vimseo.utilities.json_grammar_utils import to_json_grammar
 
 
@@ -78,6 +79,42 @@ def _write_properties(path, properties):
     return path
 
 
+_X = {"type": "array", "items": {"type": "number", "minimum": 0.0, "maximum": 1.0}}
+_Y = {"type": "array", "items": {"type": "number"}}
+
+
+def test_read_json_grammar(tmp_path):
+    """A JSON grammar file is read as an object, even without ``"type": "object"``,
+    and named by its path by default."""
+    file_path = tmp_path / "g.json"
+    file_path.write_text(json.dumps({"properties": {"x": _X}, "required": ["x"]}))
+
+    grammar = read_json_grammar(file_path)
+
+    assert grammar.name == str(file_path)
+    assert set(grammar.names) == {"x"}
+    assert grammar.required_names == {"x"}
+    assert read_json_grammar(file_path, "h").name == "h"
+
+
+@pytest.mark.parametrize(
+    "content",
+    ["{bad", "[1, 2]", json.dumps({"properties": {"x": {"type": "foo"}}})],
+)
+def test_read_json_grammar_error(tmp_path, content):
+    """A file which is not a valid JSON schema raises a ValueError naming the file."""
+    file_path = tmp_path / "g.json"
+    file_path.write_text(content)
+
+    with pytest.raises(
+        ValueError,
+        match=re.escape(
+            f"The JSON grammar file {file_path} is not a valid JSON schema: "
+        ),
+    ):
+        read_json_grammar(file_path)
+
+
 @pytest.fixture
 def reference():
     """A reference grammar, ``x`` being bounded in [0, 1] and ``y`` not."""
@@ -104,12 +141,8 @@ def test_check_grammar_restriction(tmp_path, reference):
     properties["x"]["items"]["maximum"] = 1.0
 
     check_grammar_restriction(
-        reference, _write_properties(tmp_path / "g.json", properties)
+        reference, read_json_grammar(_write_properties(tmp_path / "g.json", properties))
     )
-
-
-_X = {"type": "array", "items": {"type": "number", "minimum": 0.0, "maximum": 1.0}}
-_Y = {"type": "array", "items": {"type": "number"}}
 
 
 @pytest.mark.parametrize(
@@ -120,6 +153,11 @@ _Y = {"type": "array", "items": {"type": "number"}}
             "unknown variables ['z']",
         ),
         ({"x": _X}, "missing variables ['y']"),
+        ({}, "missing variables ['x', 'y']"),
+        (
+            {"x": {"description": "no type"}, "y": _Y},
+            "x: type (None, None) instead of ('array', 'number')",
+        ),
         (
             {"x": _X, "y": {"type": "number"}},
             "y: type ('number', None) instead of ('array', 'number')",
@@ -144,7 +182,7 @@ def test_check_grammar_restriction_error(tmp_path, reference, properties, error)
             f"grammar ref and only restrict them: {error}."
         ),
     ):
-        check_grammar_restriction(reference, file_path)
+        check_grammar_restriction(reference, read_json_grammar(file_path))
 
 
 def _material(**bounds):

@@ -35,6 +35,7 @@ from pydantic import BaseModel
 if TYPE_CHECKING:
     from collections.abc import Mapping
     from numbers import Number
+    from typing import Any
 
     from gemseo.core.grammars.base_grammar import BaseGrammar
 
@@ -62,11 +63,12 @@ def load_input_bounds(
     input_space = {}
     lower_bounds = {}
     upper_bounds = {}
-    properties = grammar.schema["properties"]
+    properties = grammar.schema.get("properties", {})
     for key in properties:
-        if properties[key]["type"] == "array":
-            var_type = properties[key]["items"].get("type")
-            lower_bound = properties[key]["items"].get("minimum")
+        if properties[key].get("type") == "array":
+            items = properties[key].get("items", {})
+            var_type = items.get("type")
+            lower_bound = items.get("minimum")
             if lower_bound is not None:
                 lower_bounds[key] = lower_bound
             if var_type == "number":
@@ -75,7 +77,7 @@ def load_input_bounds(
                 else:
                     input_space[key] = [-inf]
 
-            upper_bound = properties[key]["items"].get("maximum")
+            upper_bound = items.get("maximum")
             if upper_bound is not None:
                 upper_bounds[key] = upper_bound
             if var_type == "number":
@@ -129,62 +131,103 @@ def to_json_grammar(grammar: BaseGrammar, name: str = "") -> JSONGrammar:
     return json_grammar
 
 
-def check_grammar_restriction(reference: JSONGrammar, file_path: str | Path) -> None:
-    """Check that a JSON grammar file can replace a reference grammar.
+def read_json_grammar(file_path: str | Path, name: str = "") -> JSONGrammar:
+    """Read a JSON grammar file.
 
-    The file shall declare all the variables of the reference grammar and only
+    The schema of the file is read as the one of an object, even without
+    ``"type": "object"``, so that its ``properties`` are the variables of the grammar.
+
+    Args:
+        file_path: The path to the JSON grammar file.
+        name: The name of the grammar. By default, the path to the file.
+
+    Returns:
+        The JSON grammar.
+
+    Raises:
+        ValueError: When the file is not a valid JSON schema.
+    """
+    grammar = JSONGrammar(name or str(file_path))
+    grammar.update_from_schema({"type": "object"})
+    try:
+        grammar.update_from_file(file_path, merge=True)
+    except (ValueError, RuntimeError, AttributeError) as error:
+        # GEMSEO raises a JSONDecodeError (a ValueError) for an invalid JSON file, a
+        # RuntimeError for an unknown type, and an AttributeError for a JSON file
+        # which is not an object.
+        msg = f"The JSON grammar file {file_path} is not a valid JSON schema: {error}"
+        raise ValueError(msg) from error
+    return grammar
+
+
+def check_grammar_restriction(reference: JSONGrammar, grammar: JSONGrammar) -> None:
+    """Check that a JSON grammar can replace a reference grammar.
+
+    The grammar shall declare all the variables of the reference grammar and only
     restrict them.
 
     Args:
         reference: The reference grammar.
-        file_path: The path to the JSON grammar file.
+        grammar: The grammar replacing the reference grammar,
+            e.g. read from a file by :func:`read_json_grammar`.
 
     Raises:
-        ValueError: When the file declares a variable unknown to the reference grammar,
-            misses a variable of the reference grammar, changes the type of a variable,
-            or has a looser ``minimum`` or ``maximum`` than the reference one.
+        ValueError: When the grammar declares a variable unknown to the reference
+            grammar, misses a variable of the reference grammar, changes the type of a
+            variable, or has a looser ``minimum`` or ``maximum`` than the reference one.
     """
-    properties = json.loads(Path(file_path).read_text(encoding="utf-8"))["properties"]
-    reference_properties = reference.schema["properties"]
+    names, reference_names = set(grammar.names), set(reference.names)
     errors = []
-    unknown_names = sorted(properties.keys() - reference_properties.keys())
+    unknown_names = sorted(names - reference_names)
     if unknown_names:
         errors.append(f"unknown variables {unknown_names}")
-    missing_names = sorted(reference_properties.keys() - properties.keys())
+    missing_names = sorted(reference_names - names)
     if missing_names:
         errors.append(f"missing variables {missing_names}")
-    lower_bounds, upper_bounds, _ = load_input_bounds(reference)
-    for name in sorted(properties.keys() & reference_properties.keys()):
-        prop = properties[name]
-        reference_prop = reference_properties[name]
-        prop_type = (prop.get("type"), prop.get("items", {}).get("type"))
-        reference_type = (
-            reference_prop.get("type"),
-            reference_prop.get("items", {}).get("type"),
-        )
+    properties = grammar.schema.get("properties", {})
+    reference_properties = reference.schema.get("properties", {})
+    lower_bounds, upper_bounds, _ = load_input_bounds(grammar)
+    reference_lower_bounds, reference_upper_bounds, _ = load_input_bounds(reference)
+    for name in sorted(names & reference_names):
+        prop_type = _get_type(properties[name])
+        reference_type = _get_type(reference_properties[name])
         if prop_type != reference_type:
             errors.append(f"{name}: type {prop_type} instead of {reference_type}")
             continue
-        items = prop.get("items", {})
-        lower_bound, upper_bound = items.get("minimum"), items.get("maximum")
-        if name in lower_bounds and (
-            lower_bound is None or lower_bound < lower_bounds[name]
+        lower_bound = lower_bounds.get(name)
+        reference_lower_bound = reference_lower_bounds.get(name)
+        if reference_lower_bound is not None and (
+            lower_bound is None or lower_bound < reference_lower_bound
         ):
             errors.append(
-                f"{name}: minimum {lower_bound} looser than {lower_bounds[name]}"
+                f"{name}: minimum {lower_bound} looser than {reference_lower_bound}"
             )
-        if name in upper_bounds and (
-            upper_bound is None or upper_bound > upper_bounds[name]
+        upper_bound = upper_bounds.get(name)
+        reference_upper_bound = reference_upper_bounds.get(name)
+        if reference_upper_bound is not None and (
+            upper_bound is None or upper_bound > reference_upper_bound
         ):
             errors.append(
-                f"{name}: maximum {upper_bound} looser than {upper_bounds[name]}"
+                f"{name}: maximum {upper_bound} looser than {reference_upper_bound}"
             )
     if errors:
         msg = (
-            f"The JSON grammar {file_path} shall declare all the variables of the "
+            f"The JSON grammar {grammar.name} shall declare all the variables of the "
             f"grammar {reference.name} and only restrict them: {'; '.join(errors)}."
         )
         raise ValueError(msg)
+
+
+def _get_type(prop: Mapping[str, Any]) -> tuple[str | None, str | None]:
+    """Return the type of a property of a JSON schema and the type of its items.
+
+    Args:
+        prop: The property.
+
+    Returns:
+        The type of the property and the type of its items, ``None`` when undefined.
+    """
+    return prop.get("type"), prop.get("items", {}).get("type")
 
 
 def check_material_bounds(material: Material, grammar: JSONGrammar) -> None:
@@ -205,7 +248,7 @@ def check_material_bounds(material: Material, grammar: JSONGrammar) -> None:
     errors = []
     for prop in material.properties:
         if prop.name in lower_bounds:
-            lower_bound = float(np.min(lower_bounds[prop.name]))
+            lower_bound = lower_bounds[prop.name]
             if prop.lower_bound < lower_bound:
                 errors.append(
                     f"{prop.name}: lower bound {prop.lower_bound} looser than "
@@ -214,7 +257,7 @@ def check_material_bounds(material: Material, grammar: JSONGrammar) -> None:
             if prop.value < lower_bound:
                 errors.append(f"{prop.name}: value {prop.value} below {lower_bound}")
         if prop.name in upper_bounds:
-            upper_bound = float(np.max(upper_bounds[prop.name]))
+            upper_bound = upper_bounds[prop.name]
             if prop.upper_bound > upper_bound:
                 errors.append(
                     f"{prop.name}: upper bound {prop.upper_bound} looser than "

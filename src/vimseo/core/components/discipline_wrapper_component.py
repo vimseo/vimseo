@@ -20,6 +20,7 @@ from typing import TYPE_CHECKING
 
 from vimseo.core.components.base_component import BaseComponent
 from vimseo.utilities.json_grammar_utils import check_grammar_restriction
+from vimseo.utilities.json_grammar_utils import read_json_grammar
 from vimseo.utilities.json_grammar_utils import to_json_grammar
 
 if TYPE_CHECKING:
@@ -43,16 +44,18 @@ class DisciplineWrapperComponent(BaseComponent):
     ):
         """
         Args:
-            input_grammar_file: The path to a JSON grammar file replacing the input
-                grammar of the discipline, e.g. with bounds; it declares all the
-                inputs of the discipline. If empty, the component shares the input
-                grammar of the discipline; otherwise, it has its own JSON grammar, and
-                the discipline validates its inputs with its own grammar after the
-                component.
+            input_grammar_file: The path to a JSON grammar file bounding the inputs of
+                the discipline, i.e. giving the domain of validity of the model: the
+                model reads its ``lower_bounds`` and ``upper_bounds`` from this grammar,
+                e.g. to build the input space of a DOE or a calibration, and an input
+                out of these bounds makes the execution fail. The discipline keeps its
+                own grammar and validates its inputs with it after the component, so the
+                file declares all the inputs of the discipline and only restricts them.
+                If empty, the component shares the input grammar of the discipline.
 
         Raises:
-            ValueError: When the JSON grammar file misses an input of the discipline
-                or does more than restrict its input grammar.
+            ValueError: When the JSON grammar file is not a valid JSON schema, misses
+                an input of the discipline or does more than restrict its input grammar.
         """  # ruff: ignore[undocumented-param]
         super().__init__(load_case)
 
@@ -60,10 +63,10 @@ class DisciplineWrapperComponent(BaseComponent):
         if input_grammar_file == "":
             self.input_grammar = discipline.input_grammar
         else:
-            grammar = to_json_grammar(discipline.input_grammar)
-            check_grammar_restriction(grammar, input_grammar_file)
-            # The file declares all the inputs, so it replaces all the properties.
-            grammar.update_from_file(input_grammar_file)
+            grammar = read_json_grammar(input_grammar_file)
+            check_grammar_restriction(
+                to_json_grammar(discipline.input_grammar), grammar
+            )
             for name in discipline.input_grammar.required_names:
                 grammar.required_names.add(name)
             grammar.defaults.update(discipline.input_grammar.defaults)
