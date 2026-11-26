@@ -12,4 +12,7 @@ bounds of the JSON input grammars of its components, so that an uncertain space
 built from the material only yields valid inputs. Otherwise, the construction of
 the model raises a `ValueError` naming the properties concerned. A material
 property without bounds (±1e12 by default) is thus rejected when the grammar
-bounds the input.
+bounds the input. Only the properties that are inputs bounded by such a grammar
+(`minimum` or `maximum` of `items`) are checked. To fix a material file, set the
+`lower_bound` and `upper_bound` of these properties within the bounds of the
+grammar, and their `value` between them.
