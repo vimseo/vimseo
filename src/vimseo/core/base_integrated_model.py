@@ -50,6 +50,7 @@ from numpy import inf
 from pandas import DataFrame
 from strenum import StrEnum
 
+import vimseo
 from vimseo.analysis_nodes.post_analysis_nodes.plot_parameters import Plot
 from vimseo.analysis_nodes.post_analysis_nodes.plot_parameters import merge_plots
 from vimseo.core.gemseo_discipline_wrapper import GemseoDisciplineWrapper
@@ -88,16 +89,40 @@ if TYPE_CHECKING:
 LOGGER = logging.getLogger(__name__)
 
 
+def _is_release_version(version: str) -> bool:
+    """Return whether a version of VIMSEO is a tagged release.
+
+    The version is computed by setuptools_scm: a tagged release, e.g. ``0.1.7``, has
+    neither a development part (``.devN``, the code is ahead of the last tag) nor a
+    local part (``+...``, e.g. the working tree has uncommitted changes).
+
+    Args:
+        version: The version.
+
+    Returns:
+        Whether the version is a tagged release.
+    """
+    return ".dev" not in version and "+" not in version
+
+
 @cache
-def _get_vimseo_git_commit() -> str:
-    """Return the git commit of the source code of VIMSEO.
+def _get_vimseo_version() -> str:
+    """Return the version of the source code of VIMSEO.
+
+    It is the installed version when it is a tagged release.
+    Otherwise, it is the git commit checked out in the source directory of VIMSEO,
+    which is exact even for an editable install, whose version is computed at
+    installation; when git cannot give it, it is the installed version.
 
     It is computed once per process.
 
     Returns:
-        The git commit, or an empty string when VIMSEO is not installed from a git
-        repository or when git is not available.
+        The version of the source code of VIMSEO.
     """
+    version = vimseo.__version__
+    if _is_release_version(version):
+        return version
+
     try:
         return (
             subprocess
@@ -110,10 +135,11 @@ def _get_vimseo_git_commit() -> str:
         )
     except (CalledProcessError, OSError):
         LOGGER.info(
-            "VIMSEO is not installed from a git repository, or git is not available: "
-            "the git commit of the model metadata is empty."
+            "VIMSEO is not a tagged release and its git commit cannot be determined: "
+            "the model metadata stores its installed version %s.",
+            version,
         )
-        return ""
+        return version
 
 
 class IntegratedModel(GemseoDisciplineWrapper):
@@ -930,7 +956,7 @@ class IntegratedModel(GemseoDisciplineWrapper):
                 MetaDataNames.error_code, self._ERROR_CODE_DEFAULT
             )
 
-        vims_git_version = _get_vimseo_git_commit()
+        vims_git_version = _get_vimseo_version()
         user = get_user_name()
         return MetaData(**{
             MetaDataNames.model: array([self.__class__.__name__]),
