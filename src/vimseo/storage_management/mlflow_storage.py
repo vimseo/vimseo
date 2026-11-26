@@ -109,10 +109,10 @@ def get_tracking_uri(root_directory: Path | str = "") -> str:
 
     if config.database.mode == "Local":
         local_uri = config.database.local_uri
-        if str(root_directory) in ("", local_uri):
-            # The default root of the archive is the uri of the configuration.
-            return local_uri or f"file:///{Path(root_directory).absolute()!s}"
-        return f"file:///{Path(root_directory).absolute()!s}"
+        if local_uri and str(root_directory) in ("", local_uri):
+            # No root directory, or the default one (the uri of the configuration).
+            return local_uri
+        return Path(root_directory).absolute().as_uri()
 
     msg = f"Wrong value for config.database.mode: {config.database.mode}"
     raise ValueError(msg)

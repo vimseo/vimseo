@@ -16,6 +16,7 @@
 from __future__ import annotations
 
 from copy import deepcopy
+from pathlib import Path
 
 import pytest
 from numpy.core.shape_base import atleast_1d
@@ -306,3 +307,47 @@ def test_run_ids_are_stored_in_the_run(tmp_wd):
     assert (
         result["outputs"][MetaDataNames.run_id][0] == outputs[MetaDataNames.run_id][0]
     )
+
+
+@pytest.mark.parametrize("root_directory", ["", "archive"])
+def test_local_tracking_uri_is_a_valid_file_uri(tmp_wd, monkeypatch, root_directory):
+    """Check that the local tracking uri points to the root directory (#80).
+
+    Prefixing an absolute POSIX path with ``file:///`` gave a uri with four slashes,
+    which MLflow resolved to the root of the file system.
+    """
+    from urllib.parse import urlparse
+    from urllib.request import url2pathname
+
+    from vimseo.config.global_configuration import _configuration as config
+    from vimseo.storage_management.mlflow_storage import get_tracking_uri
+
+    monkeypatch.setattr(config.database, "mode", "Local")
+    monkeypatch.setattr(config.database, "local_uri", "")
+    uri = get_tracking_uri(root_directory)
+
+    assert uri.startswith("file:")
+    assert not uri.startswith("file:////")
+    assert Path(url2pathname(urlparse(uri).path)) == (tmp_wd / root_directory)
+
+
+@pytest.mark.parametrize(
+    ("root_directory", "use_local_uri"),
+    [("", True), ("local_uri", True), ("archive", False)],
+)
+def test_local_tracking_uri_of_the_configuration(
+    tmp_wd, monkeypatch, root_directory, use_local_uri
+):
+    """Check that the ``local_uri`` of the configuration is used only for no root
+    directory or the default one."""
+    from vimseo.config.global_configuration import _configuration as config
+    from vimseo.storage_management.mlflow_storage import get_tracking_uri
+
+    local_uri = (tmp_wd / "local_uri").as_uri()
+    monkeypatch.setattr(config.database, "mode", "Local")
+    monkeypatch.setattr(config.database, "local_uri", local_uri)
+    if root_directory == "local_uri":
+        root_directory = local_uri
+
+    expected = local_uri if use_local_uri else (tmp_wd / root_directory).as_uri()
+    assert get_tracking_uri(root_directory) == expected
