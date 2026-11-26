@@ -418,3 +418,44 @@ def test_key_values(tmp_wd, deterministic_validation_case):
             assert [
                 key_values[f"{name}.point_{i}"] for i in range(n_points)
             ] == pytest.approx(point_values)
+
+
+def test_stochastic_case_has_its_own_metadata(tmp_wd):
+    """Check that a case set from point results does not share the metadata of its
+    first point (#121)."""
+    points = [ValidationPointResult(), ValidationPointResult()]
+    for i, point in enumerate(points):
+        point.metadata.analysis_node_run_id = f"point_{i}"
+        point.metadata.simulation_run_ids = (f"simulation_{i}", "shared_simulation")
+        point.metadata.misc["analysis_node_name"] = "StochasticValidationPoint"
+        point.metadata.settings["metric_names"] = ["RelativeErrorMetric"]
+        point.metadata.report["measured_output_names"] = ["y1"]
+        point.measured_data = IODataset.from_array(
+            [[1.0, 2.0]],
+            variable_names=["x3", "y1"],
+            variable_names_to_group_names={
+                "x3": IODataset.INPUT_GROUP,
+                "y1": IODataset.OUTPUT_GROUP,
+            },
+        )
+        point.simulated_data = point.measured_data.copy()
+        point.nominal_data = {"x2": array([float(i)])}
+        point.integrated_metrics = {"RelativeErrorMetric": {"y1": 0.0}}
+
+    case = ValidationCaseResult()
+    case.set_from_point_results(points)
+
+    assert case.metadata is not points[0].metadata
+    assert case.metadata.analysis_node_run_id not in {"", "point_0", "point_1"}
+    assert case.metadata.child_analysis_node_run_ids == ("point_0", "point_1")
+    assert case.metadata.simulation_run_ids == (
+        "simulation_0",
+        "shared_simulation",
+        "simulation_1",
+    )
+    assert "analysis_node_name" not in case.metadata.misc
+    assert case.metadata.settings == points[0].metadata.settings
+
+    case.metadata.settings["metric_names"].append("AbsoluteErrorMetric")
+    assert points[0].metadata.settings["metric_names"] == ["RelativeErrorMetric"]
+    assert points[0].metadata.analysis_node_run_id == "point_0"

@@ -19,6 +19,7 @@ import logging
 from collections import defaultdict
 from collections.abc import Mapping
 from collections.abc import Sequence
+from copy import deepcopy
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 from typing import ClassVar
@@ -36,6 +37,7 @@ from vimseo.analysis_nodes.result_visualization import flatten_numbers
 from vimseo.analysis_nodes.validation.validation_point_result import (
     ValidationPointResult,
 )
+from vimseo.core.run_context import new_run_id
 from vimseo.utilities.datasets import GROUP_SEPARATORS
 from vimseo.utilities.datasets import dataframe_to_dataset
 from vimseo.utilities.datasets import dataset_to_dataframe
@@ -117,7 +119,26 @@ class ValidationCaseResult(BaseResult):
 
         # TODO check that all points have common settings
         self.stochastic_point_results = results
-        self.metadata = results[0].metadata
+        # The case has its own identity, whereas it gets the settings of its points:
+        # sharing the metadata of a point would give the case the identifier of this
+        # point, and modifying the metadata of the case would modify the ones of the
+        # point.
+        self.metadata = deepcopy(results[0].metadata)
+        self.metadata.analysis_node_run_id = new_run_id()
+        self.metadata.parent_analysis_node_run_id = ""
+        self.metadata.child_analysis_node_run_ids = tuple(
+            result.metadata.analysis_node_run_id
+            for result in results
+            if result.metadata.analysis_node_run_id
+        )
+        self.metadata.simulation_run_ids = tuple(
+            dict.fromkeys(
+                run_id
+                for result in results
+                for run_id in result.metadata.simulation_run_ids
+            )
+        )
+        self.metadata.misc.pop("analysis_node_name", None)
 
         metric_names = self._get_common_values([
             result.metadata.settings["metric_names"] for result in results
